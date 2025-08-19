@@ -13,11 +13,13 @@ const buttonVariants = cva(
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         outline:
-          "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+          "border border-storiq-border bg-transparent text-foreground hover:bg-storiq-card-bg hover:text-foreground",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
+        gradient: "bg-gradient-to-r from-storiq-purple to-storiq-blue text-white hover:opacity-90 transition-opacity",
+        storiq: "bg-storiq-card-bg text-white border border-storiq-border hover:bg-storiq-dark-lighter transition-colors",
       },
       size: {
         default: "h-10 px-4 py-2",

@@ -52,15 +52,14 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
-				sidebar: {
-					DEFAULT: 'hsl(var(--sidebar-background))',
-					foreground: 'hsl(var(--sidebar-foreground))',
-					primary: 'hsl(var(--sidebar-primary))',
-					'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
-					accent: 'hsl(var(--sidebar-accent))',
-					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
-					border: 'hsl(var(--sidebar-border))',
-					ring: 'hsl(var(--sidebar-ring))'
+				storiq: {
+					dark: 'hsl(var(--storiq-dark))',
+					'dark-lighter': 'hsl(var(--storiq-dark-lighter))',
+					purple: 'hsl(var(--storiq-purple))',
+					'purple-light': 'hsl(var(--storiq-purple-light))',
+					blue: 'hsl(var(--storiq-blue))',
+					'card-bg': 'hsl(var(--storiq-card-bg))',
+					border: 'hsl(var(--storiq-border))'
 				}
 			},
 			borderRadius: {
