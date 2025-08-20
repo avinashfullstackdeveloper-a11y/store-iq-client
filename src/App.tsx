@@ -9,6 +9,14 @@ import Tools from "./pages/Tools";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
+import Dashboard from "./pages/dashboard/Dashboard";
+import Stats from "./pages/dashboard/Stats";
+import Publish from "./pages/dashboard/Publish";
+import Videos from "./pages/dashboard/Videos";
+import Exports from "./pages/dashboard/Exports";
+import Scripts from "./pages/dashboard/Scripts";
+import Settings from "./pages/dashboard/Settings";
+import CreateVideo from "./pages/dashboard/CreateVideo";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +32,14 @@ const App = () => (
           <Route path="/tools" element={<Tools />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard/stats" element={<Stats />} />
+          <Route path="/dashboard/publish" element={<Publish />} />
+          <Route path="/dashboard/videos" element={<Videos />} />
+          <Route path="/dashboard/exports" element={<Exports />} />
+          <Route path="/dashboard/scripts" element={<Scripts />} />
+          <Route path="/dashboard/settings" element={<Settings />} />
+          <Route path="/dashboard/create" element={<CreateVideo />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
