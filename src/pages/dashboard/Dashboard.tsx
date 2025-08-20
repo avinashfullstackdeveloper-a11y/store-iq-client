@@ -7,7 +7,8 @@ const Dashboard = () => {
       title: "Search Viral Videos",
       description: "YouTube",
       image: "/api/placeholder/300/150",
-      color: "from-red-500/20 to-red-600/20"
+      color: "from-red-500/20 to-red-600/20",
+      href: "/dashboard/search-videos"
     },
     {
       title: "Generate Scripts",
@@ -75,8 +76,9 @@ const Dashboard = () => {
         {/* Quick Options */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           {quickOptions.map((option, index) => (
-            <div
+            <a
               key={index}
+              href={option.href || "#"}
               className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${option.color} border border-storiq-border p-6 min-h-[200px] flex flex-col justify-end cursor-pointer hover:scale-105 transition-transform`}
             >
               <div className="absolute inset-0 bg-black/40"></div>
@@ -86,7 +88,7 @@ const Dashboard = () => {
                   <p className="text-white/80 text-sm">{option.description}</p>
                 )}
               </div>
-            </div>
+            </a>
           ))}
         </div>
 

@@ -17,6 +17,7 @@ import Exports from "./pages/dashboard/Exports";
 import Scripts from "./pages/dashboard/Scripts";
 import Settings from "./pages/dashboard/Settings";
 import CreateVideo from "./pages/dashboard/CreateVideo";
+import SearchVideos from "./pages/dashboard/SearchVideos";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,7 @@ const App = () => (
           <Route path="/dashboard/scripts" element={<Scripts />} />
           <Route path="/dashboard/settings" element={<Settings />} />
           <Route path="/dashboard/create" element={<CreateVideo />} />
+          <Route path="/dashboard/search-videos" element={<SearchVideos />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
