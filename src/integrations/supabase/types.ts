@@ -14,7 +14,119 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+          username: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+          username?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
+      scripts: {
+        Row: {
+          created_at: string
+          generated_script_text: string
+          id: string
+          owner: string
+          source_content: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          generated_script_text: string
+          id?: string
+          owner: string
+          source_content: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          generated_script_text?: string
+          id?: string
+          owner?: string
+          source_content?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      search_history: {
+        Row: {
+          created_at: string
+          filters: Json | null
+          id: string
+          search_term: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          filters?: Json | null
+          id?: string
+          search_term: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          filters?: Json | null
+          id?: string
+          search_term?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      video_projects: {
+        Row: {
+          created_at: string
+          id: string
+          owner: string
+          script_id: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          owner: string
+          script_id?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          owner?: string
+          script_id?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_projects_script_id_fkey"
+            columns: ["script_id"]
+            isOneToOne: false
+            referencedRelation: "scripts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
