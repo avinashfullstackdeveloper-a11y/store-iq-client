@@ -1,32 +1,52 @@
-import { Button } from "@/components/ui/button";
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
 
 const Header = () => {
+  const location = useLocation();
+
+  const navLinks = [
+    { name: 'Home', path: '/' },
+    { name: 'About', path: '/about' },
+    { name: 'Tools', path: '/tools' },
+  ];
+
   return (
-    <header className="w-full py-4 px-8 flex items-center justify-between">
-      <div className="flex items-center">
-        <div className="bg-white text-black px-4 py-2 rounded-full font-bold text-sm">
-          STORIQ
+    <div className="bg-[#100f1f] p-4 font-sans">
+      <header className="w-full max-w-5xl mx-auto bg-white rounded-full py-3 px-6 flex items-center justify-between">
+        <div className="flex items-center">
+          <div className="flex items-center">
+            {/* This class will now work correctly */}
+            <div className="text-black font-semibold text-2xl tracking-normal font-orbitron leading-6">
+              STORIQ
+            </div>
+          </div>
         </div>
-      </div>
-      
-      <nav className="hidden md:flex items-center space-x-8">
-        <a href="/" className="text-white hover:text-storiq-purple-light transition-colors">
-          Home
-        </a>
-        <a href="/about" className="text-white hover:text-storiq-purple-light transition-colors">
-          About
-        </a>
-        <a href="/tools" className="text-white hover:text-storiq-purple-light transition-colors">
-          Tools
-        </a>
-      </nav>
-      
-      <div className="flex items-center space-x-4">
-        <Button variant="ghost" className="text-white hover:text-storiq-purple-light">
-          SIGN IN
-        </Button>
-      </div>
-    </header>
+        
+        <nav className="hidden md:flex items-center space-x-4">
+          <div className="flex items-center space-x-1">
+            {navLinks.map((link) => (
+              <Link
+                key={link.name}
+                to={link.path}
+                className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors duration-300 ${
+                  location.pathname === link.path
+                    ? 'bg-black text-white' 
+                    : 'bg-transparent text-black hover:bg-gray-200'
+                }`}
+              >
+                {link.name}
+              </Link>
+            ))}
+          </div>
+          
+          <div className="flex items-center">
+            <Link to="/pages/signup" className="text-black text-sm font-semibold px-4 py-1.5 rounded-full hover:bg-gray-200 transition-colors duration-300">
+              SIGN UP
+            </Link>
+          </div>
+        </nav>
+      </header>
+    </div>
   );
 };
 

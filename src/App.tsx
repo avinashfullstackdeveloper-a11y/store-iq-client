@@ -8,6 +8,7 @@ import About from "./pages/About";
 import Tools from "./pages/Tools";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import Home from "./components/HeroSection";
 import NotFound from "./pages/NotFound";
 import Dashboard from "./pages/dashboard/Dashboard";
 import Stats from "./pages/dashboard/Stats";
@@ -32,7 +33,7 @@ const App = () => (
           <Route path="/about" element={<About />} />
           <Route path="/tools" element={<Tools />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
+         <Route path="/pages/signup" element={<Signup />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/dashboard/stats" element={<Stats />} />
           <Route path="/dashboard/publish" element={<Publish />} />
@@ -40,8 +41,9 @@ const App = () => (
           <Route path="/dashboard/exports" element={<Exports />} />
           <Route path="/dashboard/scripts" element={<Scripts />} />
           <Route path="/dashboard/settings" element={<Settings />} />
-          <Route path="/dashboard/create" element={<CreateVideo />} />
+          <Route path="/dashboard/create-video" element={<CreateVideo />} />
           <Route path="/dashboard/search-videos" element={<SearchVideos />} />
+           <Route path="/Home" element={<Home />} /> // The path is "/Home"
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

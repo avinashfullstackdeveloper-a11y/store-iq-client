@@ -1,51 +1,82 @@
 import { Button } from "@/components/ui/button";
+import creativeContentVideo from "@/assets/videos/creative-content.mp4";
+import aiGeneratedVideo from "@/assets/videos/ai-generated.mp4";
+import videoContentVideo from "@/assets/videos/video-content.mp4";
+// You can also import the sticker if you prefer that method
+// import girlSticker from "/girl-sticker.png";
+
+const VideoCard = ({ src }) => {
+  return (
+    <div className="relative aspect-[9/16] rounded-lg overflow-hidden group">
+      {/* Video */}
+      <video
+        src={src}
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="absolute top-0 left-0 w-full h-full object-cover"
+      />
+
+      {/* Striped Overlay */}
+      <div
+        className="absolute inset-0 pointer-events-none z-10"
+        style={{
+          backgroundImage: `repeating-linear-gradient(
+            90deg,
+            rgba(0,0,0,0.9) 0px,
+            rgba(0,0,0,0.9) 2px,
+            transparent 2px,
+            transparent 6px
+          )`,
+        }}
+      ></div>
+    </div>
+  );
+};
 
 const HeroSection = () => {
   return (
-    <section className="min-h-screen flex flex-col items-center justify-center text-center px-8 relative">
+    <section className="min-h-screen flex flex-col items-center justify-center text-center px-8 relative bg-black text-white">
       {/* Background gradient orbs */}
-      <div className="absolute top-20 left-1/4 w-64 h-64 bg-gradient-to-br from-storiq-purple/30 to-storiq-blue/30 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-20 right-1/4 w-80 h-80 bg-gradient-to-br from-storiq-blue/20 to-storiq-purple/20 rounded-full blur-3xl"></div>
+      <div className="absolute top-0 left-0 w-64 h-64 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
+      <div className="absolute top-0 left-1/2 w-64 h-64 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
+      <div className="absolute top-0 right-0 w-64 h-64 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-4000"></div>
+      <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
+      <div className="absolute bottom-0 right-0 w-64 h-64 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-4000"></div>
       
-      {/* Hero Images Grid */}
-      <div className="grid grid-cols-3 gap-4 mb-12 max-w-2xl">
-        <div className="aspect-square bg-gradient-to-br from-storiq-blue/20 to-storiq-purple/20 rounded-lg overflow-hidden">
-          <div className="w-full h-full bg-gradient-to-b from-transparent via-black/20 to-black/60 flex items-end p-4">
-            <div className="text-xs text-white/80">Creative Content</div>
-          </div>
-        </div>
-        <div className="aspect-square bg-gradient-to-br from-storiq-purple/20 to-black/40 rounded-lg overflow-hidden">
-          <div className="w-full h-full bg-gradient-to-b from-transparent via-black/20 to-black/60 flex items-end p-4">
-            <div className="text-xs text-white/80">AI Generated</div>
-          </div>
-        </div>
-        <div className="aspect-square bg-gradient-to-br from-amber-500/20 to-orange-500/20 rounded-lg overflow-hidden">
-          <div className="w-full h-full bg-gradient-to-b from-transparent via-black/20 to-black/60 flex items-end p-4">
-            <div className="text-xs text-white/80">Video Content</div>
-          </div>
-        </div>
+      {/* Hero Videos Grid */}
+      <div className="grid grid-cols-3 gap-2 mb-12 max-w-4xl w-full">
+        <VideoCard src={creativeContentVideo} />
+        <VideoCard src={aiGeneratedVideo} />
+        <VideoCard src={videoContentVideo} />
       </div>
       
       {/* Main Heading */}
-      <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 max-w-4xl leading-tight">
+      <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-4 max-w-4xl leading-tight">
         The AI workspace for next-gen creators
       </h1>
       
       {/* Subheading */}
-      <p className="text-xl md:text-2xl text-white/80 mb-8 max-w-2xl">
+      <p className="text-base md:text-xl text-white/80 mb-8 max-w-2xl">
         STORIQ helps modern creators streamline content creation, planning, and 
         publishing like never before.
       </p>
       
       {/* CTA Button */}
-      <Button variant="gradient" size="lg" className="text-lg px-8 py-6 rounded-full">
+      <Button variant="gradient" size="lg" className="text-lg px-12 py-3 rounded-full font-bold">
         Explore 
-        <span className="ml-2 bg-white/20 rounded-full p-1">
-          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
-          </svg>
-        </span>
       </Button>
+
+      {/* Girl Sticker */}
+      <div className="absolute bottom-0 right-0 w-48 h-48 md:w-56 md:h-56">
+        <img
+          // The 'src' is now correctly pointing to the image in your public folder
+          // src="/image.png"
+          alt="Meera Rajput"
+          className="w-full h-full object-contain"
+        />
+      </div>
     </section>
   );
 };

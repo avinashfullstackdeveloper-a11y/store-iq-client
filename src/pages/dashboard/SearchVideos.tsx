@@ -5,10 +5,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider";
 import { ChevronDown, Play, Heart, MessageCircle } from "lucide-react";
 import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"; // Import Dialog components
 
 const SearchVideos = () => {
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [searchTerm, setSearchTerm] = useState("how to create a startup");
+  const [showVideoModal, setShowVideoModal] = useState(false); // State for modal visibility
+  const [selectedVideo, setSelectedVideo] = useState<any | null>(null); // State for selected video data
+
+  const handleVideoClick = (video: any) => {
+    setSelectedVideo(video);
+    setShowVideoModal(true);
+  };
   
   const suggestedTags = [
     "how to create a startup",
@@ -58,6 +66,18 @@ const SearchVideos = () => {
       comments: "21"
     }
   ];
+
+  const [filteredVideoResults, setFilteredVideoResults] = useState(videoResults); // New state for filtered results
+
+  const handleSearch = () => {
+    const lowerCaseSearchTerm = searchTerm.toLowerCase();
+    const newFilteredResults = videoResults.filter(video =>
+      video.title.toLowerCase().includes(lowerCaseSearchTerm) ||
+      (video.subtitle && video.subtitle.toLowerCase().includes(lowerCaseSearchTerm)) ||
+      (video.author && video.author.toLowerCase().includes(lowerCaseSearchTerm))
+    );
+    setFilteredVideoResults(newFilteredResults);
+  };
 
   return (
     <DashboardLayout>
@@ -194,6 +214,7 @@ const SearchVideos = () => {
             <div
               key={video.id}
               className="bg-storiq-card-bg border border-storiq-border rounded-2xl overflow-hidden hover:border-storiq-purple/50 transition-colors cursor-pointer"
+              onClick={() => handleVideoClick(video)} // Add onClick handler
             >
               {/* Video Thumbnail */}
               <div className="relative aspect-[3/4] bg-gradient-to-br from-orange-500/20 to-red-500/20">
@@ -255,6 +276,29 @@ const SearchVideos = () => {
           ))}
         </div>
       </div>
+      {/* Video Playback Modal */}
+      <Dialog open={showVideoModal} onOpenChange={setShowVideoModal}>
+        <DialogContent className="sm:max-w-[600px] bg-storiq-card-bg border-storiq-border text-white">
+          <DialogHeader>
+            <DialogTitle>{selectedVideo?.title}</DialogTitle>
+            <DialogDescription>
+              {selectedVideo?.platform} - {selectedVideo?.views} views
+            </DialogDescription>
+          </DialogHeader>
+          <div className="relative aspect-video bg-black flex items-center justify-center rounded-lg overflow-hidden">
+            {/* Placeholder for video player */}
+            {selectedVideo?.thumbnail && (
+              <img src={`https://placehold.co/600x400?text=Video+Placeholder`} alt="Video Thumbnail" className="w-full h-full object-cover" />
+            )}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-16 h-16 bg-white/30 backdrop-blur-sm rounded-full flex items-center justify-center">
+                <Play className="w-8 h-8 text-white ml-1" fill="white" />
+              </div>
+            </div>
+          </div>
+          {/* You might add more video details or actions here */}
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 };

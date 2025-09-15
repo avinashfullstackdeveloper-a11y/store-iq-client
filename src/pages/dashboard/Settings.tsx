@@ -6,155 +6,163 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const Settings = () => {
+  // Sidebar navigation items for the settings page
   const sidebarItems = [
     { label: "Your Timezone", active: true },
     { label: "Your affiliate code", active: false },
     { label: "Integrations", active: false },
-    { label: "No connected accounts", active: false },
     { label: "Channel Manager", active: false },
     { label: "AI Settings", active: false },
     { label: "Api Key", active: false },
     { label: "Password Management", active: false }
   ];
 
+  // Example hashtags for AI Settings
   const hashtags = ["ai", "tech", "startup", "product"];
 
   return (
     <DashboardLayout>
-      <div className="p-8">
+      <div className="p-8 bg-[#111111] min-h-screen">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-white mb-2">Your account settings</h1>
           <p className="text-white/60">Manage your account settings</p>
         </div>
 
         <div className="flex gap-8">
-          {/* Sidebar */}
-          <div className="w-80 bg-storiq-card-bg border border-storiq-border rounded-2xl p-6">
-            <div className="space-y-2">
-              {sidebarItems.map((item, index) => (
-                <button
-                  key={index}
-                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${
-                    item.active
-                      ? "bg-storiq-purple text-white"
-                      : "text-white/70 hover:text-white hover:bg-storiq-purple/20"
-                  }`}
-                >
-                  {item.label}
-                </button>
-              ))}
+          {/* Left Sidebar for Settings Navigation */}
+          <aside className="w-80 flex-shrink-0">
+             <div className="bg-[#1E1E1E] border border-[#2A2A2A] rounded-2xl p-4 sticky top-8">
+              <div className="space-y-2">
+                {sidebarItems.map((item, index) => (
+                  <button
+                    key={index}
+                    className={`w-full text-left px-4 py-3 rounded-lg transition-colors text-base font-medium ${
+                      item.active
+                        ? "bg-[#6E42E1] text-white"
+                        : "text-white/70 hover:text-white hover:bg-[#6E42E1]/20"
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          </aside>
 
-          {/* Main Content */}
-          <div className="flex-1 space-y-8">
-            {/* Timezone */}
+          {/* Main Content Area */}
+          <main className="flex-1 space-y-12">
+            
+            {/* Your Timezone Section */}
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-white text-lg font-medium mb-3">Your Timezone</h3>
+                <Select defaultValue="asia-calcutta">
+                  <SelectTrigger className="w-96 bg-[#1E1E1E] border-[#2A2A2A] text-white h-12">
+                    <SelectValue placeholder="Select a timezone" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#1E1E1E] border-[#2A2A2A] text-white">
+                    <SelectItem value="asia-calcutta" className="focus:bg-[#6E42E1]/50 focus:text-white">Asia/Calcutta</SelectItem>
+                    <SelectItem value="utc" className="focus:bg-[#6E42E1]/50 focus:text-white">UTC</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center space-x-3">
+                <Switch defaultChecked id="email-notifications" className="data-[state=checked]:bg-[#6E42E1]" />
+                <label htmlFor="email-notifications" className="text-white font-medium">Enable email notifications</label>
+              </div>
+            </div>
+
+            {/* Your Affiliate Code Section */}
             <div>
-              <h3 className="text-white text-lg font-medium mb-4">Your Timezone</h3>
-              <Select defaultValue="asia-calcutta">
-                <SelectTrigger className="w-64 bg-storiq-card-bg border-storiq-border text-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-storiq-card-bg border-storiq-border">
-                  <SelectItem value="asia-calcutta" className="text-white hover:bg-storiq-purple/20">Asia/Calcutta</SelectItem>
-                  <SelectItem value="utc" className="text-white hover:bg-storiq-purple/20">UTC</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Email Notifications */}
-            <div className="flex items-center space-x-4">
-              <Switch defaultChecked className="data-[state=checked]:bg-storiq-purple" />
-              <span className="text-white">Enable email notifications</span>
-            </div>
-
-            {/* Affiliate Code */}
-            <div>
-              <h3 className="text-white text-lg font-medium mb-4">Your affiliate code</h3>
+              <h3 className="text-white text-lg font-medium mb-3">Your affiliate code</h3>
               <Input
-                placeholder="your_custom_code"
-                className="w-80 bg-storiq-card-bg border-storiq-border text-white placeholder:text-white/40"
+                defaultValue="your_custom_code"
+                className="w-96 bg-[#1E1E1E] border-[#2A2A2A] text-white placeholder:text-white/40 h-12"
               />
-              <p className="text-white/60 text-sm mt-2">
+              <p className="text-white/60 text-sm mt-2 max-w-md">
                 Enter your affiliate code here so we can automatically add it to the video you share - get it here
               </p>
-              <Button className="bg-storiq-purple hover:bg-storiq-purple-light text-white mt-4">
+              <Button className="bg-[#6E42E1] hover:bg-[#7d55e6] text-white mt-4 px-6">
                 Save
               </Button>
             </div>
 
-            {/* Integrations */}
+            {/* Integrations Section */}
             <div>
-              <h3 className="text-white text-lg font-medium mb-4">Integrations</h3>
-              <p className="text-white/60 mb-4">Connected Social Accounts (unlimited)</p>
-              <p className="text-white mb-4">No connected accounts</p>
+              <h3 className="text-white text-lg font-medium mb-2">Integrations</h3>
+              <p className="text-white/60 mb-3">Connected Social Accounts (unlimited)</p>
+              <p className="text-white mb-3 font-medium">No connected accounts</p>
               <p className="text-white/60 text-sm mb-4">
                 Make sure you're connected on the account your want to add before clicking on one of the following buttons.
               </p>
               <div className="flex space-x-4">
-                <Button className="bg-purple-600 hover:bg-purple-700 text-white">
-                  📱 Add TikTok
+                <Button className="bg-black hover:bg-gray-800 text-white font-bold">
+                  Add TikTok
                 </Button>
-                <Button className="bg-pink-600 hover:bg-pink-700 text-white">
-                  📷 Add Instagram
+                <Button className="bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white font-bold hover:opacity-90">
+                  Add Instagram
                 </Button>
-                <Button className="bg-red-600 hover:bg-red-700 text-white">
-                  📺 Add Youtube
+                <Button className="bg-red-600 hover:bg-red-700 text-white font-bold">
+                  Add Youtube
                 </Button>
-                <Button variant="outline" className="border-storiq-border text-white hover:bg-storiq-purple">
-                  📹 Add others
+                <Button variant="outline" className="border-[#2A2A2A] bg-[#1E1E1E] text-white hover:bg-[#6E42E1] hover:text-white hover:border-[#6E42E1]">
+                  Add others
                 </Button>
               </div>
             </div>
 
-            {/* Channel Manager */}
+            {/* Channel Manager Section */}
             <div>
-              <h3 className="text-white text-lg font-medium mb-4">Channel Manager</h3>
+              <h3 className="text-white text-lg font-medium mb-3">Channel Manager</h3>
               <p className="text-white/60 text-sm mb-4">
                 Channels makes you able to schedule content on multiple social media accounts from one place.
               </p>
               <div className="flex space-x-4">
                 <Input
                   placeholder="Enter channel name"
-                  className="flex-1 bg-storiq-card-bg border-storiq-border text-white placeholder:text-white/40"
+                  className="flex-1 bg-[#1E1E1E] border-[#2A2A2A] text-white placeholder:text-white/40 h-12"
                 />
-                <Button className="bg-storiq-purple hover:bg-storiq-purple-light text-white">
+                <Button className="bg-[#6E42E1] hover:bg-[#7d55e6] text-white px-5">
                   Create Channel
                 </Button>
               </div>
             </div>
 
-            {/* AI Settings */}
-            <div>
-              <h3 className="text-white text-lg font-medium mb-4">AI Settings</h3>
-              <p className="text-white/60 text-sm mb-4">Share 3 to 5 #hashtags you're the most into.</p>
-              <div className="flex flex-wrap gap-2 mb-4">
-                {hashtags.map((tag, index) => (
-                  <span
-                    key={index}
-                    className="bg-storiq-purple text-white px-3 py-1 rounded-full text-sm flex items-center space-x-2"
-                  >
-                    <span>#{tag}</span>
-                    <button className="text-white/80 hover:text-white">×</button>
-                  </span>
-                ))}
+            {/* AI Settings Section */}
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-white text-lg font-medium mb-3">AI Settings</h3>
+                <p className="text-white/60 text-sm mb-4">Share 3 to 5 #hashtags you're the most into.</p>
+                {/* Combined hashtag input container */}
+                <div className="flex items-center w-full bg-[#1E1E1E] border border-[#2A2A2A] rounded-lg p-2.5">
+                    <div className="flex flex-wrap gap-2">
+                        {hashtags.map((tag) => (
+                          <span
+                            key={tag}
+                            className="bg-[#6E42E1] text-white px-3 py-1 rounded-md text-sm flex items-center"
+                          >
+                            <span>{tag}</span>
+                            <button className="ml-2 text-white/80 hover:text-white text-xs">X</button>
+                          </span>
+                        ))}
+                    </div>
+                    <button className="ml-auto pl-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white/60" viewBox="0 0 20 20" fill="currentColor">
+                           <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                        </svg>
+                    </button>
+                </div>
               </div>
-              <div className="flex items-center space-x-4 mb-4">
-                <Input
-                  placeholder="Add hashtag"
-                  className="flex-1 bg-storiq-card-bg border-storiq-border text-white placeholder:text-white/40"
+              
+              <div>
+                <p className="text-white font-medium text-sm mb-3">Tell us a few words about who you are and what you are into.</p>
+                <Textarea
+                  placeholder="Write in natural language so we can better personalize content for you."
+                  className="bg-[#1E1E1E] border-[#2A2A2A] text-white placeholder:text-white/40 min-h-[120px]"
                 />
-                <Button size="sm" variant="outline" className="border-storiq-border text-white hover:bg-storiq-purple">
-                  🔍
-                </Button>
               </div>
-              <p className="text-white text-sm mb-4">Tell us a few words about who you are and what you are into.</p>
-              <Textarea
-                placeholder="Write in natural language so we can better personalize content for you."
-                className="bg-storiq-card-bg border-storiq-border text-white placeholder:text-white/40 min-h-[100px]"
-              />
             </div>
-          </div>
+          </main>
         </div>
       </div>
     </DashboardLayout>
