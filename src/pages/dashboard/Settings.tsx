@@ -4,8 +4,13 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAuth } from "@/context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const Settings = () => {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
   // Sidebar navigation items for the settings page
   const sidebarItems = [
     { label: "Your Timezone", active: true },
@@ -46,6 +51,15 @@ const Settings = () => {
                   </button>
                 ))}
               </div>
+              <Button
+                className="w-full mt-6 bg-red-600 hover:bg-red-700 text-white"
+                onClick={() => {
+                  logout();
+                  navigate("/login");
+                }}
+              >
+                Logout
+              </Button>
             </div>
           </aside>
 
