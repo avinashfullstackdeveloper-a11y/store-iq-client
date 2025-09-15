@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client"; // Import supabase client
 // import CreateVideo from './create-new-video'; 
 
 
@@ -12,33 +11,15 @@ import { supabase } from "@/integrations/supabase/client"; // Import supabase cl
 
 const Dashboard = () => {
   const navigate = useNavigate(); // Initialize navigate
-  const [data, setData] = useState<any[] | null>(null);
+  const [data, setData] = useState<unknown[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // --- IMPORTANT ---
-        // Replace 'videos' with the actual name of your Supabase table.
-        const { data: fetchedData, error: fetchError } = await supabase
-          .from('video_projects')
-          .select('*');
-
-        if (fetchError) {
-          throw fetchError;
-        }
-
-        setData(fetchedData);
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []); // Empty dependency array means this effect runs once on mount
+    // No Supabase: set empty data and loading false
+    setData([]);
+    setLoading(false);
+  }, []);
 
 
   // Data for the quick options cards, updated with images and styles to match the screenshot
@@ -117,7 +98,7 @@ const Dashboard = () => {
 
         {/* --- Display Fetched Data --- */}
         <div className="mb-8 p-4 rounded-lg bg-[#1C1C1C] border border-gray-700">
-          <h2 className="text-lg font-semibold text-white mb-2">Data from Supabase</h2>
+          <h2 className="text-lg font-semibold text-white mb-2">Data from Mongodb</h2>
           {loading && <p className="text-gray-400">Loading...</p>}
           {error && <p className="text-red-500">Error: {error}</p>}
           {data && (
