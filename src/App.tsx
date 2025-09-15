@@ -20,6 +20,8 @@ import Settings from "./pages/dashboard/Settings";
 import CreateVideo from "./pages/dashboard/CreateVideo";
 import SearchVideos from "./pages/dashboard/SearchVideos";
 
+import { AuthProvider } from "./context/AuthContext";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -27,27 +29,29 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/tools" element={<Tools />} />
-          <Route path="/login" element={<Login />} />
-         <Route path="/pages/signup" element={<Signup />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/dashboard/stats" element={<Stats />} />
-          <Route path="/dashboard/publish" element={<Publish />} />
-          <Route path="/dashboard/videos" element={<Videos />} />
-          <Route path="/dashboard/exports" element={<Exports />} />
-          <Route path="/dashboard/scripts" element={<Scripts />} />
-          <Route path="/dashboard/settings" element={<Settings />} />
-          <Route path="/dashboard/create-video" element={<CreateVideo />} />
-          <Route path="/dashboard/search-videos" element={<SearchVideos />} />
-           <Route path="/Home" element={<Home />} /> // The path is "/Home"
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/tools" element={<Tools />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/pages/signup" element={<Signup />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard/stats" element={<Stats />} />
+            <Route path="/dashboard/publish" element={<Publish />} />
+            <Route path="/dashboard/videos" element={<Videos />} />
+            <Route path="/dashboard/exports" element={<Exports />} />
+            <Route path="/dashboard/scripts" element={<Scripts />} />
+            <Route path="/dashboard/settings" element={<Settings />} />
+            <Route path="/dashboard/create-video" element={<CreateVideo />} />
+            <Route path="/dashboard/search-videos" element={<SearchVideos />} />
+            <Route path="/Home" element={<Home />} /> {/* The path is "/Home" */}
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

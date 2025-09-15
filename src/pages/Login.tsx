@@ -2,23 +2,42 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useNavigate, Link } from 'react-router-dom'; // Import the useNavigate hook and Link
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from "../context/AuthContext";
 
 const Login = () => {
-  const navigate = useNavigate(); // Get the navigate function
-  const [email, setEmail] = useState('');
+  const navigate = useNavigate();
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
 
-  // A function to handle the login process
-  const handleLogin = (e) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate a successful login after a delay
-    // In a real application, you would make an API call here
-    // and only navigate if the login is successful
-    setTimeout(() => {
-      console.log('Login successful! Redirecting to dashboard...');
-      navigate('/dashboard'); // Navigate to the new dashboard route
-    }, 1000); // 1-second delay for demonstration
+    setError(null);
+    setLoading(true);
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: username,
+          password,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.message || "Login failed.");
+      } else {
+        login(data.token, data.user);
+        navigate("/dashboard");
+      }
+    } catch (err) {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -73,12 +92,13 @@ const Login = () => {
 
             <form onSubmit={handleLogin} className="space-y-6">
               <div>
-                <Input 
-                  type="text" 
+                <Input
+                  type="text"
                   placeholder="Username"
                   className="w-full"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
                 />
               </div>
               
@@ -110,8 +130,11 @@ const Login = () => {
                 </a>
               </div>
 
-              <Button type="submit" variant="gradient" className="w-full py-3 rounded-xl text-lg font-semibold">
-                Login
+              {error && (
+                <div className="text-red-400 text-sm text-center">{error}</div>
+              )}
+              <Button type="submit" variant="gradient" className="w-full py-3 rounded-xl text-lg font-semibold" disabled={loading}>
+                {loading ? "Logging in..." : "Login"}
               </Button>
 
               <div className="relative my-6">

@@ -1,8 +1,54 @@
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Link } from 'react-router-dom'; // Import Link
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from "../context/AuthContext";
 
 const Signup = () => {
+  const [username, setUsername] = useState("");
+  const [emailOrPhone, setEmailOrPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const { login } = useAuth();
+
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username,
+          email: emailOrPhone,
+          password,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.message || "Registration failed.");
+      } else {
+        // Auto-login after signup
+        login(data.token, data.user);
+        navigate("/dashboard");
+      }
+    } catch (err) {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-storiq-dark flex flex-col relative overflow-hidden">
       {/* Background gradient orbs - now there are 5 */}
@@ -58,18 +104,51 @@ const Signup = () => {
             </div>
 
             {/* Form */}
-            <form className="space-y-6">
-              <Input type="text" placeholder="Username" className="w-full" />
-              <Input type="text" placeholder="Email / Phone" className="w-full" />
-              <Input type="password" placeholder="Password" className="w-full" />
-              <Input type="password" placeholder="Confirm Password" className="w-full" />
+            <form className="space-y-6" onSubmit={handleSignup}>
+              <Input
+                type="text"
+                placeholder="Username"
+                className="w-full"
+                value={username}
+                onChange={e => setUsername(e.target.value)}
+                required
+              />
+              <Input
+                type="text"
+                placeholder="Email / Phone"
+                className="w-full"
+                value={emailOrPhone}
+                onChange={e => setEmailOrPhone(e.target.value)}
+                required
+              />
+              <Input
+                type="password"
+                placeholder="Password"
+                className="w-full"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+              />
+              <Input
+                type="password"
+                placeholder="Confirm Password"
+                className="w-full"
+                value={confirmPassword}
+                onChange={e => setConfirmPassword(e.target.value)}
+                required
+              />
 
-              {/* CTA Button */}
+              {error && (
+                <div className="text-red-400 text-sm text-center">{error}</div>
+              )}
+
               <Button
                 variant="gradient"
                 className="w-full py-3 rounded-xl text-lg font-semibold"
+                type="submit"
+                disabled={loading}
               >
-                Signup
+                {loading ? "Signing up..." : "Signup"}
               </Button>
 
               {/* Divider */}
