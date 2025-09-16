@@ -47,8 +47,12 @@ const App = () => (
               <Route path="/dashboard/scripts" element={<Scripts />} />
               <Route path="/dashboard/settings" element={<Settings />} />
               <Route path="/dashboard/create-video" element={<CreateVideo />} />
-              <Route path="/dashboard/search-videos" element={<SearchVideos />} />
-              <Route path="/Home" element={<Home />} /> {/* The path is "/Home" */}
+              <Route
+                path="/dashboard/search-videos"
+                element={<SearchVideos />}
+              />
+              <Route path="/Home" element={<Home />} />{" "}
+              {/* The path is "/Home" */}
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
