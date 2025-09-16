@@ -8,29 +8,6 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
-// const mockGeminiVeo3Api = async ({
-//   prompt,
-//   duration,
-//   preset,
-//   voice,
-// }: {
-//   prompt: string;
-//   duration: number;
-//   preset: string;
-//   voice: string;
-// }): Promise<{ videoUrl: string }> => {
-//   // Simulate network latency and random error
-//   await new Promise((res) => setTimeout(res, 2000));
-//   if (Math.random() < 0.15) {
-//     throw new Error("Failed to generate video. Please try again.");
-//   }
-//   // Return a sample video URL (public domain sample)
-//   return {
-//     videoUrl:
-//       "https://www.w3schools.com/html/mov_bbb.mp4",
-//   };
-// };
-
 function isErrorWithMessage(err: unknown): err is { message: string } {
   return (
     typeof err === "object" &&
@@ -69,6 +46,12 @@ Each scene should have a different background. Use a modern sans-serif font and 
     "idle" | "loading" | "success" | "error"
   >("idle");
   const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  // --- UPLOAD VIDEO STATE ---
+  const [uploadStatus, setUploadStatus] = useState<Status>("idle");
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState<boolean>(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   // Form validation error
   const [formError, setFormError] = useState<string | null>(null);
@@ -230,6 +213,49 @@ Each scene should have a different background. Use a modern sans-serif font and 
   ];
   const voiceOptions = ["Voice Library", "Record", "No voice"];
 
+  // --- UPLOAD VIDEO HANDLER ---
+  const handleUploadVideo = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setUploadStatus("idle");
+    setUploadError(null);
+    if (!selectedFile) {
+      setUploadError("Please select a video file to upload.");
+      return;
+    }
+    setUploading(true);
+    setUploadStatus("loading");
+    try {
+      const formData = new FormData();
+      formData.append("video", selectedFile);
+
+      const res = await fetch("/api/upload-video", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.error || "Failed to upload video.");
+      }
+      const data = await res.json();
+      if (!data?.videoUrl) throw new Error("No video URL returned from API.");
+      setVideoUrl(data.videoUrl);
+      setVideoS3Key(data.s3Key || null);
+      setVideoStatus("success");
+      setUploadStatus("success");
+      setSelectedFile(null);
+    } catch (err: unknown) {
+      let message = "Unknown error";
+      if (isErrorWithMessage(err)) {
+        message = err.message;
+      }
+      setUploadError(message);
+      setUploadStatus("error");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   // --- DELETE VIDEO HANDLER ---
   const handleDeleteVideo = async () => {
     if (!videoS3Key) return;
@@ -304,7 +330,6 @@ Each scene should have a different background. Use a modern sans-serif font and 
                   src={videoUrl}
                   controls
                   className="rounded-lg w-full aspect-[9/16] bg-black outline-none focus:ring-2 focus:ring-storiq-purple"
-                  poster="/src/assets/images/sea.png"
                   tabIndex={0}
                   aria-label="Generated video"
                 />
@@ -456,7 +481,7 @@ Each scene should have a different background. Use a modern sans-serif font and 
               )}
             </div>
             {/* Generate Video Button */}
-            <div className="flex justify-end mt-4">
+            <div className="flex justify-end mt-4 gap-4 items-center">
               <Button
                 size="lg"
                 className="bg-storiq-purple hover:bg-storiq-purple/80 text-white font-semibold"
@@ -481,7 +506,63 @@ Each scene should have a different background. Use a modern sans-serif font and 
                   <>🎬 Generate Video</>
                 )}
               </Button>
+              <form onSubmit={handleUploadVideo} className="flex gap-2 items-center">
+                <input
+                  type="file"
+                  accept="video/*"
+                  onChange={(e) => {
+                    setSelectedFile(e.target.files?.[0] || null);
+                    setUploadError(null);
+                  }}
+                  className="block text-sm text-white file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-storiq-purple/80 file:text-white hover:file:bg-storiq-purple/90"
+                  aria-label="Upload video file"
+                  disabled={uploading}
+                  style={{ maxWidth: 180 }}
+                />
+                <Button
+                  type="submit"
+                  size="lg"
+                  className="bg-green-600 hover:bg-green-700 text-white font-semibold"
+                  disabled={uploading || !selectedFile}
+                  aria-label="Upload video"
+                >
+                  {uploading ? (
+                    <span className="flex items-center gap-2">
+                      <span
+                        className="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full"
+                        aria-hidden="true"
+                      ></span>
+                      Uploading...
+                    </span>
+                  ) : (
+                    <>⬆️ Upload</>
+                  )}
+                </Button>
+              </form>
             </div>
+            {uploadStatus === "error" && uploadError && (
+              <Alert
+                variant="destructive"
+                className="mt-2 mb-2"
+                id="upload-error"
+                tabIndex={-1}
+                role="alert"
+                aria-live="assertive"
+              >
+                <AlertTitle>Upload Error</AlertTitle>
+                <AlertDescription>{uploadError}</AlertDescription>
+              </Alert>
+            )}
+            {uploadStatus === "success" && (
+              <div
+                className="mt-2 text-green-400 text-sm font-semibold"
+                role="status"
+                tabIndex={-1}
+                aria-live="polite"
+              >
+                ✅ Video uploaded successfully!
+              </div>
+            )}
 
             {/* Generated Script Display */}
             {generatedScript && (
