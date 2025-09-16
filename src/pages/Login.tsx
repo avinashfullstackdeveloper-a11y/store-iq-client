@@ -150,7 +150,7 @@ const Login = () => {
               <div className="flex justify-center space-x-4">
                <button
   type="button"
-  onClick={() => window.location.href = "http://localhost:5000/auth/google"} // backend route
+  onClick={() => window.location.href = "http://localhost:5000/auth/google"} 
   className="w-12 h-12 bg-white rounded-full flex items-center justify-center hover:scale-110 transition-transform"
 >
   <svg className="w-6 h-6" viewBox="0 0 48 48">
