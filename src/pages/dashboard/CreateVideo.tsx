@@ -229,9 +229,22 @@ Each scene should have a different background. Use a modern sans-serif font and 
       const formData = new FormData();
       formData.append("video", selectedFile);
 
+      // Log FormData keys and values before sending
+      for (const pair of formData.entries()) {
+        console.log(`[FormData] ${pair[0]}:`, pair[1]);
+      }
+
+      // Read jwt_token from localStorage
+      const jwtToken = localStorage.getItem("jwt_token");
+
       const res = await fetch("/api/upload-video", {
         method: "POST",
         body: formData,
+        headers: jwtToken
+          ? {
+              Authorization: `Bearer ${jwtToken}`,
+            }
+          : undefined,
       });
 
       if (!res.ok) {
