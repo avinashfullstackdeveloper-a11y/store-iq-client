@@ -21,6 +21,9 @@ const Scripts = () => {
 
   const { showLoader, hideLoader } = useLoader();
 
+  // State for target duration (seconds)
+  const [targetDuration, setTargetDuration] = useState<number>(22);
+
   // For animated loader message
   const loaderIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const baseLoaderMsg = "Please wait, your script is loading. This may take a few minutes";
@@ -43,7 +46,7 @@ const Scripts = () => {
     }, 1000);
 
     try {
-      const prompt = `Style: ${selectedStyle}. ${userInput}`;
+      const prompt = `Style: ${selectedStyle}. Target duration: ${targetDuration} seconds. ${userInput}`;
       const response = await fetch("/api/generate-script", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -142,13 +145,15 @@ const Scripts = () => {
             <p className="text-white/60 mb-4">Estimation of your video length: 22s (~51 Words)</p>
             <div className="relative">
               <Slider
-                defaultValue={[22]}
+                value={[targetDuration]}
+                onValueChange={([val]) => setTargetDuration(val)}
+                min={5}
                 max={60}
                 step={1}
                 className="w-full"
               />
               <div className="absolute -top-8 right-0 bg-storiq-purple text-white px-3 py-1 rounded text-sm">
-                22 s
+                {targetDuration} s
               </div>
             </div>
           </div>
