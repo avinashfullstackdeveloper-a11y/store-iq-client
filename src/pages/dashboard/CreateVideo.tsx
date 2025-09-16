@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, memo } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -82,6 +82,20 @@ Each scene should have a different background. Use a modern sans-serif font and 
   const [scriptHistory, setScriptHistory] = useState<ScriptHistoryItem[]>([]);
   const [historyLoading, setHistoryLoading] = useState<boolean>(true);
   const [historyError, setHistoryError] = useState<string | null>(null);
+  
+  // --- Per-card state for script history section ---
+  const [expandedCards, setExpandedCards] = useState<boolean[]>([]);
+  const [copiedCards, setCopiedCards] = useState<boolean[]>([]);
+  
+  // Keep per-card state arrays in sync with scriptHistory length
+  useEffect(() => {
+    setExpandedCards((prev) =>
+      scriptHistory.map((_, idx) => prev[idx] ?? false)
+    );
+    setCopiedCards((prev) =>
+      scriptHistory.map((_, idx) => false)
+    );
+  }, [scriptHistory]);
 
   useEffect(() => {
     setHistoryLoading(true);
@@ -351,40 +365,6 @@ Each scene should have a different background. Use a modern sans-serif font and 
             )}
           </div>
 
-          {/* Script History Section */}
-          <div className="w-full lg:w-96 mt-8">
-            <h2 className="text-2xl font-bold text-white mb-4">History</h2>
-            {historyLoading ? (
-              <div className="text-white/60">Loading history...</div>
-            ) : historyError ? (
-              <div className="text-red-400">{historyError}</div>
-            ) : scriptHistory.length === 0 ? (
-              <div className="text-white/40">No script history found.</div>
-            ) : (
-              <div className="flex flex-col gap-4 max-h-96 overflow-y-auto">
-                {scriptHistory.map((item, idx) => (
-                  <div
-                    key={idx}
-                    className="bg-storiq-card-bg border border-storiq-border rounded-lg p-4 text-white/80"
-                  >
-                    <div className="mb-2">
-                      <span className="font-semibold text-white">Prompt:</span>
-                      <span className="ml-2">{item.prompt}</span>
-                    </div>
-                    <div className="mb-2">
-                      <span className="font-semibold text-white">Script:</span>
-                      <span className="ml-2 whitespace-pre-wrap break-words">
-                        {item.script}
-                      </span>
-                    </div>
-                    <div className="text-xs text-white/50">
-                      {new Date(item.createdAt).toLocaleString()}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
 
           {/* Right Side - Controls */}
           <div className="flex-1 space-y-8">
@@ -614,6 +594,99 @@ Each scene should have a different background. Use a modern sans-serif font and 
               {/* Voice search/filter UI removed for clarity and polish */}
             </div>
           </div>
+        </div>
+        {/* Script History Section */}
+        <div className="w-full mt-8">
+          <h2 className="text-2xl font-bold text-white mb-4">History</h2>
+          {historyLoading ? (
+            <div className="text-white/60">Loading history...</div>
+          ) : historyError ? (
+            <div className="text-red-400">{historyError}</div>
+          ) : scriptHistory.length === 0 ? (
+            <div className="text-white/40">No script history found.</div>
+          ) : (
+            <div className="flex flex-col gap-4">
+              {scriptHistory.map((item, idx) => {
+                const isExpanded = expandedCards[idx] || false;
+                const copied = copiedCards[idx] || false;
+
+                const handleCopy = () => {
+                  navigator.clipboard.writeText(item.script);
+                  setCopiedCards((prev) => {
+                    const updated = [...prev];
+                    updated[idx] = true;
+                    return updated;
+                  });
+                  setTimeout(() => {
+                    setCopiedCards((prev) => {
+                      const updated = [...prev];
+                      updated[idx] = false;
+                      return updated;
+                    });
+                  }, 1200);
+                };
+
+                const handleToggleExpand = () => {
+                  setExpandedCards((prev) => {
+                    const updated = [...prev];
+                    updated[idx] = !updated[idx];
+                    return updated;
+                  });
+                };
+
+                return (
+                  <Card
+                    key={idx}
+                    className="bg-storiq-card-bg border-storiq-border text-white/80 w-full p-4 flex flex-col relative"
+                    style={{ minHeight: "80px" }}
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="font-semibold text-white">Prompt:</div>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="!text-white !border-storiq-purple hover:!bg-storiq-purple/80"
+                          onClick={handleCopy}
+                          aria-label="Copy script to clipboard"
+                          tabIndex={0}
+                        >
+                          {copied ? "✅ Copied" : "📋 Copy"}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="!text-white !border-storiq-purple hover:!bg-storiq-purple/80"
+                          onClick={handleToggleExpand}
+                          aria-label={isExpanded ? "Shrink script" : "Expand script"}
+                          tabIndex={0}
+                        >
+                          {isExpanded ? "▲ Shrink" : "▼ Expand"}
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="ml-0 mb-1 break-words">{item.prompt}</div>
+                    <div className="mb-1">
+                      <span className="font-semibold text-white">Script:</span>
+                      <span
+                        className={`ml-2 whitespace-pre-wrap break-words flex-1 block transition-all duration-200`}
+                        style={{
+                          maxHeight: isExpanded ? "none" : "4.5em",
+                          overflow: isExpanded ? "visible" : "hidden",
+                          display: "block",
+                        }}
+                      >
+                        {item.script}
+                      </span>
+                    </div>
+                    <div className="text-xs text-white/50 mt-1">
+                      {new Date(item.createdAt).toLocaleString()}
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </DashboardLayout>
