@@ -44,31 +44,35 @@ const HeroSection = () => {
       <div className="absolute top-0 right-0 w-64 h-64 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-4000"></div>
       <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
       <div className="absolute bottom-0 right-0 w-64 h-64 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-4000"></div>
-      
+
       {/* Hero Videos Grid */}
       <div className="grid grid-cols-3 gap-2 mb-12 max-w-4xl w-full">
         <VideoCard src={creativeContentVideo} />
         <VideoCard src={aiGeneratedVideo} />
         <VideoCard src={videoContentVideo} />
       </div>
-      
+
       {/* Main Heading */}
       <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-4 max-w-4xl leading-tight">
         The AI workspace for next-gen creators
       </h1>
-      
+
       {/* Subheading */}
       <p className="text-base md:text-xl text-white/80 mb-8 max-w-2xl">
-        STORIQ helps modern creators streamline content creation, planning, and 
+        STORIQ helps modern creators streamline content creation, planning, and
         publishing like never before.
       </p>
-      
+
       {/* CTA Button */}
-      <Button variant="gradient" size="lg" className="text-lg px-12 py-3 rounded-full font-bold">
-        Explore 
+      <Button
+        variant="gradient"
+        size="lg"
+        className="text-lg px-12 py-3 rounded-full font-bold"
+      >
+        Explore
       </Button>
 
-      {/* Girl Sticker */}
+      {/* Girl Sticker
       <div className="absolute bottom-0 right-0 w-48 h-48 md:w-56 md:h-56">
         <img
           // The 'src' is now correctly pointing to the image in your public folder
@@ -76,7 +80,7 @@ const HeroSection = () => {
           alt="Meera Rajput"
           className="w-full h-full object-contain"
         />
-      </div>
+      </div> */}
     </section>
   );
 };
