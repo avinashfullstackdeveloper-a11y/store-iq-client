@@ -60,7 +60,7 @@ const Signup = () => {
   };
 
   const handleGithubAuth = () => {
-    window.location.href = "/api/auth/github";
+    window.location.href = "http://localhost:5000/auth/github";
   };
 
   return (
