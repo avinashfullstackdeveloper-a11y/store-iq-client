@@ -244,7 +244,7 @@ Each scene should have a different background. Use a modern sans-serif font and 
     setUploadStatus("loading");
     try {
       // 1. Split file into parts (5-10 MB)
-      const PART_SIZE = 8 * 1024 * 1024; // 8 MB
+      const PART_SIZE = 32 * 1024 * 1024; // 32 MB
       const totalParts = Math.ceil(selectedFile.size / PART_SIZE);
       const parts: Blob[] = [];
       for (let i = 0; i < totalParts; i++) {
@@ -313,12 +313,24 @@ Each scene should have a different background. Use a modern sans-serif font and 
         return { ETag: eTag ? eTag.replace(/"/g, "") : undefined, PartNumber: partNumber + 1 };
       };
       
-      const uploadResults = await Promise.all(
-        (urls as PresignedUrlItem[]).map((item, idx) => {
-          const url = typeof item === "string" ? item : item.url;
-          return uploadPart(url, parts[idx], idx);
-        })
-      );
+      // Concurrency-limited upload (max 5 at a time)
+      const CONCURRENCY = 10;
+      const uploadResults: { ETag: string | undefined; PartNumber: number }[] = [];
+      let current = 0;
+
+      async function runPool() {
+        while (current < totalParts) {
+          const batch = [];
+          for (let i = 0; i < CONCURRENCY && current < totalParts; i++, current++) {
+            const item = (urls as PresignedUrlItem[])[current];
+            const url = typeof item === "string" ? item : item.url;
+            batch.push(uploadPart(url, parts[current], current));
+          }
+          const results = await Promise.all(batch);
+          uploadResults.push(...results);
+        }
+      }
+      await runPool();
 
       // 5. Complete multipart upload
       const completeRes = await fetch("/api/s3-multipart/complete", {
