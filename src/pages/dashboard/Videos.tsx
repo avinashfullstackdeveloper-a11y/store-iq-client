@@ -248,7 +248,7 @@ const Videos = () => {
             if (!open) closeModal();
           }}
         >
-          <DialogContent className="max-w-4xl p-0 overflow-hidden bg-card border-0">
+          <DialogContent className="max-w-4xl p-0 overflow-hidden bg-storiq-card-bg border-0">
             <DialogHeader className="px-6 pt-6">
               <DialogTitle className="text-xl text-white">{modal.title}</DialogTitle>
             </DialogHeader>
@@ -315,16 +315,12 @@ const Videos = () => {
             {/* Action Buttons */}
             <DialogFooter className="flex justify-end gap-2 px-6 pb-6">
               <Button
-                variant="outline"
+                variant="destructive"
                 onClick={() => handleOpenDeleteDialog(modal.videoId)}
                 className="gap-2"
               >
                 <Trash2 className="h-4 w-4" />
                 Delete
-              </Button>
-              <Button className="gap-2">
-                <Download className="h-4 w-4" />
-                Download
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -351,7 +347,7 @@ const Videos = () => {
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {[...Array(8)].map((_, i) => (
-              <Card key={i} className="overflow-hidden border-border bg-card">
+              <Card key={i} className="overflow-hidden border-storiq-border bg-storiq-card-bg">
                 <Skeleton className="h-48 w-full rounded-none" />
                 <CardContent className="p-4">
                   <Skeleton className="h-5 w-3/4 mb-2" />
@@ -371,18 +367,18 @@ const Videos = () => {
               <FileVideo className="h-10 w-10 text-destructive" />
             </div>
             <h3 className="text-xl font-medium text-white mb-2">Unable to load videos</h3>
-            <p className="text-muted-foreground mb-6 max-w-md">{error}</p>
+            <p className="text-white/40 mb-6 max-w-md">{error}</p>
             <Button onClick={() => window.location.reload()}>
               Try Again
             </Button>
           </div>
         ) : videos.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="rounded-full bg-muted p-4 mb-4">
-              <FileVideo className="h-12 w-12 text-muted-foreground" />
+            <div className="rounded-full bg-storiq-card-bg p-4 mb-4 border border-storiq-border">
+              <FileVideo className="h-12 w-12 text-white/40" />
             </div>
             <h3 className="text-xl font-medium text-white mb-2">No videos yet</h3>
-            <p className="text-muted-foreground mb-6">
+            <p className="text-white/40 mb-6">
               Videos you create will appear here
             </p>
             <Button onClick={() => navigate("/dashboard/create-video")}>Create Your First Video</Button>
@@ -390,11 +386,9 @@ const Videos = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {videos.map((video, index) => (
-              // TEMP: Log video object to verify structure and id presence
-              console.log("TEMP DEBUG: video object", video),
               <Card
                 key={video.id || index}
-                className="group overflow-hidden border-border bg-card hover:border-primary/50 transition-all duration-300 hover:shadow-lg"
+                className="group overflow-hidden border-storiq-border bg-storiq-card-bg hover:border-primary/50 transition-all duration-300 hover:shadow-lg"
               >
                 <div className="relative h-48 overflow-hidden">
                   <img
@@ -412,7 +406,7 @@ const Videos = () => {
                     }}
                   />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                    <Button 
+                    <Button
                       onClick={() => openModal(video)}
                       className="rounded-full h-12 w-12"
                       size="icon"
@@ -462,11 +456,11 @@ const Videos = () => {
                     </DropdownMenu>
                   </div>
                   
-                  <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
+                  <p className="text-white/60 text-sm mb-3 line-clamp-2">
                     {video.subtitle || video.description || "No description"}
                   </p>
                   
-                  <div className="flex items-center text-xs text-muted-foreground">
+                  <div className="flex items-center text-xs text-white/40">
                     <Calendar className="h-3 w-3 mr-1" />
                     {video.createdAt ? (
                       new Date(video.createdAt).toLocaleDateString()
@@ -477,19 +471,18 @@ const Videos = () => {
                 </CardContent>
                 
                 <CardFooter className="p-4 pt-0 flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="flex-1 gap-2"
+                  <Button
+                    size="sm"
+                    className="flex-1 gap-2 bg-storiq-purple hover:bg-storiq-purple/80 text-white font-semibold"
                     onClick={() => openModal(video)}
                   >
                     <Play className="h-4 w-4" />
                     Preview
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="flex-1 gap-2"
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 gap-2 !text-white !border-storiq-purple hover:!bg-storiq-purple/80"
                   >
                     <Edit3 className="h-4 w-4" />
                     Edit
