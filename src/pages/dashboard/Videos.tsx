@@ -33,10 +33,22 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 
+interface Video {
+  id?: string;
+  url: string;
+  title?: string;
+  thumbnail?: string;
+  duration?: number;
+  subtitle?: string;
+  description?: string;
+  createdAt?: string;
+  s3Key?: string;
+}
+
 const Videos = () => {
   const navigate = useNavigate();
   // State
-  const [videos, setVideos] = useState<any[]>([]);
+  const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [generatedThumbs, setGeneratedThumbs] = useState<{
@@ -81,8 +93,14 @@ const Videos = () => {
         if (!res.ok) throw new Error("Failed to fetch videos");
         const data = await res.json();
         setVideos(Array.isArray(data) ? data : []);
-      } catch (err: any) {
-        setError(err.message || "Unknown error");
+      } catch (err: unknown) {
+        let message = "Unknown error";
+        if (err && typeof err === "object" && "message" in err && typeof (err as any).message === "string") {
+          message = (err as any).message;
+        } else if (typeof err === "string") {
+          message = err;
+        }
+        setError(message);
       } finally {
         setLoading(false);
       }
@@ -95,7 +113,7 @@ const Videos = () => {
     const generateThumbnails = async () => {
       const updates: { [key: string]: string } = {};
       await Promise.all(
-        videos.map(async (video) => {
+        videos.map(async (video: Video) => {
           if (
             !video.thumbnail &&
             video.url &&
@@ -147,7 +165,7 @@ const Videos = () => {
     });
 
   // Modal handlers
-  const openModal = (video: any) => {
+  const openModal = (video: Video) => {
     setModal({
       open: true,
       src: video.url || "",
@@ -206,8 +224,14 @@ const Videos = () => {
       setDeleteVideoId(null);
       setDeleteConfirmOpen(false);
       closeModal();
-    } catch (err: any) {
-      setError(err.message || "Unknown error");
+    } catch (err: unknown) {
+      let message = "Unknown error";
+      if (err && typeof err === "object" && "message" in err && typeof (err as any).message === "string") {
+        message = (err as any).message;
+      } else if (typeof err === "string") {
+        message = err;
+      }
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -230,6 +254,17 @@ const Videos = () => {
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
+
+  // Helper to open delete dialog safely
+  function handleOpenDeleteDialog(videoId: string | null) {
+    console.log("[handleOpenDeleteDialog] called with videoId:", videoId);
+    // TEMP: Confirm correct videoId received
+    console.log("TEMP DEBUG: handleOpenDeleteDialog received videoId:", videoId);
+    if (videoId) {
+      setDeleteVideoId(videoId);
+      setDeleteConfirmOpen(true);
+    }
+  }
 
   return (
     <DashboardLayout>
@@ -385,7 +420,7 @@ const Videos = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {videos.map((video, index) => (
+            {videos.map((video: Video, index) => (
               <Card
                 key={video.id || index}
                 className="group overflow-hidden border-storiq-border bg-storiq-card-bg hover:border-primary/50 transition-all duration-300 hover:shadow-lg"
@@ -495,16 +530,6 @@ const Videos = () => {
       </div>
     </DashboardLayout>
   );
-  // Helper to open delete dialog safely
-  function handleOpenDeleteDialog(videoId: string | null) {
-    console.log("[handleOpenDeleteDialog] called with videoId:", videoId);
-    // TEMP: Confirm correct videoId received
-    console.log("TEMP DEBUG: handleOpenDeleteDialog received videoId:", videoId);
-    if (videoId) {
-      setDeleteVideoId(videoId);
-      setDeleteConfirmOpen(true);
-    }
-  }
 
 };
 
