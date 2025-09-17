@@ -231,6 +231,7 @@ Each scene should have a different background. Use a modern sans-serif font and 
   const voiceOptions = ["Voice Library", "Record", "No voice"];
 
   // --- UPLOAD VIDEO HANDLER ---
+  // S3 Multipart Upload Handler
   const handleUploadVideo = async (e: React.FormEvent) => {
     e.preventDefault();
     setUploadStatus("idle");
@@ -242,47 +243,102 @@ Each scene should have a different background. Use a modern sans-serif font and 
     setUploading(true);
     setUploadStatus("loading");
     try {
-      // Step 1: Request pre-signed URL
+      // 1. Split file into parts (5-10 MB)
+      const PART_SIZE = 8 * 1024 * 1024; // 8 MB
+      const totalParts = Math.ceil(selectedFile.size / PART_SIZE);
+      const parts: Blob[] = [];
+      for (let i = 0; i < totalParts; i++) {
+        const start = i * PART_SIZE;
+        const end = Math.min(start + PART_SIZE, selectedFile.size);
+        parts.push(selectedFile.slice(start, end));
+      }
+
+      // 2. Initiate multipart upload
       const token = localStorage.getItem("jwt_token");
-      const presignHeaders = {
+      const headers = {
         "Content-Type": "application/json",
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       };
-      // Debug log for Authorization header before fetch
-      console.debug(
-        "[DEBUG] Authorization header for /api/s3-presigned-url:",
-        presignHeaders.Authorization
-      );
-      const presignRes = await fetch("/api/s3-presigned-url", {
+      const initRes = await fetch("/api/s3-multipart/initiate", {
         method: "POST",
-        headers: presignHeaders,
+        headers,
         body: JSON.stringify({
           filename: selectedFile.name,
           contentType: selectedFile.type || "video/mp4",
         }),
       });
+      if (!initRes.ok) {
+        const err = await initRes.json().catch(() => ({}));
+        throw new Error(err?.error || "Failed to initiate multipart upload.");
+      }
+      const { uploadId, key } = await initRes.json();
+      if (!uploadId || !key) throw new Error("No uploadId or key returned from API.");
+
+      // 3. Get presigned URLs for each part
+      const presignRes = await fetch("/api/s3-multipart/presigned-urls", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          uploadId,
+          key,
+          partNumbers: Array.from({ length: totalParts }, (_, i) => i + 1),
+          contentType: selectedFile.type || "video/mp4",
+        }),
+      });
       if (!presignRes.ok) {
         const err = await presignRes.json().catch(() => ({}));
-        throw new Error(err?.error || "Failed to get S3 pre-signed URL.");
+        throw new Error(err?.error || "Failed to get presigned URLs.");
       }
-      const presignData = await presignRes.json();
-      if (!presignData?.url) throw new Error("No pre-signed URL returned from API.");
+      const { urls } = await presignRes.json();
+      if (
+        !urls ||
+        !Array.isArray(urls) ||
+        urls.length !== totalParts
+      )
+        throw new Error("Invalid presigned URLs response.");
+      
+      // 4. Upload each part in parallel
+      // Support both array of strings and array of objects with a 'url' property
+      type PresignedUrlItem = string | { url: string };
+      const uploadPart = async (url: string, partBlob: Blob, partNumber: number) => {
+        const res = await fetch(url, {
+          method: "PUT",
+          headers: {
+            "Content-Type": selectedFile.type || "video/mp4",
+          },
+          body: partBlob,
+        });
+        if (!res.ok) throw new Error(`Failed to upload part ${partNumber + 1}`);
+        const eTag = res.headers.get("ETag");
+        return { ETag: eTag ? eTag.replace(/"/g, "") : undefined, PartNumber: partNumber + 1 };
+      };
+      
+      const uploadResults = await Promise.all(
+        (urls as PresignedUrlItem[]).map((item, idx) => {
+          const url = typeof item === "string" ? item : item.url;
+          return uploadPart(url, parts[idx], idx);
+        })
+      );
 
-      // Step 2: Upload file directly to S3
-      const s3Res = await fetch(presignData.url, {
-        method: "PUT",
-        headers: {
-          "Content-Type": selectedFile.type || "video/mp4",
-        },
-        body: selectedFile,
+      // 5. Complete multipart upload
+      const completeRes = await fetch("/api/s3-multipart/complete", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          uploadId,
+          key,
+          parts: uploadResults,
+        }),
       });
-      if (!s3Res.ok) {
-        throw new Error("Failed to upload video to S3.");
+      if (!completeRes.ok) {
+        const err = await completeRes.json().catch(() => ({}));
+        throw new Error(err?.error || "Failed to complete multipart upload.");
       }
+      const completeData = await completeRes.json();
 
-      // Step 3: Update UI as before
-      setVideoUrl(presignData.fileUrl || null);
-      setVideoS3Key(presignData.s3Key || null);
+      // 6. Update UI as before
+      setVideoUrl(completeData.fileUrl || null);
+      setVideoS3Key(completeData.s3Key || null);
       setVideoStatus("success");
       setUploadStatus("success");
       setSelectedFile(null);
