@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import AdvancedVideoPlayer from "@/components/AdvancedVideoPlayer";
+import { useAuth } from "@/context/AuthContext";
 
 function isErrorWithMessage(err: unknown): err is { message: string } {
   return (
@@ -19,6 +20,8 @@ function isErrorWithMessage(err: unknown): err is { message: string } {
 }
 
 const CreateVideo = () => {
+  const { user } = useAuth();
+  console.log("Current user in CreateVideo:", user);
   // --- STATE MANAGEMENT ---
   // --- STATUS MANAGEMENT ---
   type Status = "idle" | "loading" | "success" | "error";
@@ -82,9 +85,14 @@ Each scene should have a different background. Use a modern sans-serif font and 
   }, [scriptHistory]);
 
   useEffect(() => {
+    if (!user) {
+      setHistoryLoading(false);
+      return;
+    }
     setHistoryLoading(true);
     setHistoryError(null);
-    fetch("/api/scripts/history?userId=demo-user")
+    const userId = user.id || user.userId || user.email;
+    fetch(`/api/scripts/history?userId=${encodeURIComponent(userId)}`)
       .then(async (res) => {
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
@@ -108,12 +116,13 @@ Each scene should have a different background. Use a modern sans-serif font and 
         );
         setHistoryLoading(false);
       });
-  }, []);
+  }, [user]);
 
   // --- HANDLERS ---
 
   // Generate Script: Calls backend API
   const handleGenerateScript = async () => {
+    console.log("handleGenerateScript called");
     if (!prompt.trim()) {
       setFormError("Prompt cannot be empty.");
       return;
@@ -140,17 +149,24 @@ Each scene should have a different background. Use a modern sans-serif font and 
       setGeneratedScript(data.script);
       setScriptStatus("success");
       // Save script to backend history
-      fetch("/api/scripts/history", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: "demo-user",
-          prompt,
-          script: data.script,
-        }),
-      }).catch(() => {
-        // Silently ignore errors for history saving
-      });
+      if (user) {
+        console.log("Current user object:", user);
+        const userId =
+          (user && user.userId) ||
+          (user && user.id) ||
+          (user && user.email);
+        fetch("/api/scripts/history", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId,
+            prompt,
+            script: data.script,
+          }),
+        }).catch(() => {
+          // Silently ignore errors for history saving
+        });
+      }
     } catch (err: unknown) {
       let message = "Unknown error";
       if (isErrorWithMessage(err)) {
