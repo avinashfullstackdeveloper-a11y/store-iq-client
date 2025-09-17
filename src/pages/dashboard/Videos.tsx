@@ -1,6 +1,7 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Dialog,
   DialogContent,
@@ -33,6 +34,7 @@ import {
 import { ConfirmDialog } from "@/components/confirm-dialog";
 
 const Videos = () => {
+  const navigate = useNavigate();
   // State
   const [videos, setVideos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -383,7 +385,7 @@ const Videos = () => {
             <p className="text-muted-foreground mb-6">
               Videos you create will appear here
             </p>
-            <Button>Create Your First Video</Button>
+            <Button onClick={() => navigate("/dashboard/create-video")}>Create Your First Video</Button>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

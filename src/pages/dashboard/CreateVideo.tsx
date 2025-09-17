@@ -242,35 +242,47 @@ Each scene should have a different background. Use a modern sans-serif font and 
     setUploading(true);
     setUploadStatus("loading");
     try {
-      const formData = new FormData();
-      formData.append("video", selectedFile);
-
-      // Log FormData keys and values before sending
-      for (const pair of formData.entries()) {
-        console.log(`[FormData] ${pair[0]}:`, pair[1]);
-      }
-
-      // Read jwt_token from localStorage
-      const jwtToken = localStorage.getItem("jwt_token");
-
-      const res = await fetch("/api/upload-video", {
+      // Step 1: Request pre-signed URL
+      const token = localStorage.getItem("jwt_token");
+      const presignHeaders = {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      };
+      // Debug log for Authorization header before fetch
+      console.debug(
+        "[DEBUG] Authorization header for /api/s3-presigned-url:",
+        presignHeaders.Authorization
+      );
+      const presignRes = await fetch("/api/s3-presigned-url", {
         method: "POST",
-        body: formData,
-        headers: jwtToken
-          ? {
-              Authorization: `Bearer ${jwtToken}`,
-            }
-          : undefined,
+        headers: presignHeaders,
+        body: JSON.stringify({
+          filename: selectedFile.name,
+          contentType: selectedFile.type || "video/mp4",
+        }),
       });
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err?.error || "Failed to upload video.");
+      if (!presignRes.ok) {
+        const err = await presignRes.json().catch(() => ({}));
+        throw new Error(err?.error || "Failed to get S3 pre-signed URL.");
       }
-      const data = await res.json();
-      if (!data?.videoUrl) throw new Error("No video URL returned from API.");
-      setVideoUrl(data.videoUrl);
-      setVideoS3Key(data.s3Key || null);
+      const presignData = await presignRes.json();
+      if (!presignData?.url) throw new Error("No pre-signed URL returned from API.");
+
+      // Step 2: Upload file directly to S3
+      const s3Res = await fetch(presignData.url, {
+        method: "PUT",
+        headers: {
+          "Content-Type": selectedFile.type || "video/mp4",
+        },
+        body: selectedFile,
+      });
+      if (!s3Res.ok) {
+        throw new Error("Failed to upload video to S3.");
+      }
+
+      // Step 3: Update UI as before
+      setVideoUrl(presignData.fileUrl || null);
+      setVideoS3Key(presignData.s3Key || null);
       setVideoStatus("success");
       setUploadStatus("success");
       setSelectedFile(null);
