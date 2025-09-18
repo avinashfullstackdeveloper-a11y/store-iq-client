@@ -24,20 +24,18 @@ const Videos = () => {
     const fetchVideos = async () => {
       setLoading(true);
       setError(null);
+
       try {
-        // Read JWT from localStorage
-        const token = localStorage.getItem("jwt_token");
-        if (!token) throw new Error("User not authenticated (no token found)");
+        // Fetch videos from backend
+        const res = await fetch(`/api/videos`, {
+          method: "GET",
+          credentials: "include", // important to send cookies
+        });
 
-        // Decode JWT payload (no signature verification)
-        const payload = token.split(".")[1];
-        if (!payload) throw new Error("Invalid JWT format");
-        const decodedPayload = JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/")));
-        const userId = decodedPayload.id;
-        if (!userId) throw new Error("User ID not found in token");
+        if (!res.ok) {
+          throw new Error("Failed to fetch videos");
+        }
 
-        const res = await fetch(`/api/videos?userId=${encodeURIComponent(userId)}`);
-        if (!res.ok) throw new Error("Failed to fetch videos");
         const data = await res.json();
         setVideos(Array.isArray(data) ? data : []);
       } catch (err: any) {
@@ -46,6 +44,7 @@ const Videos = () => {
         setLoading(false);
       }
     };
+
     fetchVideos();
   }, []);
 
@@ -98,32 +97,25 @@ const Videos = () => {
                 key={video.id || index}
                 className="bg-storiq-card-bg border border-storiq-border rounded-2xl overflow-hidden hover:border-storiq-purple/50 transition-colors"
               >
-                {/* --- START: Updated Image Section --- */}
+                {/* Video Thumbnail */}
                 <div className="h-48 relative">
                   <img
                     src={video.thumbnail || "/placeholder.svg"}
                     alt={video.title || "Untitled Video"}
                     className="w-full h-full object-cover"
-                    onError={e => {
+                    onError={(e) => {
                       (e.target as HTMLImageElement).src = "/placeholder.svg";
                     }}
                   />
                   <div className="absolute inset-0 bg-black/20"></div>
                 </div>
-                {/* --- END: Updated Image Section --- */}
 
                 <div className="p-6">
                   <h3 className="text-white text-xl font-bold mb-1">{video.title || "Untitled Video"}</h3>
                   <p className="text-white/60 text-sm mb-2">{video.subtitle || video.description || ""}</p>
                   <div className="text-white/40 text-xs mb-4">
-                    {video.createdAt && (
-                      <span>
-                        Created: {new Date(video.createdAt).toLocaleDateString()}
-                      </span>
-                    )}
-                    {video.duration && (
-                      <span className="ml-2">Duration: {video.duration} sec</span>
-                    )}
+                    {video.createdAt && <span>Created: {new Date(video.createdAt).toLocaleDateString()}</span>}
+                    {video.duration && <span className="ml-2">Duration: {video.duration} sec</span>}
                   </div>
                   <div className="flex space-x-3">
                     <Button
