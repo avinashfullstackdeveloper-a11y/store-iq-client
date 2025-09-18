@@ -33,10 +33,11 @@ const Exports = () => {
   // Poll for status updates for pending/processing exports
   useEffect(() => {
     // Helper to update both state and localStorage
-    const updateExportEntry = (exportId: string, data: any) => {
+    // Update export entry by backend jobId, not export_id
+    const updateExportEntryByJobId = (jobId: string, data: any) => {
       setExportHistory(prev => {
         const updated = prev.map(item =>
-          item.export_id === exportId ? { ...item, ...data } : item
+          item.job_id === jobId ? { ...item, ...data } : item
         );
         localStorage.setItem("exports", JSON.stringify(updated));
         return updated;
@@ -65,17 +66,18 @@ const Exports = () => {
           const res = await fetch(`/api/video/crop/${item.job_id}`);
           if (!res.ok) return;
           const data = await res.json();
-          // Expecting { status: "completed", url: "..." } or similar
+          // Log backend response for each completed/failed job
           if (
             data.status &&
             (data.status.toLowerCase() === "completed" || data.status.toLowerCase() === "failed")
           ) {
-            updateExportEntry(item.export_id, {
+            console.log('[Polling] Backend response for job', item.job_id, data);
+            updateExportEntryByJobId(item.job_id, {
               status: data.status.charAt(0).toUpperCase() + data.status.slice(1),
-              url: data.url || null,
+              downloadUrl: data.downloadUrl || data.url || null,
             });
           } else if (data.status && data.progress !== undefined) {
-            updateExportEntry(item.export_id, {
+            updateExportEntryByJobId(item.job_id, {
               status: data.status.charAt(0).toUpperCase() + data.status.slice(1),
               progress: data.progress,
             });
@@ -196,12 +198,19 @@ const Exports = () => {
                           </p>
                         </div>
                       ) : null}
+                      {(() => {
+                        // Log just before rendering the download button
+                        if (item.downloadUrl || item.url) {
+                          console.log('[In Progress] Download button:', { jobId: item.export_id, downloadUrl: item.downloadUrl || item.url });
+                        }
+                        return null;
+                      })()}
                       <a
-                        href={item.url}
+                        href={item.downloadUrl || item.url}
                         download={item.filename || item.name || "exported-video"}
                         className="block w-full text-center border border-storiq-border text-white hover:bg-storiq-purple hover:border-storiq-purple rounded-md py-2 transition-colors"
-                        style={{ pointerEvents: item.url ? "auto" : "none", opacity: item.url ? 1 : 0.5 }}
-                        tabIndex={item.url ? 0 : -1}
+                        style={{ pointerEvents: (item.downloadUrl || item.url) ? "auto" : "none", opacity: (item.downloadUrl || item.url) ? 1 : 0.5 }}
+                        tabIndex={(item.downloadUrl || item.url) ? 0 : -1}
                       >
                         Download
                       </a>
@@ -257,14 +266,21 @@ const Exports = () => {
                       </span>
                     </div>
                     <div>
-                      {item.url ? (
-                        <a
-                          href={item.url}
-                          download={item.filename || item.name || "exported-video"}
-                          className="text-storiq-purple underline hover:text-white transition-colors"
-                        >
-                          Download
-                        </a>
+                      {(item.downloadUrl || item.url) ? (
+                        <>
+                          {(() => {
+                            // Log just before rendering the download button
+                            console.log('[History] Download button:', { jobId: item.export_id, downloadUrl: item.downloadUrl || item.url });
+                            return null;
+                          })()}
+                          <a
+                            href={item.downloadUrl || item.url}
+                            download={item.filename || item.name || "exported-video"}
+                            className="text-storiq-purple underline hover:text-white transition-colors"
+                          >
+                            Download
+                          </a>
+                        </>
                       ) : (
                         <span className="text-white/40">N/A</span>
                       )}

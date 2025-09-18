@@ -278,13 +278,14 @@ const VideoEditor: React.FC = () => {
               if (!response.ok) throw new Error("Failed to export video");
               const data = await response.json();
               // Prepare export entry with job_id and status
-              // Use backend job_id for polling and as the job_id in export entry
+              // Use backend job_id or jobId for polling and as the job_id in export entry
+              const jobId = data.job_id || data.jobId;
               const exportEntry = {
                 filename: video.title || "Untitled",
                 date: new Date().toISOString(),
                 crop: { start, end },
                 url: video.url,
-                job_id: data.job_id, // use backend job_id for polling
+                job_id: jobId, // always save as job_id
                 status: data.status,
                 export_id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}` // unique id for UI actions
               };
