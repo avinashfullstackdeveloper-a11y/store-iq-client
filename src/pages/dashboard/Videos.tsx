@@ -15,15 +15,15 @@ import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Play, 
-  Edit3, 
-  Trash2, 
-  Clock, 
+import {
+  Play,
+  Edit3,
+  Trash2,
+  Clock,
   Calendar,
   Download,
   MoreVertical,
-  FileVideo
+  FileVideo,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -72,10 +72,9 @@ const Videos = () => {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteVideoId, setDeleteVideoId] = useState<string | null>(null);
 
-  // Edited/original split state
-  const [editedVideoUrls, setEditedVideoUrls] = useState<Set<string>>(new Set());
+  // No longer needed: editedVideoUrls state removed
 
-  // Fetch videos and edited video URLs
+  // Fetch videos only (edited/original split is now backend-driven)
   useEffect(() => {
     const fetchVideos = async () => {
       setLoading(true);
@@ -90,31 +89,22 @@ const Videos = () => {
         );
         const userId = decodedPayload.id;
         if (!userId) throw new Error("User ID not found in token");
-        // Get edited video URLs from export history
-        let editedUrls: string[] = [];
-        try {
-          const raw = localStorage.getItem("exports");
-          if (raw) {
-            const parsed = JSON.parse(raw);
-            if (Array.isArray(parsed)) {
-              editedUrls = parsed
-                .filter((item: any) => item.userId === userId)
-                .map((item: any) => item.downloadUrl || item.url)
-                .filter(Boolean);
-            }
-          }
-        } catch {}
-        setEditedVideoUrls(new Set(editedUrls));
         // Fetch all videos
         const res = await fetch(
           `/api/videos?userId=${encodeURIComponent(userId)}`
         );
         if (!res.ok) throw new Error("Failed to fetch videos");
         const data = await res.json();
+        console.log("[Videos] API /api/videos response:", data);
         setVideos(Array.isArray(data) ? data : []);
       } catch (err: unknown) {
         let message = "Unknown error";
-        if (err && typeof err === "object" && "message" in err && typeof (err as any).message === "string") {
+        if (
+          err &&
+          typeof err === "object" &&
+          "message" in err &&
+          typeof (err as any).message === "string"
+        ) {
           message = (err as any).message;
         } else if (typeof err === "string") {
           message = err;
@@ -223,21 +213,26 @@ const Videos = () => {
       // Find the video object to get the s3Key
       const videoToDelete = videos.find((v) => v.id === deleteVideoId);
       if (!videoToDelete || !videoToDelete.s3Key) {
-        console.log("[handleDelete] Early return: videoToDelete or s3Key missing", videoToDelete);
+        console.log(
+          "[handleDelete] Early return: videoToDelete or s3Key missing",
+          videoToDelete
+        );
         throw new Error("Video s3Key not found");
       }
-      console.log("[handleDelete] Deleting video object:", videoToDelete, "s3Key:", videoToDelete.s3Key);
-      const res = await fetch(
-        "/api/delete-video",
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ s3Key: videoToDelete.s3Key }),
-        }
+      console.log(
+        "[handleDelete] Deleting video object:",
+        videoToDelete,
+        "s3Key:",
+        videoToDelete.s3Key
       );
+      const res = await fetch("/api/delete-video", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ s3Key: videoToDelete.s3Key }),
+      });
       if (!res.ok) throw new Error("Failed to delete video");
       setVideos((prev) => prev.filter((v) => v.id !== deleteVideoId));
       setDeleteVideoId(null);
@@ -245,7 +240,12 @@ const Videos = () => {
       closeModal();
     } catch (err: unknown) {
       let message = "Unknown error";
-      if (err && typeof err === "object" && "message" in err && typeof (err as any).message === "string") {
+      if (
+        err &&
+        typeof err === "object" &&
+        "message" in err &&
+        typeof (err as any).message === "string"
+      ) {
         message = (err as any).message;
       } else if (typeof err === "string") {
         message = err;
@@ -271,14 +271,17 @@ const Videos = () => {
     if (!seconds) return "0:00";
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
   // Helper to open delete dialog safely
   function handleOpenDeleteDialog(videoId: string | null) {
     console.log("[handleOpenDeleteDialog] called with videoId:", videoId);
     // TEMP: Confirm correct videoId received
-    console.log("TEMP DEBUG: handleOpenDeleteDialog received videoId:", videoId);
+    console.log(
+      "TEMP DEBUG: handleOpenDeleteDialog received videoId:",
+      videoId
+    );
     if (videoId) {
       setDeleteVideoId(videoId);
       setDeleteConfirmOpen(true);
@@ -289,7 +292,9 @@ const Videos = () => {
     <DashboardLayout>
       <div className="p-6 md:p-8">
         <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">Your Videos</h1>
+          <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+            Your Videos
+          </h1>
           <p className="text-white/60">
             Manage and preview all the videos you've created
           </p>
@@ -304,12 +309,17 @@ const Videos = () => {
         >
           <DialogContent className="max-w-4xl p-0 overflow-hidden bg-storiq-card-bg border-0">
             <DialogHeader className="px-6 pt-6">
-              <DialogTitle className="text-xl text-white">{modal.title}</DialogTitle>
+              <DialogTitle className="text-xl text-white">
+                {modal.title}
+              </DialogTitle>
             </DialogHeader>
-            
+
             {/* Video Player Container */}
             <div className="relative px-6">
-              <AspectRatio ratio={16 / 9} className="bg-black rounded-lg overflow-hidden">
+              <AspectRatio
+                ratio={16 / 9}
+                className="bg-black rounded-lg overflow-hidden"
+              >
                 {/* Overlay: Loading spinner */}
                 {modal.loading && (
                   <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/60 transition-opacity animate-fade-in">
@@ -322,14 +332,16 @@ const Videos = () => {
                     </span>
                   </div>
                 )}
-                
+
                 {/* Overlay: Error */}
                 {modal.error && (
                   <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/80 transition-opacity animate-fade-in p-4">
                     <span className="text-destructive text-lg font-semibold mb-2">
                       Failed to load video
                     </span>
-                    <span className="text-white/70 text-center text-sm mb-4">{modal.error}</span>
+                    <span className="text-white/70 text-center text-sm mb-4">
+                      {modal.error}
+                    </span>
                     <Button
                       variant="outline"
                       onClick={closeModal}
@@ -339,7 +351,7 @@ const Videos = () => {
                     </Button>
                   </div>
                 )}
-                
+
                 {/* Video Player */}
                 {modal.src && (
                   <AdvancedVideoPlayer
@@ -365,7 +377,7 @@ const Videos = () => {
                 )}
               </AspectRatio>
             </div>
-            
+
             {/* Action Buttons */}
             <DialogFooter className="flex justify-end gap-2 px-6 pb-6">
               <Button
@@ -401,7 +413,10 @@ const Videos = () => {
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {[...Array(8)].map((_, i) => (
-              <Card key={i} className="overflow-hidden border-storiq-border bg-storiq-card-bg">
+              <Card
+                key={i}
+                className="overflow-hidden border-storiq-border bg-storiq-card-bg"
+              >
                 <Skeleton className="h-48 w-full rounded-none" />
                 <CardContent className="p-4">
                   <Skeleton className="h-5 w-3/4 mb-2" />
@@ -420,34 +435,41 @@ const Videos = () => {
             <div className="rounded-full bg-destructive/20 p-4 mb-4">
               <FileVideo className="h-10 w-10 text-destructive" />
             </div>
-            <h3 className="text-xl font-medium text-white mb-2">Unable to load videos</h3>
+            <h3 className="text-xl font-medium text-white mb-2">
+              Unable to load videos
+            </h3>
             <p className="text-white/40 mb-6 max-w-md">{error}</p>
-            <Button onClick={() => window.location.reload()}>
-              Try Again
-            </Button>
+            <Button onClick={() => window.location.reload()}>Try Again</Button>
           </div>
         ) : videos.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <div className="rounded-full bg-storiq-card-bg p-4 mb-4 border border-storiq-border">
               <FileVideo className="h-12 w-12 text-white/40" />
             </div>
-            <h3 className="text-xl font-medium text-white mb-2">No videos yet</h3>
+            <h3 className="text-xl font-medium text-white mb-2">
+              No videos yet
+            </h3>
             <p className="text-white/40 mb-6">
               Videos you create will appear here
             </p>
-            <Button onClick={() => navigate("/dashboard/create-video")}>Create Your First Video</Button>
+            <Button onClick={() => navigate("/dashboard/create-video")}>
+              Create Your First Video
+            </Button>
           </div>
         ) : (
           <div>
-            <h2 className="text-2xl font-bold text-white mb-4">Original Videos</h2>
+            <h2 className="text-2xl font-bold text-white mb-4">
+              Original Videos
+            </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-10">
-              {videos.filter((video) => !editedVideoUrls.has(video.url)).length === 0 ? (
+              {videos.filter((video: any) => !video.isEdited)
+                .length === 0 ? (
                 <div className="col-span-4 text-white/60 text-center py-8">
                   No original videos found.
                 </div>
               ) : (
                 videos
-                  .filter((video) => !editedVideoUrls.has(video.url))
+                  .filter((video: any) => !video.isEdited)
                   .map((video: Video, index) => (
                     <Card
                       key={video.id || index}
@@ -465,7 +487,8 @@ const Videos = () => {
                           alt={video.title || "Untitled Video"}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           onError={(e) => {
-                            (e.target as HTMLImageElement).src = "/placeholder.svg";
+                            (e.target as HTMLImageElement).src =
+                              "/placeholder.svg";
                           }}
                         />
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
@@ -478,7 +501,10 @@ const Videos = () => {
                           </Button>
                         </div>
                         {video.duration && (
-                          <Badge variant="secondary" className="absolute bottom-2 right-2">
+                          <Badge
+                            variant="secondary"
+                            className="absolute bottom-2 right-2"
+                          >
                             <Clock className="h-3 w-3 mr-1" />
                             {formatDuration(video.duration)}
                           </Badge>
@@ -491,21 +517,33 @@ const Videos = () => {
                           </h3>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                              >
                                 <MoreVertical className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => openModal(video)}>
+                              <DropdownMenuItem
+                                onClick={() => openModal(video)}
+                              >
                                 <Play className="h-4 w-4 mr-2" />
                                 Preview
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => {
                                   if (video.s3Key) {
-                                    navigate(`/dashboard/video-editor/${video.s3Key}`, { state: { url: video.url } });
+                                    navigate(
+                                      `/dashboard/video-editor/${video.s3Key}`,
+                                      { state: { url: video.url } }
+                                    );
                                   } else if (video.id) {
-                                    navigate(`/dashboard/video-editor/${video.id}`, { state: { url: video.url } });
+                                    navigate(
+                                      `/dashboard/video-editor/${video.id}`,
+                                      { state: { url: video.url } }
+                                    );
                                   }
                                 }}
                               >
@@ -515,7 +553,9 @@ const Videos = () => {
                               <DropdownMenuItem
                                 className="text-destructive"
                                 onClick={() => handleOpenDeleteDialog(video.id)}
-                                disabled={video.id === undefined || video.id === null}
+                                disabled={
+                                  video.id === undefined || video.id === null
+                                }
                               >
                                 <Trash2 className="h-4 w-4 mr-2" />
                                 Delete
@@ -524,15 +564,15 @@ const Videos = () => {
                           </DropdownMenu>
                         </div>
                         <p className="text-white/60 text-sm mb-3 line-clamp-2">
-                          {video.subtitle || video.description || "No description"}
+                          {video.subtitle ||
+                            video.description ||
+                            "No description"}
                         </p>
                         <div className="flex items-center text-xs text-white/40">
                           <Calendar className="h-3 w-3 mr-1" />
-                          {video.createdAt ? (
-                            new Date(video.createdAt).toLocaleDateString()
-                          ) : (
-                            "Unknown date"
-                          )}
+                          {video.createdAt
+                            ? new Date(video.createdAt).toLocaleDateString()
+                            : "Unknown date"}
                         </div>
                       </CardContent>
                       <CardFooter className="p-4 pt-0 flex gap-2">
@@ -550,9 +590,14 @@ const Videos = () => {
                           className="flex-1 gap-2 !text-white !border-storiq-purple hover:!bg-storiq-purple/80"
                           onClick={() => {
                             if (video.s3Key) {
-                              navigate(`/dashboard/video-editor/${video.s3Key}`, { state: { url: video.url } });
+                              navigate(
+                                `/dashboard/video-editor/${video.s3Key}`,
+                                { state: { url: video.url } }
+                              );
                             } else if (video.id) {
-                              navigate(`/dashboard/video-editor/${video.id}`, { state: { url: video.url } });
+                              navigate(`/dashboard/video-editor/${video.id}`, {
+                                state: { url: video.url },
+                              });
                             }
                           }}
                         >
@@ -564,15 +609,18 @@ const Videos = () => {
                   ))
               )}
             </div>
-            <h2 className="text-2xl font-bold text-white mb-4">Edited Videos</h2>
+            <h2 className="text-2xl font-bold text-white mb-4">
+              Edited Videos
+            </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {videos.filter((video) => editedVideoUrls.has(video.url)).length === 0 ? (
+              {videos.filter((video: any) => video.isEdited)
+                .length === 0 ? (
                 <div className="col-span-4 text-white/60 text-center py-8">
                   No edited videos found.
                 </div>
               ) : (
                 videos
-                  .filter((video) => editedVideoUrls.has(video.url))
+                  .filter((video: any) => video.isEdited)
                   .map((video: Video, index) => (
                     <Card
                       key={video.id || index}
@@ -590,7 +638,8 @@ const Videos = () => {
                           alt={video.title || "Untitled Video"}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           onError={(e) => {
-                            (e.target as HTMLImageElement).src = "/placeholder.svg";
+                            (e.target as HTMLImageElement).src =
+                              "/placeholder.svg";
                           }}
                         />
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
@@ -603,7 +652,10 @@ const Videos = () => {
                           </Button>
                         </div>
                         {video.duration && (
-                          <Badge variant="secondary" className="absolute bottom-2 right-2">
+                          <Badge
+                            variant="secondary"
+                            className="absolute bottom-2 right-2"
+                          >
                             <Clock className="h-3 w-3 mr-1" />
                             {formatDuration(video.duration)}
                           </Badge>
@@ -616,21 +668,33 @@ const Videos = () => {
                           </h3>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                              >
                                 <MoreVertical className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => openModal(video)}>
+                              <DropdownMenuItem
+                                onClick={() => openModal(video)}
+                              >
                                 <Play className="h-4 w-4 mr-2" />
                                 Preview
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => {
                                   if (video.s3Key) {
-                                    navigate(`/dashboard/video-editor/${video.s3Key}`, { state: { url: video.url } });
+                                    navigate(
+                                      `/dashboard/video-editor/${video.s3Key}`,
+                                      { state: { url: video.url } }
+                                    );
                                   } else if (video.id) {
-                                    navigate(`/dashboard/video-editor/${video.id}`, { state: { url: video.url } });
+                                    navigate(
+                                      `/dashboard/video-editor/${video.id}`,
+                                      { state: { url: video.url } }
+                                    );
                                   }
                                 }}
                               >
@@ -640,7 +704,9 @@ const Videos = () => {
                               <DropdownMenuItem
                                 className="text-destructive"
                                 onClick={() => handleOpenDeleteDialog(video.id)}
-                                disabled={video.id === undefined || video.id === null}
+                                disabled={
+                                  video.id === undefined || video.id === null
+                                }
                               >
                                 <Trash2 className="h-4 w-4 mr-2" />
                                 Delete
@@ -649,15 +715,15 @@ const Videos = () => {
                           </DropdownMenu>
                         </div>
                         <p className="text-white/60 text-sm mb-3 line-clamp-2">
-                          {video.subtitle || video.description || "No description"}
+                          {video.subtitle ||
+                            video.description ||
+                            "No description"}
                         </p>
                         <div className="flex items-center text-xs text-white/40">
                           <Calendar className="h-3 w-3 mr-1" />
-                          {video.createdAt ? (
-                            new Date(video.createdAt).toLocaleDateString()
-                          ) : (
-                            "Unknown date"
-                          )}
+                          {video.createdAt
+                            ? new Date(video.createdAt).toLocaleDateString()
+                            : "Unknown date"}
                         </div>
                       </CardContent>
                       <CardFooter className="p-4 pt-0 flex gap-2">
@@ -675,9 +741,14 @@ const Videos = () => {
                           className="flex-1 gap-2 !text-white !border-storiq-purple hover:!bg-storiq-purple/80"
                           onClick={() => {
                             if (video.s3Key) {
-                              navigate(`/dashboard/video-editor/${video.s3Key}`, { state: { url: video.url } });
+                              navigate(
+                                `/dashboard/video-editor/${video.s3Key}`,
+                                { state: { url: video.url } }
+                              );
                             } else if (video.id) {
-                              navigate(`/dashboard/video-editor/${video.id}`, { state: { url: video.url } });
+                              navigate(`/dashboard/video-editor/${video.id}`, {
+                                state: { url: video.url },
+                              });
                             }
                           }}
                         >
@@ -694,8 +765,6 @@ const Videos = () => {
       </div>
     </DashboardLayout>
   );
-
 };
-
 
 export default Videos;
