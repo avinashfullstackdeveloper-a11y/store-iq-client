@@ -19,6 +19,7 @@ import Scripts from "./pages/dashboard/Scripts";
 import Settings from "./pages/dashboard/Settings";
 import CreateVideo from "./pages/dashboard/CreateVideo";
 import SearchVideos from "./pages/dashboard/SearchVideos";
+import VideoEditor from "./pages/dashboard/VideoEditor";
 
 import { AuthProvider } from "./context/AuthContext";
 import { LoaderProvider } from "./context/LoaderContext";
@@ -54,6 +55,7 @@ const App = () => (
               <Route path="/Home" element={<Home />} />{" "}
               {/* The path is "/Home" */}
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="/dashboard/video-editor/*" element={<VideoEditor />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

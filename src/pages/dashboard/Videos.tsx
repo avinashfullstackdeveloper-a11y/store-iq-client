@@ -475,7 +475,15 @@ const Videos = () => {
                           <Play className="h-4 w-4 mr-2" />
                           Preview
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            if (video.s3Key) {
+                              navigate(`/dashboard/video-editor/${video.s3Key}`, { state: { url: video.url } });
+                            } else if (video.id) {
+                              navigate(`/dashboard/video-editor/${video.id}`, { state: { url: video.url } });
+                            }
+                          }}
+                        >
                           <Edit3 className="h-4 w-4 mr-2" />
                           Edit
                         </DropdownMenuItem>
@@ -518,6 +526,13 @@ const Videos = () => {
                     variant="outline"
                     size="sm"
                     className="flex-1 gap-2 !text-white !border-storiq-purple hover:!bg-storiq-purple/80"
+                    onClick={() => {
+                      if (video.s3Key) {
+                        navigate(`/dashboard/video-editor/${video.s3Key}`, { state: { url: video.url } });
+                      } else if (video.id) {
+                        navigate(`/dashboard/video-editor/${video.id}`, { state: { url: video.url } });
+                      }
+                    }}
                   >
                     <Edit3 className="h-4 w-4" />
                     Edit
