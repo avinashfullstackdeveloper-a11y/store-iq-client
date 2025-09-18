@@ -49,6 +49,7 @@ const VideoEditor: React.FC = () => {
   // Cropping state
   const [start, setStart] = useState(0);
   const [end, setEnd] = useState(0);
+  const [duration, setDuration] = useState(0);
   const [previewing, setPreviewing] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -78,6 +79,7 @@ const VideoEditor: React.FC = () => {
             setVideo(v);
             setStart(0);
             setEnd(v.duration ?? 0);
+            setDuration(v.duration ?? 0);
           } else {
             setError("Video not found");
           }
@@ -98,12 +100,28 @@ const VideoEditor: React.FC = () => {
       });
       setStart(0);
       setEnd(0);
+      setDuration(0);
       setLoading(false);
     } else {
       setError("No video identifier provided");
       setLoading(false);
     }
   }, [wildcard, location.state]);
+
+  // Set duration from video metadata
+  useEffect(() => {
+    const vid = videoRef.current;
+    if (!vid) return;
+    const handleLoadedMetadata = () => {
+      setDuration(vid.duration);
+      // If end is 0 or greater than duration, set end to duration
+      setEnd((prevEnd) => (prevEnd === 0 || prevEnd > vid.duration ? vid.duration : prevEnd));
+    };
+    vid.addEventListener("loadedmetadata", handleLoadedMetadata);
+    return () => {
+      vid.removeEventListener("loadedmetadata", handleLoadedMetadata);
+    };
+  }, [video]);
 
   // Handle preview of cropped segment
   useEffect(() => {
@@ -140,7 +158,7 @@ const VideoEditor: React.FC = () => {
     );
   }
 
-  const duration = video.duration ?? 0;
+  // duration is now from state
 
   return (
     <DashboardLayout>
@@ -171,8 +189,11 @@ const VideoEditor: React.FC = () => {
             step={0.1}
             value={[start, end]}
             onValueChange={([newStart, newEnd]) => {
-              setStart(Math.min(newStart, newEnd));
-              setEnd(Math.max(newStart, newEnd));
+              // Clamp values to [0, duration]
+              const s = Math.max(0, Math.min(newStart, newEnd, duration));
+              const e = Math.max(0, Math.max(newStart, newEnd, 0));
+              setStart(Math.min(s, e));
+              setEnd(Math.max(s, e));
             }}
             minStepsBetweenThumbs={1}
             className="mb-2"
@@ -186,7 +207,13 @@ const VideoEditor: React.FC = () => {
                 max={end}
                 step={0.1}
                 value={start}
-                onChange={(e) => setStart(Math.min(Number(e.target.value), end))}
+                onChange={(e) => {
+                  let val = Number(e.target.value);
+                  if (isNaN(val)) val = 0;
+                  val = Math.max(0, Math.min(val, end, duration));
+                  setStart(val);
+                  if (val > end) setEnd(val);
+                }}
                 className="ml-2 w-20 rounded px-2 py-1 bg-storiq-card-bg text-white border border-storiq-border"
               />
             </div>
@@ -198,7 +225,13 @@ const VideoEditor: React.FC = () => {
                 max={duration}
                 step={0.1}
                 value={end}
-                onChange={(e) => setEnd(Math.max(Number(e.target.value), start))}
+                onChange={(e) => {
+                  let val = Number(e.target.value);
+                  if (isNaN(val)) val = start;
+                  val = Math.max(start, Math.min(val, duration));
+                  setEnd(val);
+                  if (val < start) setStart(val);
+                }}
                 className="ml-2 w-20 rounded px-2 py-1 bg-storiq-card-bg text-white border border-storiq-border"
               />
             </div>
