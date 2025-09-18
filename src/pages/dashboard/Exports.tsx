@@ -11,6 +11,29 @@ import {
 import React, { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 
+/** Animated progress card for in-progress exports */
+import Loader from "@/components/ui/Loader";
+
+const InProgressExportCard = ({ item }: { item: any }) => {
+  return (
+    <div className="bg-storiq-card-bg border border-storiq-border rounded-2xl overflow-hidden">
+      <div className="h-32 w-full bg-storiq-dark flex flex-col items-center justify-center">
+        {/* No loader here */}
+      </div>
+      <div className="p-6">
+        <h3 className="text-white text-xl font-bold mb-1">
+          {item.filename || item.name || "Untitled"}
+        </h3>
+        <p className="text-white/60 text-sm mb-4">
+          {item.status || "Exporting"}
+          {item.resolution ? ` • ${item.resolution}` : ""}
+          {item.format ? ` • ${item.format}` : ""}
+        </p>
+      </div>
+    </div>
+  );
+};
+
 const Exports = () => {
   const [exportHistory, setExportHistory] = useState<any[]>([]);
   const { user } = useAuth();
@@ -265,6 +288,17 @@ const Exports = () => {
         {/* In Progress Section */}
         <div className="mb-12">
           <h2 className="text-2xl font-bold text-white mb-6">In Progress</h2>
+          {exportHistory.filter((item) => item.status !== "Completed").length > 0 && (
+            <div className="flex flex-col items-center mb-6">
+              <Loader
+                size="large"
+                variant="spinner"
+                primaryColor="#A259FF"
+                overlayColor="transparent"
+                message="Your export in progress"
+              />
+            </div>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {exportHistory.filter((item) => item.status !== "Completed")
               .length === 0 ? (
@@ -275,83 +309,7 @@ const Exports = () => {
               exportHistory
                 .filter((item) => item.status !== "Completed")
                 .map((item, idx) => (
-                  <div
-                    key={item.export_id}
-                    className="bg-storiq-card-bg border border-storiq-border rounded-2xl overflow-hidden"
-                  >
-                    <div className="relative h-48 w-full bg-slate-800 flex items-center justify-center">
-                      {/* Striped background created with CSS */}
-                      <div
-                        className="absolute inset-0"
-                        style={{
-                          backgroundImage:
-                            "repeating-linear-gradient(135deg, transparent, transparent 10px, rgba(0, 0, 0, 0.2) 10px, rgba(0, 0, 0, 0.2) 20px)",
-                        }}
-                      ></div>
-                      {/* Play button overlay */}
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="bg-black/50 rounded-full h-16 w-16 flex items-center justify-center cursor-pointer">
-                          <PlayIcon className="h-8 w-8 text-white" />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="p-6">
-                      <h3 className="text-white text-xl font-bold mb-1">
-                        {item.filename || item.name || "Untitled"}
-                      </h3>
-                      <p className="text-white/60 text-sm mb-4">
-                        {item.status || "Exporting"}
-                        {item.resolution ? ` • ${item.resolution}` : ""}
-                        {item.format ? ` • ${item.format}` : ""}
-                      </p>
-                      {/* Progress Bar */}
-                      {typeof item.progress === "number" ? (
-                        <div className="flex items-center gap-x-3 mb-4">
-                          <div className="w-full bg-storiq-dark rounded-full h-2">
-                            <div
-                              className="bg-storiq-purple h-2 rounded-full"
-                              style={{ width: `${item.progress}%` }}
-                            ></div>
-                          </div>
-                          <p className="text-storiq-purple text-sm font-medium whitespace-nowrap">
-                            {item.progress}%
-                          </p>
-                        </div>
-                      ) : null}
-                      {(() => {
-                        // Log just before rendering the download button
-                        if (item.downloadUrl || item.url) {
-                          console.log("[In Progress] Download button:", {
-                            jobId: item.export_id,
-                            downloadUrl: item.downloadUrl || item.url,
-                          });
-                        }
-                        return null;
-                      })()}
-                      <a
-                        href={item.downloadUrl || item.url}
-                        download={
-                          item.filename || item.name || "exported-video"
-                        }
-                        className="block w-full text-center border border-storiq-border text-white hover:bg-storiq-purple hover:border-storiq-purple rounded-md py-2 transition-colors"
-                        style={{
-                          pointerEvents:
-                            item.downloadUrl || item.url ? "auto" : "none",
-                          opacity: item.downloadUrl || item.url ? 1 : 0.5,
-                        }}
-                        tabIndex={item.downloadUrl || item.url ? 0 : -1}
-                      >
-                        Download
-                      </a>
-                      <Button
-                        variant="destructive"
-                        className="mt-4 w-full"
-                        onClick={() => handleDeleteExport(item.export_id)}
-                      >
-                        Delete
-                      </Button>
-                    </div>
-                  </div>
+                  <InProgressExportCard key={item.export_id} item={item} />
                 ))
             )}
           </div>
