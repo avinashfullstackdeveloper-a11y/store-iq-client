@@ -250,22 +250,55 @@ const VideoEditor: React.FC = () => {
         <Button
           className="mt-6"
           disabled={start >= end}
-          onClick={() => {
-            // Prepare export entry
-            const exportEntry = {
-              filename: video.title || "Untitled",
-              date: new Date().toISOString(),
-              crop: { start, end },
-              url: video.url,
-            };
-            // Get existing exports from localStorage
-            const existing = JSON.parse(localStorage.getItem("exports") || "[]");
-            // Add new entry
-            existing.push(exportEntry);
-            // Save back to localStorage
-            localStorage.setItem("exports", JSON.stringify(existing));
-            // Navigate to /dashboard/exports
-            window.location.href = "/dashboard/exports";
+          onClick={async () => {
+            // Ensure all values are present and valid
+            if (
+              !video?.url ||
+              typeof start !== "number" ||
+              typeof end !== "number" ||
+              start < 0 ||
+              end <= start ||
+              isNaN(start) ||
+              isNaN(end)
+            ) {
+              alert("Invalid crop parameters. Please check start/end times and video URL.");
+              return;
+            }
+            try {
+              // Send POST request to crop API with correct keys
+              const response = await fetch("/api/video/crop", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  videoUrl: video.url,
+                  start: Number(start),
+                  end: Number(end),
+                }),
+              });
+              if (!response.ok) throw new Error("Failed to export video");
+              const data = await response.json();
+              // Prepare export entry with job_id and status
+              // Use backend job_id for polling and as the job_id in export entry
+              const exportEntry = {
+                filename: video.title || "Untitled",
+                date: new Date().toISOString(),
+                crop: { start, end },
+                url: video.url,
+                job_id: data.job_id, // use backend job_id for polling
+                status: data.status,
+                export_id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}` // unique id for UI actions
+              };
+              // Get existing exports from localStorage
+              const existing = JSON.parse(localStorage.getItem("exports") || "[]");
+              // Add new entry
+              existing.push(exportEntry);
+              // Save back to localStorage
+              localStorage.setItem("exports", JSON.stringify(existing));
+              // Navigate to /dashboard/exports
+              window.location.href = "/dashboard/exports";
+            } catch (err) {
+              alert("Export failed. Please try again.");
+            }
           }}
         >
           Export

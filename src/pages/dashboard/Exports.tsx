@@ -7,6 +7,15 @@ import React, { useEffect, useState } from "react";
 const Exports = () => {
   const [exportHistory, setExportHistory] = useState<any[]>([]);
 
+  // Remove export by export_id and update localStorage/UI
+  const handleDeleteExport = (exportId: string) => {
+    setExportHistory(prev => {
+      const updated = prev.filter(item => item.export_id !== exportId);
+      localStorage.setItem("exports", JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   useEffect(() => {
     try {
       const raw = localStorage.getItem("exports");
@@ -20,6 +29,70 @@ const Exports = () => {
       setExportHistory([]);
     }
   }, []);
+
+  // Poll for status updates for pending/processing exports
+  useEffect(() => {
+    // Helper to update both state and localStorage
+    const updateExportEntry = (exportId: string, data: any) => {
+      setExportHistory(prev => {
+        const updated = prev.map(item =>
+          item.export_id === exportId ? { ...item, ...data } : item
+        );
+        localStorage.setItem("exports", JSON.stringify(updated));
+        return updated;
+      });
+    };
+
+    // Find all pending/processing jobs
+    const pollingEntries = exportHistory.filter(
+      item =>
+        (item.status === "pending" ||
+          item.status === "processing" ||
+          item.status === "Pending" ||
+          item.status === "Processing") &&
+        item.job_id // backend job id must exist
+    );
+
+    if (pollingEntries.length === 0) return;
+
+    // Poll each job every 5 seconds
+    const intervals: NodeJS.Timeout[] = [];
+
+    pollingEntries.forEach((item) => {
+      const poll = async () => {
+        try {
+          // Always use backend job_id for polling
+          const res = await fetch(`/api/video/crop/${item.job_id}`);
+          if (!res.ok) return;
+          const data = await res.json();
+          // Expecting { status: "completed", url: "..." } or similar
+          if (
+            data.status &&
+            (data.status.toLowerCase() === "completed" || data.status.toLowerCase() === "failed")
+          ) {
+            updateExportEntry(item.export_id, {
+              status: data.status.charAt(0).toUpperCase() + data.status.slice(1),
+              url: data.url || null,
+            });
+          } else if (data.status && data.progress !== undefined) {
+            updateExportEntry(item.export_id, {
+              status: data.status.charAt(0).toUpperCase() + data.status.slice(1),
+              progress: data.progress,
+            });
+          }
+        } catch (e) {
+          // Ignore polling errors
+        }
+      };
+      poll();
+      const interval = setInterval(poll, 5000);
+      intervals.push(interval);
+    });
+
+    return () => {
+      intervals.forEach(clearInterval);
+    };
+  }, [exportHistory]);
 
   // A simple play icon component using SVG
   const PlayIcon = (props) => (
@@ -86,7 +159,7 @@ const Exports = () => {
               exportHistory
                 .filter(item => item.status !== "Completed")
                 .map((item, idx) => (
-                  <div key={idx} className="bg-storiq-card-bg border border-storiq-border rounded-2xl overflow-hidden">
+                  <div key={item.export_id} className="bg-storiq-card-bg border border-storiq-border rounded-2xl overflow-hidden">
                     <div className="relative h-48 w-full bg-slate-800 flex items-center justify-center">
                       {/* Striped background created with CSS */}
                       <div
@@ -132,6 +205,13 @@ const Exports = () => {
                       >
                         Download
                       </a>
+                      <Button
+                        variant="destructive"
+                        className="mt-4 w-full"
+                        onClick={() => handleDeleteExport(item.export_id)}
+                      >
+                        Delete
+                      </Button>
                     </div>
                   </div>
                 ))
@@ -159,12 +239,12 @@ const Exports = () => {
                 <div className="p-4 text-white/60 col-span-6">No exports found.</div>
               ) : (
                 exportHistory.map((item, index) => (
-                  <div key={index} className="p-4 grid grid-cols-6 gap-4 text-white items-center">
+                  <div key={item.export_id} className="p-4 grid grid-cols-6 gap-4 text-white items-center">
                     <div className="font-medium">{item.filename || item.name || "Untitled"}</div>
                     <div className="text-white/60">{item.date || item.createdAt || "-"}</div>
                     <div className="text-white/60">
-                      {item.cropRange
-                        ? `${item.cropRange.start ?? "-"} - ${item.cropRange.end ?? "-"}`
+                      {item.crop
+                        ? `${item.crop.start ?? "-"} - ${item.crop.end ?? "-"}`
                         : "-"}
                     </div>
                     <div>
@@ -190,7 +270,13 @@ const Exports = () => {
                       )}
                     </div>
                     <div>
-                      {/* Placeholder for future actions */}
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDeleteExport(item.export_id)}
+                      >
+                        Delete
+                      </Button>
                     </div>
                   </div>
                 ))
