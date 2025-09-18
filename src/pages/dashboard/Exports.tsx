@@ -3,15 +3,21 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 import React, { useEffect, useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 
 const Exports = () => {
   const [exportHistory, setExportHistory] = useState<any[]>([]);
+  const { user } = useAuth();
+  const userId = user && user._id ? user._id : null;
 
   // Remove export by export_id and update localStorage/UI
   const handleDeleteExport = (exportId: string) => {
     setExportHistory(prev => {
       const updated = prev.filter(item => item.export_id !== exportId);
-      localStorage.setItem("exports", JSON.stringify(updated));
+      // Only update localStorage for this user's exports
+      const allExports = JSON.parse(localStorage.getItem("exports") || "[]");
+      const filteredAll = allExports.filter((item: any) => !(item.export_id === exportId && item.userId === userId));
+      localStorage.setItem("exports", JSON.stringify(filteredAll));
       return updated;
     });
   };
@@ -22,13 +28,14 @@ const Exports = () => {
       if (raw) {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed)) {
-          setExportHistory(parsed);
+          // Only show exports for the current user
+          setExportHistory(parsed.filter((item) => item.userId === userId));
         }
       }
     } catch (e) {
       setExportHistory([]);
     }
-  }, []);
+  }, [userId]);
 
   // Poll for status updates for pending/processing exports
   useEffect(() => {

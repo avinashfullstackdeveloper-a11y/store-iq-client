@@ -5,6 +5,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { useAuth } from "@/context/AuthContext";
 
 interface Video {
   id?: string;
@@ -41,6 +42,8 @@ function fetchVideoById(id: string | undefined): Promise<Video | null> {
 const VideoEditor: React.FC = () => {
   const params = useParams();
   const location = useLocation();
+  const { user } = useAuth();
+  const userId = user && user._id ? user._id : null;
   const wildcard = params['*']; // full path after /dashboard/video-editor/
   const [video, setVideo] = useState<Video | null>(null);
   const [loading, setLoading] = useState(true);
@@ -266,9 +269,13 @@ const VideoEditor: React.FC = () => {
             }
             try {
               // Send POST request to crop API with correct keys
+              const token = localStorage.getItem("jwt_token");
               const response = await fetch("/api/video/crop", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                  "Content-Type": "application/json",
+                  ...(token ? { Authorization: `Bearer ${token}` } : {})
+                },
                 body: JSON.stringify({
                   videoUrl: video.url,
                   start: Number(start),
@@ -287,7 +294,8 @@ const VideoEditor: React.FC = () => {
                 url: video.url,
                 job_id: jobId, // always save as job_id
                 status: data.status,
-                export_id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}` // unique id for UI actions
+                export_id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // unique id for UI actions
+                userId: userId
               };
               // Get existing exports from localStorage
               const existing = JSON.parse(localStorage.getItem("exports") || "[]");
