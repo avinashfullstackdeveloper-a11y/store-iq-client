@@ -17,11 +17,46 @@ const Exports = () => {
   const userId = user && user.id ? user.id : null;
 
   // Remove export by export_id and update localStorage/UI
-  const handleDeleteExport = (exportId: string) => {
+  const handleDeleteExport = async (exportId: string) => {
+    // Find the export item to get its S3 URL
+    const allExports = JSON.parse(localStorage.getItem("exports") || "[]");
+    const exportItem = allExports.find(
+      (item: any) => item.export_id === exportId && item.userId === userId
+    );
+    let s3Url = exportItem?.downloadUrl || exportItem?.url || "";
+    // Extract S3 key from the URL (after the bucket domain)
+    let s3Key = "";
+    try {
+      if (s3Url) {
+        const urlObj = new URL(s3Url);
+        // S3 key is the pathname without leading slash
+        s3Key = urlObj.pathname.startsWith("/")
+          ? urlObj.pathname.slice(1)
+          : urlObj.pathname;
+      }
+    } catch (e) {
+      // Invalid URL
+      s3Key = "";
+    }
+
+    // Call backend to delete from S3 if key exists
+    if (s3Key) {
+      try {
+        await fetch("/api/delete-video", {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ s3Key }),
+        });
+      } catch (e) {
+        // Optionally handle error (e.g., show toast)
+      }
+    }
+
+    // Remove from UI and localStorage as before
     setExportHistory((prev) => {
       const updated = prev.filter((item) => item.export_id !== exportId);
-      // Only update localStorage for this user's exports
-      const allExports = JSON.parse(localStorage.getItem("exports") || "[]");
       const filteredAll = allExports.filter(
         (item: any) => !(item.export_id === exportId && item.userId === userId)
       );
