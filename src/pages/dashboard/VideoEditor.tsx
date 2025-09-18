@@ -43,7 +43,7 @@ const VideoEditor: React.FC = () => {
   const params = useParams();
   const location = useLocation();
   const { user } = useAuth();
-  const userId = user && user._id ? user._id : null;
+  const userId = user && user.id ? user.id : null;
   const wildcard = params['*']; // full path after /dashboard/video-editor/
   const [video, setVideo] = useState<Video | null>(null);
   const [loading, setLoading] = useState(true);
@@ -252,7 +252,7 @@ const VideoEditor: React.FC = () => {
         </div>
         <Button
           className="mt-6"
-          disabled={start >= end}
+          disabled={start >= end || !userId}
           onClick={async () => {
             // Ensure all values are present and valid
             if (
@@ -265,6 +265,10 @@ const VideoEditor: React.FC = () => {
               isNaN(end)
             ) {
               alert("Invalid crop parameters. Please check start/end times and video URL.");
+              return;
+            }
+            if (!userId) {
+              alert("User not authenticated. Please log in again.");
               return;
             }
             try {
@@ -280,6 +284,7 @@ const VideoEditor: React.FC = () => {
                   videoUrl: video.url,
                   start: Number(start),
                   end: Number(end),
+                  userId: userId, // Always include userId for export creation
                 }),
               });
               if (!response.ok) throw new Error("Failed to export video");
@@ -310,7 +315,7 @@ const VideoEditor: React.FC = () => {
             }
           }}
         >
-          Export
+          {userId ? "Export" : "Sign in to Export"}
         </Button>
       </div>
     </DashboardLayout>
