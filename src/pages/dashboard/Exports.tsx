@@ -23,7 +23,7 @@ const Exports = () => {
     const exportItem = allExports.find(
       (item: any) => item.export_id === exportId && item.userId === userId
     );
-    let s3Url = exportItem?.downloadUrl || exportItem?.url || "";
+    const s3Url = exportItem?.downloadUrl || exportItem?.url || "";
     // Extract S3 key from the URL (after the bucket domain)
     let s3Key = "";
     try {

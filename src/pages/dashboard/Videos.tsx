@@ -72,7 +72,10 @@ const Videos = () => {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteVideoId, setDeleteVideoId] = useState<string | null>(null);
 
-  // Fetch videos
+  // Edited/original split state
+  const [editedVideoUrls, setEditedVideoUrls] = useState<Set<string>>(new Set());
+
+  // Fetch videos and edited video URLs
   useEffect(() => {
     const fetchVideos = async () => {
       setLoading(true);
@@ -87,6 +90,22 @@ const Videos = () => {
         );
         const userId = decodedPayload.id;
         if (!userId) throw new Error("User ID not found in token");
+        // Get edited video URLs from export history
+        let editedUrls: string[] = [];
+        try {
+          const raw = localStorage.getItem("exports");
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) {
+              editedUrls = parsed
+                .filter((item: any) => item.userId === userId)
+                .map((item: any) => item.downloadUrl || item.url)
+                .filter(Boolean);
+            }
+          }
+        } catch {}
+        setEditedVideoUrls(new Set(editedUrls));
+        // Fetch all videos
         const res = await fetch(
           `/api/videos?userId=${encodeURIComponent(userId)}`
         );
@@ -419,63 +438,116 @@ const Videos = () => {
             <Button onClick={() => navigate("/dashboard/create-video")}>Create Your First Video</Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {videos.map((video: Video, index) => (
-              <Card
-                key={video.id || index}
-                className="group overflow-hidden border-storiq-border bg-storiq-card-bg hover:border-primary/50 transition-all duration-300 hover:shadow-lg"
-              >
-                <div className="relative h-48 overflow-hidden">
-                  <img
-                    src={
-                      video.thumbnail
-                        ? video.thumbnail
-                        : generatedThumbs[video.id || video.url]
-                        ? generatedThumbs[video.id || video.url]
-                        : "/placeholder.svg"
-                    }
-                    alt={video.title || "Untitled Video"}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = "/placeholder.svg";
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                    <Button
-                      onClick={() => openModal(video)}
-                      className="rounded-full h-12 w-12"
-                      size="icon"
-                    >
-                      <Play className="h-5 w-5 fill-current ml-1" />
-                    </Button>
-                  </div>
-                  
-                  {video.duration && (
-                    <Badge variant="secondary" className="absolute bottom-2 right-2">
-                      <Clock className="h-3 w-3 mr-1" />
-                      {formatDuration(video.duration)}
-                    </Badge>
-                  )}
+          <div>
+            <h2 className="text-2xl font-bold text-white mb-4">Original Videos</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-10">
+              {videos.filter((video) => !editedVideoUrls.has(video.url)).length === 0 ? (
+                <div className="col-span-4 text-white/60 text-center py-8">
+                  No original videos found.
                 </div>
-                
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-white font-semibold line-clamp-1 flex-1 mr-2">
-                      {video.title || "Untitled Video"}
-                    </h3>
-                    
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => openModal(video)}>
-                          <Play className="h-4 w-4 mr-2" />
+              ) : (
+                videos
+                  .filter((video) => !editedVideoUrls.has(video.url))
+                  .map((video: Video, index) => (
+                    <Card
+                      key={video.id || index}
+                      className="group overflow-hidden border-storiq-border bg-storiq-card-bg hover:border-primary/50 transition-all duration-300 hover:shadow-lg"
+                    >
+                      <div className="relative h-48 overflow-hidden">
+                        <img
+                          src={
+                            video.thumbnail
+                              ? video.thumbnail
+                              : generatedThumbs[video.id || video.url]
+                              ? generatedThumbs[video.id || video.url]
+                              : "/placeholder.svg"
+                          }
+                          alt={video.title || "Untitled Video"}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = "/placeholder.svg";
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                          <Button
+                            onClick={() => openModal(video)}
+                            className="rounded-full h-12 w-12"
+                            size="icon"
+                          >
+                            <Play className="h-5 w-5 fill-current ml-1" />
+                          </Button>
+                        </div>
+                        {video.duration && (
+                          <Badge variant="secondary" className="absolute bottom-2 right-2">
+                            <Clock className="h-3 w-3 mr-1" />
+                            {formatDuration(video.duration)}
+                          </Badge>
+                        )}
+                      </div>
+                      <CardContent className="p-4">
+                        <div className="flex justify-between items-start mb-2">
+                          <h3 className="text-white font-semibold line-clamp-1 flex-1 mr-2">
+                            {video.title || "Untitled Video"}
+                          </h3>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => openModal(video)}>
+                                <Play className="h-4 w-4 mr-2" />
+                                Preview
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  if (video.s3Key) {
+                                    navigate(`/dashboard/video-editor/${video.s3Key}`, { state: { url: video.url } });
+                                  } else if (video.id) {
+                                    navigate(`/dashboard/video-editor/${video.id}`, { state: { url: video.url } });
+                                  }
+                                }}
+                              >
+                                <Edit3 className="h-4 w-4 mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-destructive"
+                                onClick={() => handleOpenDeleteDialog(video.id)}
+                                disabled={video.id === undefined || video.id === null}
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                        <p className="text-white/60 text-sm mb-3 line-clamp-2">
+                          {video.subtitle || video.description || "No description"}
+                        </p>
+                        <div className="flex items-center text-xs text-white/40">
+                          <Calendar className="h-3 w-3 mr-1" />
+                          {video.createdAt ? (
+                            new Date(video.createdAt).toLocaleDateString()
+                          ) : (
+                            "Unknown date"
+                          )}
+                        </div>
+                      </CardContent>
+                      <CardFooter className="p-4 pt-0 flex gap-2">
+                        <Button
+                          size="sm"
+                          className="flex-1 gap-2 bg-storiq-purple hover:bg-storiq-purple/80 text-white font-semibold"
+                          onClick={() => openModal(video)}
+                        >
+                          <Play className="h-4 w-4" />
                           Preview
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 gap-2 !text-white !border-storiq-purple hover:!bg-storiq-purple/80"
                           onClick={() => {
                             if (video.s3Key) {
                               navigate(`/dashboard/video-editor/${video.s3Key}`, { state: { url: video.url } });
@@ -484,62 +556,139 @@ const Videos = () => {
                             }
                           }}
                         >
-                          <Edit3 className="h-4 w-4 mr-2" />
+                          <Edit3 className="h-4 w-4" />
                           Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-destructive"
-                          onClick={() => handleOpenDeleteDialog(video.id)}
-                          disabled={video.id === undefined || video.id === null}
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  ))
+              )}
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-4">Edited Videos</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {videos.filter((video) => editedVideoUrls.has(video.url)).length === 0 ? (
+                <div className="col-span-4 text-white/60 text-center py-8">
+                  No edited videos found.
+                </div>
+              ) : (
+                videos
+                  .filter((video) => editedVideoUrls.has(video.url))
+                  .map((video: Video, index) => (
+                    <Card
+                      key={video.id || index}
+                      className="group overflow-hidden border-storiq-border bg-storiq-card-bg hover:border-primary/50 transition-all duration-300 hover:shadow-lg"
+                    >
+                      <div className="relative h-48 overflow-hidden">
+                        <img
+                          src={
+                            video.thumbnail
+                              ? video.thumbnail
+                              : generatedThumbs[video.id || video.url]
+                              ? generatedThumbs[video.id || video.url]
+                              : "/placeholder.svg"
+                          }
+                          alt={video.title || "Untitled Video"}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = "/placeholder.svg";
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                          <Button
+                            onClick={() => openModal(video)}
+                            className="rounded-full h-12 w-12"
+                            size="icon"
+                          >
+                            <Play className="h-5 w-5 fill-current ml-1" />
+                          </Button>
+                        </div>
+                        {video.duration && (
+                          <Badge variant="secondary" className="absolute bottom-2 right-2">
+                            <Clock className="h-3 w-3 mr-1" />
+                            {formatDuration(video.duration)}
+                          </Badge>
+                        )}
+                      </div>
+                      <CardContent className="p-4">
+                        <div className="flex justify-between items-start mb-2">
+                          <h3 className="text-white font-semibold line-clamp-1 flex-1 mr-2">
+                            {video.title || "Untitled Video"}
+                          </h3>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => openModal(video)}>
+                                <Play className="h-4 w-4 mr-2" />
+                                Preview
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  if (video.s3Key) {
+                                    navigate(`/dashboard/video-editor/${video.s3Key}`, { state: { url: video.url } });
+                                  } else if (video.id) {
+                                    navigate(`/dashboard/video-editor/${video.id}`, { state: { url: video.url } });
+                                  }
+                                }}
+                              >
+                                <Edit3 className="h-4 w-4 mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-destructive"
+                                onClick={() => handleOpenDeleteDialog(video.id)}
+                                disabled={video.id === undefined || video.id === null}
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                        <p className="text-white/60 text-sm mb-3 line-clamp-2">
+                          {video.subtitle || video.description || "No description"}
+                        </p>
+                        <div className="flex items-center text-xs text-white/40">
+                          <Calendar className="h-3 w-3 mr-1" />
+                          {video.createdAt ? (
+                            new Date(video.createdAt).toLocaleDateString()
+                          ) : (
+                            "Unknown date"
+                          )}
+                        </div>
+                      </CardContent>
+                      <CardFooter className="p-4 pt-0 flex gap-2">
+                        <Button
+                          size="sm"
+                          className="flex-1 gap-2 bg-storiq-purple hover:bg-storiq-purple/80 text-white font-semibold"
+                          onClick={() => openModal(video)}
                         >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                  
-                  <p className="text-white/60 text-sm mb-3 line-clamp-2">
-                    {video.subtitle || video.description || "No description"}
-                  </p>
-                  
-                  <div className="flex items-center text-xs text-white/40">
-                    <Calendar className="h-3 w-3 mr-1" />
-                    {video.createdAt ? (
-                      new Date(video.createdAt).toLocaleDateString()
-                    ) : (
-                      "Unknown date"
-                    )}
-                  </div>
-                </CardContent>
-                
-                <CardFooter className="p-4 pt-0 flex gap-2">
-                  <Button
-                    size="sm"
-                    className="flex-1 gap-2 bg-storiq-purple hover:bg-storiq-purple/80 text-white font-semibold"
-                    onClick={() => openModal(video)}
-                  >
-                    <Play className="h-4 w-4" />
-                    Preview
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1 gap-2 !text-white !border-storiq-purple hover:!bg-storiq-purple/80"
-                    onClick={() => {
-                      if (video.s3Key) {
-                        navigate(`/dashboard/video-editor/${video.s3Key}`, { state: { url: video.url } });
-                      } else if (video.id) {
-                        navigate(`/dashboard/video-editor/${video.id}`, { state: { url: video.url } });
-                      }
-                    }}
-                  >
-                    <Edit3 className="h-4 w-4" />
-                    Edit
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))}
+                          <Play className="h-4 w-4" />
+                          Preview
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 gap-2 !text-white !border-storiq-purple hover:!bg-storiq-purple/80"
+                          onClick={() => {
+                            if (video.s3Key) {
+                              navigate(`/dashboard/video-editor/${video.s3Key}`, { state: { url: video.url } });
+                            } else if (video.id) {
+                              navigate(`/dashboard/video-editor/${video.id}`, { state: { url: video.url } });
+                            }
+                          }}
+                        >
+                          <Edit3 className="h-4 w-4" />
+                          Edit
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  ))
+              )}
+            </div>
           </div>
         )}
       </div>
