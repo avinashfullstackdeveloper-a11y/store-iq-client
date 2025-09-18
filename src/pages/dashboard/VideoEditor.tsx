@@ -247,6 +247,29 @@ const VideoEditor: React.FC = () => {
         <div className="text-white/40 text-xs">
           Cropping logic is implemented for preview only. No saving or exporting.
         </div>
+        <Button
+          className="mt-6"
+          disabled={start >= end}
+          onClick={() => {
+            // Prepare export entry
+            const exportEntry = {
+              filename: video.title || "Untitled",
+              date: new Date().toISOString(),
+              crop: { start, end },
+              url: video.url,
+            };
+            // Get existing exports from localStorage
+            const existing = JSON.parse(localStorage.getItem("exports") || "[]");
+            // Add new entry
+            existing.push(exportEntry);
+            // Save back to localStorage
+            localStorage.setItem("exports", JSON.stringify(existing));
+            // Navigate to /dashboard/exports
+            window.location.href = "/dashboard/exports";
+          }}
+        >
+          Export
+        </Button>
       </div>
     </DashboardLayout>
   );
