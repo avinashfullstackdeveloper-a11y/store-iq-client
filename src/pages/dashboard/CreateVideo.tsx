@@ -251,16 +251,13 @@ Each scene should have a different background. Use a modern sans-serif font and 
       }
 
       // Read jwt_token from localStorage
-      const jwtToken = localStorage.getItem("jwt_token");
+      // const jwtToken = localStorage.getItem("jwt_token");
 
       const res = await fetch("/api/upload-video", {
         method: "POST",
         body: formData,
-        headers: jwtToken
-          ? {
-              Authorization: `Bearer ${jwtToken}`,
-            }
-          : undefined,
+        credentials: "include"
+        
       });
 
       if (!res.ok) {

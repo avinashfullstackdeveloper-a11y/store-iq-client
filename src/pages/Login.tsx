@@ -40,16 +40,16 @@ const Login = () => {
     }
   };
   const handleGoogleAuth = () => {
-    window.location.href = "http://localhost:5000/auth/google"; // backend OAuth route
+    window.location.href =  `${import.meta.env.VITE_API_BASE_URL}/auth/google/login`; // backend OAuth route
   };
 
   // (Later you can do the same for Facebook/GitHub if needed)
   const handleFacebookAuth = () => {
-    window.location.href = "http://localhost:5000/auth/facebook";
+    window.location.href =  `${import.meta.env.VITE_API_BASE_URL}/auth/facebook/login`;
   };
 
   const handleGithubAuth = () => {
-    window.location.href = "http://localhost:5000/auth/github";
+    window.location.href =  `${import.meta.env.VITE_API_BASE_URL}/auth/github/login`;
   };
 
   return (
