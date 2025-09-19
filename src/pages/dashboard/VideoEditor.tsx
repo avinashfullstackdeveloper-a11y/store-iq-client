@@ -43,6 +43,7 @@ const VideoEditor: React.FC = () => {
   const params = useParams();
   const location = useLocation();
   const { user } = useAuth();
+  console.log('user', user);
   const userId = user && user.id ? user.id : null;
   const wildcard = params['*']; // full path after /dashboard/video-editor/
   const [video, setVideo] = useState<Video | null>(null);
@@ -254,23 +255,24 @@ const VideoEditor: React.FC = () => {
           className="mt-6"
           disabled={start >= end || !userId}
           onClick={async () => {
-            // Ensure all values are present and valid
-            if (
-              !video?.url ||
-              typeof start !== "number" ||
-              typeof end !== "number" ||
-              start < 0 ||
-              end <= start ||
-              isNaN(start) ||
-              isNaN(end)
-            ) {
-              alert("Invalid crop parameters. Please check start/end times and video URL.");
-              return;
-            }
-            if (!userId) {
-              alert("User not authenticated. Please log in again.");
-              return;
-            }
+              console.log('user', user);
+              // Ensure all values are present and valid
+              if (
+                !video?.url ||
+                typeof start !== "number" ||
+                typeof end !== "number" ||
+                start < 0 ||
+                end <= start ||
+                isNaN(start) ||
+                isNaN(end)
+              ) {
+                alert("Invalid crop parameters. Please check start/end times and video URL.");
+                return;
+              }
+              if (!userId) {
+                alert("User not authenticated. Please log in again.");
+                return;
+              }
             try {
               // Send POST request to crop API with correct keys
               const response = await fetch("/api/video/crop", {
@@ -314,7 +316,7 @@ const VideoEditor: React.FC = () => {
             }
           }}
         >
-          {userId ? "Export" : "Sign in to Export"}
+          "{userId ? "Export" : "Sign in to Export"}"
         </Button>
       </div>
     </DashboardLayout>

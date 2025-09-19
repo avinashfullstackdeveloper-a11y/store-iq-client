@@ -8,10 +8,16 @@ import React, {
   useEffect,
 } from "react";
 
+interface User {
+  id: string;
+  email: string;
+  // Add other user fields as needed
+}
+
 interface AuthContextType {
-  user: any;
+  user: User | null;
   token: string | null;
-  login: (token: string, user: any) => void;
+  login: (token: string, user: User) => void;
   logout: () => void;
 }
 
@@ -19,18 +25,65 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [token, setToken] = useState<string | null>(null);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
 
-  const login = (_jwt: string, userObj: any) => {
-    setToken(null); 
+  // Restore user/token on mount
+  useEffect(() => {
+    const storedToken = localStorage.getItem("token");
+    if (storedToken) {
+      setToken(storedToken);
+      // Optionally fetch user info with token
+      fetch("/api/auth/me", {
+        headers: {
+          Authorization: `Bearer ${storedToken}`,
+        },
+        credentials: "include",
+      })
+        .then((res) => res.ok ? res.json() : null)
+        .then((data) => {
+          if (data && data.user) {
+            setUser(data.user);
+          } else {
+            setUser(null);
+            setToken(null);
+            localStorage.removeItem("token");
+          }
+        })
+        .catch(() => {
+          setUser(null);
+          setToken(null);
+          localStorage.removeItem("token");
+        });
+    } else {
+      // Try cookie-based session
+      fetch("/api/auth/me", {
+        credentials: "include",
+      })
+        .then((res) => res.ok ? res.json() : null)
+        .then((data) => {
+          if (data && data.user) {
+            setUser(data.user);
+          }
+        })
+        .catch(() => {});
+    }
+  }, []);
+
+  const login = (_jwt: string, userObj: User) => {
+    setToken(_jwt); // Store token in state
     setUser(userObj);
-
+    if (_jwt) {
+      localStorage.setItem("token", _jwt); // Persist token
+    }
+    // Optionally, persist user info if needed
+    // localStorage.setItem("user", JSON.stringify(userObj));
   };
 
   const logout = () => {
     setToken(null);
     setUser(null);
-    
+    localStorage.removeItem("token");
+    // localStorage.removeItem("user");
   };
 
   return (
