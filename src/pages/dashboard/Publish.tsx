@@ -80,11 +80,62 @@ const Publish = () => {
     }
     setPostingId(video.id || video.s3Key || "");
     setToast(null);
-    setTimeout(() => {
+
+    try {
+      // Prepare payload
+      const payload = {
+        videoId: video.id || video.s3Key,
+        // Add more metadata here if needed
+      };
+
+      // Track results for each platform
+      let success = false;
+      let errorMsg = "";
+
+      // Post to YouTube if selected
+      if (selection.yt && ytConnected) {
+        const res = await fetch("/api/publish/youtube", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          errorMsg += `YouTube: ${err?.message || "Failed to post"} `;
+        } else {
+          success = true;
+        }
+      }
+
+      // Post to Instagram if selected
+      if (selection.ig && igConnected) {
+        const res = await fetch("/api/publish/instagram", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          errorMsg += `Instagram: ${err?.message || "Failed to post"} `;
+        } else {
+          success = true;
+        }
+      }
+
       setPostingId(null);
-      setToast({ type: "success", message: "Video posted successfully!" });
-      setPlatformSelections((prev) => ({ ...prev, [video.id || video.s3Key || ""]: { yt: false, ig: false } }));
-    }, 2000);
+
+      if (success) {
+        setToast({ type: "success", message: "Video posted successfully!" });
+        setPlatformSelections((prev) => ({ ...prev, [video.id || video.s3Key || ""]: { yt: false, ig: false } }));
+      } else {
+        setToast({ type: "error", message: errorMsg.trim() || "Failed to post video." });
+      }
+    } catch (err) {
+      setPostingId(null);
+      setToast({ type: "error", message: (err as Error)?.message || "Failed to post video." });
+    }
   };
 
   return (
