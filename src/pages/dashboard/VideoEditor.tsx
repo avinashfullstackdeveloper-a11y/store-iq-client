@@ -273,12 +273,10 @@ const VideoEditor: React.FC = () => {
             }
             try {
               // Send POST request to crop API with correct keys
-              const token = localStorage.getItem("jwt_token");
               const response = await fetch("/api/video/crop", {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
-                  ...(token ? { Authorization: `Bearer ${token}` } : {})
                 },
                 body: JSON.stringify({
                   videoUrl: video.url,
@@ -286,6 +284,7 @@ const VideoEditor: React.FC = () => {
                   end: Number(end),
                   userId: userId, // Always include userId for export creation
                 }),
+                credentials: "include",
               });
               if (!response.ok) throw new Error("Failed to export video");
               const data = await response.json();

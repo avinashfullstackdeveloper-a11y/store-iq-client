@@ -92,7 +92,9 @@ Each scene should have a different background. Use a modern sans-serif font and 
     setHistoryLoading(true);
     setHistoryError(null);
     const userId = user.id || user.userId || user.email;
-    fetch(`/api/scripts/history?userId=${encodeURIComponent(userId)}`)
+    fetch(`/api/scripts/history?userId=${encodeURIComponent(userId)}`, {
+      credentials: "include",
+    })
       .then(async (res) => {
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
@@ -139,6 +141,7 @@ Each scene should have a different background. Use a modern sans-serif font and 
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt }),
+        credentials: "include",
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -163,6 +166,7 @@ Each scene should have a different background. Use a modern sans-serif font and 
             prompt,
             script: data.script,
           }),
+          credentials: "include",
         }).catch(() => {
           // Silently ignore errors for history saving
         });
@@ -200,6 +204,7 @@ Each scene should have a different background. Use a modern sans-serif font and 
             voice: selectedVoice,
           },
         }),
+        credentials: "include",
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -254,10 +259,8 @@ Each scene should have a different background. Use a modern sans-serif font and 
       }
 
       // 2. Initiate multipart upload
-      const token = localStorage.getItem("jwt_token");
       const headers = {
         "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       };
       const initRes = await fetch("/api/s3-multipart/initiate", {
         method: "POST",
@@ -266,6 +269,7 @@ Each scene should have a different background. Use a modern sans-serif font and 
           filename: selectedFile.name,
           contentType: selectedFile.type || "video/mp4",
         }),
+        credentials: "include",
       });
       if (!initRes.ok) {
         const err = await initRes.json().catch(() => ({}));
@@ -284,6 +288,7 @@ Each scene should have a different background. Use a modern sans-serif font and 
           partNumbers: Array.from({ length: totalParts }, (_, i) => i + 1),
           contentType: selectedFile.type || "video/mp4",
         }),
+        credentials: "include",
       });
       if (!presignRes.ok) {
         const err = await presignRes.json().catch(() => ({}));
@@ -341,6 +346,7 @@ Each scene should have a different background. Use a modern sans-serif font and 
           key,
           parts: uploadResults,
         }),
+        credentials: "include",
       });
       if (!completeRes.ok) {
         const err = await completeRes.json().catch(() => ({}));
@@ -376,6 +382,7 @@ Each scene should have a different background. Use a modern sans-serif font and 
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ s3Key: videoS3Key }),
+        credentials: "include",
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
