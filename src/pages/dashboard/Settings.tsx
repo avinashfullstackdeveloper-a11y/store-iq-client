@@ -1,5 +1,13 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,8 +16,12 @@ import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 const Settings = () => {
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
 
   // Sidebar navigation items for the settings page
   const sidebarItems = [
@@ -51,15 +63,34 @@ const Settings = () => {
                   </button>
                 ))}
               </div>
-              <Button
-                className="w-full mt-6 bg-red-600 hover:bg-red-700 text-white"
-                onClick={() => {
-                  logout();
-                  navigate("/login");
-                }}
-              >
-                Logout
-              </Button>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button
+                    className="w-full mt-6 bg-[#614e4e] hover:bg-[#2a2a2a] text-white"
+                  >
+                    Account
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="bg-[#18181b] border-[#2A2A2A] text-white">
+                  <DialogHeader>
+                    <DialogTitle>Account Details</DialogTitle>
+                  </DialogHeader>
+                  <div className="py-2">
+                    <div className="mb-4">
+                      <span className="block text-sm text-white/60 mb-1">Email</span>
+                      <span className="block text-base font-medium">{user?.email || "Not available"}</span>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button
+                      className="w-full bg-red-600 hover:bg-red-700 text-white"
+                      onClick={handleLogout}
+                    >
+                      Logout
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </div>
           </aside>
 
