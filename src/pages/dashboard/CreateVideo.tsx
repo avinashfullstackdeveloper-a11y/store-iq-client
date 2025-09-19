@@ -212,8 +212,8 @@ Each scene should have a different background. Use a modern sans-serif font and 
         throw new Error(err?.error || "Failed to generate video.");
       }
       const data = await res.json();
-      if (!data?.url) throw new Error("No video URL returned from API.");
-      setVideoUrl(data.url);
+      if (!data?.s3Url) throw new Error("No video URL returned from API.");
+      setVideoUrl(data.s3Url);
       setVideoS3Key(data.s3Key || null); // Expect backend to return s3Key
       setVideoStatus("success");
     } catch (err: unknown) {
