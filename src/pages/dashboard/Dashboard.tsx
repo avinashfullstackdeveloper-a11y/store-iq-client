@@ -108,26 +108,56 @@ const Dashboard = () => {
 
         {/* Quick Options */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-          {quickOptions.map((option, index) => (
-            <a
-              key={index}
-              href={option.href || "#"}
-              className="relative overflow-hidden rounded-2xl bg-[#1C1C1C] border border-gray-800/80 p-6 min-h-[180px] flex flex-col justify-end group cursor-pointer transition-all duration-300 hover:border-violet-700/60 hover:shadow-lg hover:shadow-violet-700/20"
-            >
-              <div 
-                className="absolute inset-0 bg-cover bg-center opacity-40 group-hover:opacity-50 group-hover:scale-105 transition-all duration-300"
-                style={{backgroundImage: `url(${option.image})`}}
-              ></div>
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-              {option.icon}
-              <div className="relative z-10">
-                {option.superTitle && (
-                  <p className="text-gray-300 text-xs font-semibold uppercase tracking-wider mb-1">{option.superTitle}</p>
-                )}
-                <h3 className="text-white text-xl font-bold">{option.title}</h3>
-              </div>
-            </a>
-          ))}
+          {quickOptions.map((option, index) => {
+            // Only for "Generate Scripts" quick option (index 1)
+            if (option.superTitle === "VIDEO SCRIPT" && option.title === "Generate Scripts") {
+              return (
+                <div
+                  key={index}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => navigate('/dashboard/scripts')}
+                  onKeyPress={e => { if (e.key === 'Enter' || e.key === ' ') navigate('/dashboard/scripts'); }}
+                  className="relative overflow-hidden rounded-2xl bg-[#1C1C1C] border border-gray-800/80 p-6 min-h-[180px] flex flex-col justify-end group cursor-pointer transition-all duration-300 hover:border-violet-700/60 hover:shadow-lg hover:shadow-violet-700/20 outline-none"
+                  style={{ cursor: 'pointer' }}
+                >
+                  <div
+                    className="absolute inset-0 bg-cover bg-center opacity-40 group-hover:opacity-50 group-hover:scale-105 transition-all duration-300"
+                    style={{backgroundImage: `url(${option.image})`}}
+                  ></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                  {option.icon}
+                  <div className="relative z-10">
+                    {option.superTitle && (
+                      <p className="text-gray-300 text-xs font-semibold uppercase tracking-wider mb-1">{option.superTitle}</p>
+                    )}
+                    <h3 className="text-white text-xl font-bold">{option.title}</h3>
+                  </div>
+                </div>
+              );
+            }
+            // All other quick options remain as links
+            return (
+              <a
+                key={index}
+                href={option.href || "#"}
+                className="relative overflow-hidden rounded-2xl bg-[#1C1C1C] border border-gray-800/80 p-6 min-h-[180px] flex flex-col justify-end group cursor-pointer transition-all duration-300 hover:border-violet-700/60 hover:shadow-lg hover:shadow-violet-700/20"
+              >
+                <div
+                  className="absolute inset-0 bg-cover bg-center opacity-40 group-hover:opacity-50 group-hover:scale-105 transition-all duration-300"
+                  style={{backgroundImage: `url(${option.image})`}}
+                ></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                {option.icon}
+                <div className="relative z-10">
+                  {option.superTitle && (
+                    <p className="text-gray-300 text-xs font-semibold uppercase tracking-wider mb-1">{option.superTitle}</p>
+                  )}
+                  <h3 className="text-white text-xl font-bold">{option.title}</h3>
+                </div>
+              </a>
+            );
+          })}
         </div>
 
         {/* Tabs */}
