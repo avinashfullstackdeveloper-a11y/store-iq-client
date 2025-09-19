@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { useAuth } from "@/context/AuthContext";
+import Loader from "@/components/ui/Loader";
 
 interface Video {
   id?: string;
@@ -49,6 +50,8 @@ const VideoEditor: React.FC = () => {
   const [video, setVideo] = useState<Video | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportCompleted, setExportCompleted] = useState(false);
 
   // Cropping state
   const [start, setStart] = useState(0);
@@ -166,6 +169,22 @@ const VideoEditor: React.FC = () => {
 
   return (
     <DashboardLayout>
+      {isExporting && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "100vw",
+          height: "100vh",
+          background: "rgba(0,0,0,0.6)",
+          zIndex: 2000,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center"
+        }}>
+          <Loader message="Exporting video, please wait..." />
+        </div>
+      )}
       <div className="p-6 md:p-8 max-w-3xl mx-auto">
         <h1 className="text-2xl font-bold text-white mb-4">
           Video Editor: {video.title || "Untitled"}
@@ -248,14 +267,22 @@ const VideoEditor: React.FC = () => {
             </Button>
           </div>
         </div>
-        <div className="text-white/40 text-xs">
-          Cropping logic is implemented for preview only. No saving or exporting.
-        </div>
         <Button
-          className="mt-6"
-          disabled={start >= end || !userId}
+          className={`mt-6 ${exportCompleted ? "bg-green-600 hover:bg-green-700 text-white" : ""}`}
+          disabled={
+            start >= end ||
+            !userId ||
+            isExporting ||
+            (exportCompleted && false) // keep enabled after export completes
+          }
           onClick={async () => {
-              console.log('user', user);
+            if (exportCompleted) {
+              window.location.href = "/dashboard/exports";
+              return;
+            }
+            if (isExporting) return;
+            setIsExporting(true);
+            try {
               // Ensure all values are present and valid
               if (
                 !video?.url ||
@@ -267,13 +294,14 @@ const VideoEditor: React.FC = () => {
                 isNaN(end)
               ) {
                 alert("Invalid crop parameters. Please check start/end times and video URL.");
+                setIsExporting(false);
                 return;
               }
               if (!userId) {
                 alert("User not authenticated. Please log in again.");
+                setIsExporting(false);
                 return;
               }
-            try {
               // Send POST request to crop API with correct keys
               const response = await fetch("/api/video/crop", {
                 method: "POST",
@@ -309,14 +337,21 @@ const VideoEditor: React.FC = () => {
               existing.push(exportEntry);
               // Save back to localStorage
               localStorage.setItem("exports", JSON.stringify(existing));
-              // Navigate to /dashboard/exports
-              window.location.href = "/dashboard/exports";
+              setExportCompleted(true);
             } catch (err) {
               alert("Export failed. Please try again.");
+            } finally {
+              setIsExporting(false);
             }
           }}
         >
-          "{userId ? "Export" : "Sign in to Export"}"
+          {isExporting
+            ? "Export in progress"
+            : exportCompleted
+              ? "Go to export"
+              : userId
+                ? "Export"
+                : "Sign in to Export"}
         </Button>
       </div>
     </DashboardLayout>

@@ -26,46 +26,64 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   // Restore user/token on mount
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
+    const handleAuthMeResponse = async (res: Response) => {
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.user) {
+          setUser(data.user);
+          setAuthError(null);
+        } else {
+          setUser(null);
+          setToken(null);
+          localStorage.removeItem("token");
+          setAuthError("Authentication failed.");
+        }
+      } else if (res.status === 401 || res.status === 403) {
+        setUser(null);
+        setToken(null);
+        localStorage.removeItem("token");
+        setAuthError("Session expired. Please log in again.");
+      } else if (res.status >= 500) {
+        setAuthError(
+          "The server is temporarily unavailable. Please try again later."
+        );
+        // Do not clear user/token
+      } else {
+        setAuthError("An unknown error occurred.");
+      }
+    };
+
     if (storedToken) {
       setToken(storedToken);
-      // Optionally fetch user info with token
       fetch("/api/auth/me", {
         headers: {
           Authorization: `Bearer ${storedToken}`,
         },
         credentials: "include",
       })
-        .then((res) => res.ok ? res.json() : null)
-        .then((data) => {
-          if (data && data.user) {
-            setUser(data.user);
-          } else {
-            setUser(null);
-            setToken(null);
-            localStorage.removeItem("token");
-          }
-        })
+        .then(handleAuthMeResponse)
         .catch(() => {
-          setUser(null);
-          setToken(null);
-          localStorage.removeItem("token");
+          setAuthError(
+            "Unable to connect to the server. Please check your connection."
+          );
+          // Do not clear user/token
         });
     } else {
       // Try cookie-based session
       fetch("/api/auth/me", {
         credentials: "include",
       })
-        .then((res) => res.ok ? res.json() : null)
-        .then((data) => {
-          if (data && data.user) {
-            setUser(data.user);
-          }
-        })
-        .catch(() => {});
+        .then(handleAuthMeResponse)
+        .catch(() => {
+          setAuthError(
+            "Unable to connect to the server. Please check your connection."
+          );
+        });
     }
   }, []);
 
@@ -88,6 +106,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <AuthContext.Provider value={{ user, token, login, logout }}>
+      {authError && (
+        <div style={{ color: "red", textAlign: "center", margin: "1em" }}>
+          {authError}
+        </div>
+      )}
       {children}
     </AuthContext.Provider>
   );
