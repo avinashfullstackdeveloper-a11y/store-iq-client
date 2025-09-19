@@ -12,6 +12,7 @@ interface User {
   id: string;
   email: string;
   username?: string; // Add other user fields as needed
+  timezone?: string;
 }
 
 interface AuthContextType {
@@ -19,6 +20,7 @@ interface AuthContextType {
   token: string | null;
   login: (token: string, user: User) => void;
   logout: () => void;
+  updateTimezone: (timezone: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -104,8 +106,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // localStorage.removeItem("user");
   };
 
+  // PATCH user's timezone and update state
+  const updateTimezone = async (timezone: string) => {
+    if (!user) return;
+    try {
+      const res = await fetch("/api/auth/me", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        credentials: "include",
+        body: JSON.stringify({ timezone }),
+      });
+      if (!res.ok) throw new Error("Failed to update timezone");
+      setUser((prev) => (prev ? { ...prev, timezone } : prev));
+    } catch (err) {
+      // Optionally handle error (toast, etc)
+      // console.error(err);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, login, logout }}>
+    <AuthContext.Provider value={{ user, token, login, logout, updateTimezone }}>
       {authError && (
         <div style={{ color: "red", textAlign: "center", margin: "1em" }}>
           {authError}
