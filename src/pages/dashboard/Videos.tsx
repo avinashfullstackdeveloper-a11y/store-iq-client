@@ -81,25 +81,20 @@ const Videos = () => {
       setError(null);
 
       try {
-        const token = localStorage.getItem("jwt_token");
-        if (!token) throw new Error("User not authenticated (no token found)");
-        const payload = token.split(".")[1];
-        if (!payload) throw new Error("Invalid JWT format");
-        const decodedPayload = JSON.parse(
-          atob(payload.replace(/-/g, "+").replace(/_/g, "/"))
-        );
-        const userId = decodedPayload.id;
-        if (!userId) throw new Error("User ID not found in token");
-        // Fetch all videos
-        const res = await fetch(
-          `/api/videos?userId=${encodeURIComponent(userId)}`
-        );
+        let url = "/api/videos";
+        let fetchOptions: RequestInit = { credentials: "include" };
+        // User ID is determined by session cookie on backend
+        const res = await fetch(url, fetchOptions);
+        if (res.status === 401) {
+          throw new Error("Unauthorized (401): Please log in.");
+        }
         if (!res.ok) throw new Error("Failed to fetch videos");
         const data = await res.json();
         console.log("[Videos] API /api/videos response:", data);
         setVideos(Array.isArray(data) ? data : []);
       } catch (err: unknown) {
         let message = "Unknown error";
+        console.error("[Videos][DEBUG] Error in fetchVideos:", err);
         if (
           err &&
           typeof err === "object" &&
@@ -207,11 +202,6 @@ const Videos = () => {
     try {
       setLoading(true);
       setError(null);
-      const token = localStorage.getItem("jwt_token");
-      if (!token) {
-        console.log("[handleDelete] Early return: JWT token is missing");
-        throw new Error("User not authenticated (no token found)");
-      }
       // Find the video object to get the s3Key
       const videoToDelete = videos.find((v) => v.id === deleteVideoId);
       if (!videoToDelete || !videoToDelete.s3Key) {
@@ -231,9 +221,9 @@ const Videos = () => {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ s3Key: videoToDelete.s3Key }),
+        credentials: "include",
       });
       if (!res.ok) throw new Error("Failed to delete video");
       setVideos((prev) => prev.filter((v) => v.id !== deleteVideoId));

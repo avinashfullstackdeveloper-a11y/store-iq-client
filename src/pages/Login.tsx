@@ -25,6 +25,7 @@ const Login = () => {
           email: username,
           password,
         }),
+        credentials: "include", // Ensure cookies are sent
       });
       const data = await res.json();
       if (!res.ok) {
