@@ -11,7 +11,7 @@ import React, {
 interface User {
   id: string;
   email: string;
-  // Add other user fields as needed
+  username?: string; // Add other user fields as needed
 }
 
 interface AuthContextType {

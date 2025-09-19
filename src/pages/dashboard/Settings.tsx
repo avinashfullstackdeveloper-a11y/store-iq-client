@@ -15,6 +15,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
+import { useState } from "react";
+
 const Settings = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -25,14 +27,17 @@ const Settings = () => {
 
   // Sidebar navigation items for the settings page
   const sidebarItems = [
-    { label: "Your Timezone", active: true },
-    { label: "Your affiliate code", active: false },
-    { label: "Integrations", active: false },
-    { label: "Channel Manager", active: false },
-    { label: "AI Settings", active: false },
-    { label: "Api Key", active: false },
-    { label: "Password Management", active: false }
+    "Your Timezone",
+    "Your affiliate code",
+    "Integrations",
+    "Channel Manager",
+    "AI Settings",
+    "Api Key",
+    "Password Management",
+    "Account"
   ];
+
+  const [activeTab, setActiveTab] = useState(sidebarItems[0]);
 
   // Example hashtags for AI Settings
   const hashtags = ["ai", "tech", "startup", "product"];
@@ -50,163 +55,169 @@ const Settings = () => {
           <aside className="w-80 flex-shrink-0">
              <div className="bg-[#1E1E1E] border border-[#2A2A2A] rounded-2xl p-4 sticky top-8">
               <div className="space-y-2">
-                {sidebarItems.map((item, index) => (
+                {sidebarItems.map((label, index) => (
                   <button
                     key={index}
                     className={`w-full text-left px-4 py-3 rounded-lg transition-colors text-base font-medium ${
-                      item.active
+                      activeTab === label
                         ? "bg-[#6E42E1] text-white"
                         : "text-white/70 hover:text-white hover:bg-[#6E42E1]/20"
                     }`}
+                    onClick={() => setActiveTab(label)}
                   >
-                    {item.label}
+                    {label}
                   </button>
                 ))}
               </div>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button
-                    className="w-full mt-6 bg-[#614e4e] hover:bg-[#2a2a2a] text-white"
-                  >
-                    Account
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="bg-[#18181b] border-[#2A2A2A] text-white">
-                  <DialogHeader>
-                    <DialogTitle>Account Details</DialogTitle>
-                  </DialogHeader>
-                  <div className="py-2">
-                    <div className="mb-4">
-                      <span className="block text-sm text-white/60 mb-1">Email</span>
-                      <span className="block text-base font-medium">{user?.email || "Not available"}</span>
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button
-                      className="w-full bg-red-600 hover:bg-red-700 text-white"
-                      onClick={handleLogout}
-                    >
-                      Logout
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
             </div>
           </aside>
 
           {/* Main Content Area */}
           <main className="flex-1 space-y-12">
-            
             {/* Your Timezone Section */}
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-white text-lg font-medium mb-3">Your Timezone</h3>
-                <Select defaultValue="asia-calcutta">
-                  <SelectTrigger className="w-96 bg-[#1E1E1E] border-[#2A2A2A] text-white h-12">
-                    <SelectValue placeholder="Select a timezone" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#1E1E1E] border-[#2A2A2A] text-white">
-                    <SelectItem value="asia-calcutta" className="focus:bg-[#6E42E1]/50 focus:text-white">Asia/Calcutta</SelectItem>
-                    <SelectItem value="utc" className="focus:bg-[#6E42E1]/50 focus:text-white">UTC</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-center space-x-3">
-                <Switch defaultChecked id="email-notifications" className="data-[state=checked]:bg-[#6E42E1]" />
-                <label htmlFor="email-notifications" className="text-white font-medium">Enable email notifications</label>
-              </div>
-            </div>
-
-            {/* Your Affiliate Code Section */}
-            <div>
-              <h3 className="text-white text-lg font-medium mb-3">Your affiliate code</h3>
-              <Input
-                defaultValue="your_custom_code"
-                className="w-96 bg-[#1E1E1E] border-[#2A2A2A] text-white placeholder:text-white/40 h-12"
-              />
-              <p className="text-white/60 text-sm mt-2 max-w-md">
-                Enter your affiliate code here so we can automatically add it to the video you share - get it here
-              </p>
-              <Button className="bg-[#6E42E1] hover:bg-[#7d55e6] text-white mt-4 px-6">
-                Save
-              </Button>
-            </div>
-
-            {/* Integrations Section */}
-            <div>
-              <h3 className="text-white text-lg font-medium mb-2">Integrations</h3>
-              <p className="text-white/60 mb-3">Connected Social Accounts (unlimited)</p>
-              <p className="text-white mb-3 font-medium">No connected accounts</p>
-              <p className="text-white/60 text-sm mb-4">
-                Make sure you're connected on the account your want to add before clicking on one of the following buttons.
-              </p>
-              <div className="flex space-x-4">
-                <Button className="bg-black hover:bg-gray-800 text-white font-bold">
-                  Add TikTok
-                </Button>
-                <Button className="bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white font-bold hover:opacity-90">
-                  Add Instagram
-                </Button>
-                <Button className="bg-red-600 hover:bg-red-700 text-white font-bold">
-                  Add Youtube
-                </Button>
-                <Button variant="outline" className="border-[#2A2A2A] bg-[#1E1E1E] text-white hover:bg-[#6E42E1] hover:text-white hover:border-[#6E42E1]">
-                  Add others
-                </Button>
-              </div>
-            </div>
-
-            {/* Channel Manager Section */}
-            <div>
-              <h3 className="text-white text-lg font-medium mb-3">Channel Manager</h3>
-              <p className="text-white/60 text-sm mb-4">
-                Channels makes you able to schedule content on multiple social media accounts from one place.
-              </p>
-              <div className="flex space-x-4">
-                <Input
-                  placeholder="Enter channel name"
-                  className="flex-1 bg-[#1E1E1E] border-[#2A2A2A] text-white placeholder:text-white/40 h-12"
-                />
-                <Button className="bg-[#6E42E1] hover:bg-[#7d55e6] text-white px-5">
-                  Create Channel
-                </Button>
-              </div>
-            </div>
-
-            {/* AI Settings Section */}
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-white text-lg font-medium mb-3">AI Settings</h3>
-                <p className="text-white/60 text-sm mb-4">Share 3 to 5 #hashtags you're the most into.</p>
-                {/* Combined hashtag input container */}
-                <div className="flex items-center w-full bg-[#1E1E1E] border border-[#2A2A2A] rounded-lg p-2.5">
-                    <div className="flex flex-wrap gap-2">
-                        {hashtags.map((tag) => (
-                          <span
-                            key={tag}
-                            className="bg-[#6E42E1] text-white px-3 py-1 rounded-md text-sm flex items-center"
-                          >
-                            <span>{tag}</span>
-                            <button className="ml-2 text-white/80 hover:text-white text-xs">X</button>
-                          </span>
-                        ))}
-                    </div>
-                    <button className="ml-auto pl-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white/60" viewBox="0 0 20 20" fill="currentColor">
-                           <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-                        </svg>
-                    </button>
+            {activeTab === "Your Timezone" && (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-white text-lg font-medium mb-3">Your Timezone</h3>
+                  <Select defaultValue="asia-calcutta">
+                    <SelectTrigger className="w-96 bg-[#1E1E1E] border-[#2A2A2A] text-white h-12">
+                      <SelectValue placeholder="Select a timezone" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#1E1E1E] border-[#2A2A2A] text-white">
+                      <SelectItem value="asia-calcutta" className="focus:bg-[#6E42E1]/50 focus:text-white">Asia/Calcutta</SelectItem>
+                      <SelectItem value="utc" className="focus:bg-[#6E42E1]/50 focus:text-white">UTC</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <Switch defaultChecked id="email-notifications" className="data-[state=checked]:bg-[#6E42E1]" />
+                  <label htmlFor="email-notifications" className="text-white font-medium">Enable email notifications</label>
                 </div>
               </div>
-              
+            )}
+
+            {/* Your Affiliate Code Section */}
+            {activeTab === "Your affiliate code" && (
               <div>
-                <p className="text-white font-medium text-sm mb-3">Tell us a few words about who you are and what you are into.</p>
-                <Textarea
-                  placeholder="Write in natural language so we can better personalize content for you."
-                  className="bg-[#1E1E1E] border-[#2A2A2A] text-white placeholder:text-white/40 min-h-[120px]"
+                <h3 className="text-white text-lg font-medium mb-3">Your affiliate code</h3>
+                <Input
+                  defaultValue="your_custom_code"
+                  className="w-96 bg-[#1E1E1E] border-[#2A2A2A] text-white placeholder:text-white/40 h-12"
                 />
+                <p className="text-white/60 text-sm mt-2 max-w-md">
+                  Enter your affiliate code here so we can automatically add it to the video you share - get it here
+                </p>
+                <Button className="bg-[#6E42E1] hover:bg-[#7d55e6] text-white mt-4 px-6">
+                  Save
+                </Button>
               </div>
-            </div>
+            )}
+
+            {/* Integrations Section */}
+            {activeTab === "Integrations" && (
+              <div>
+                <h3 className="text-white text-lg font-medium mb-2">Integrations</h3>
+                <p className="text-white/60 mb-3">Connected Social Accounts (unlimited)</p>
+                <p className="text-white mb-3 font-medium">No connected accounts</p>
+                <p className="text-white/60 text-sm mb-4">
+                  Make sure you're connected on the account your want to add before clicking on one of the following buttons.
+                </p>
+                <div className="flex space-x-4">
+                  <Button className="bg-black hover:bg-gray-800 text-white font-bold">
+                    Add TikTok
+                  </Button>
+                  <Button className="bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white font-bold hover:opacity-90">
+                    Add Instagram
+                  </Button>
+                  <Button className="bg-red-600 hover:bg-red-700 text-white font-bold">
+                    Add Youtube
+                  </Button>
+                  <Button variant="outline" className="border-[#2A2A2A] bg-[#1E1E1E] text-white hover:bg-[#6E42E1] hover:text-white hover:border-[#6E42E1]">
+                    Add others
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Channel Manager Section */}
+            {activeTab === "Channel Manager" && (
+              <div>
+                <h3 className="text-white text-lg font-medium mb-3">Channel Manager</h3>
+                <p className="text-white/60 text-sm mb-4">
+                  Channels makes you able to schedule content on multiple social media accounts from one place.
+                </p>
+                <div className="flex space-x-4">
+                  <Input
+                    placeholder="Enter channel name"
+                    className="flex-1 bg-[#1E1E1E] border-[#2A2A2A] text-white placeholder:text-white/40 h-12"
+                  />
+                  <Button className="bg-[#6E42E1] hover:bg-[#7d55e6] text-white px-5">
+                    Create Channel
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* AI Settings Section */}
+            {activeTab === "AI Settings" && (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-white text-lg font-medium mb-3">AI Settings</h3>
+                  <p className="text-white/60 text-sm mb-4">Share 3 to 5 #hashtags you're the most into.</p>
+                  {/* Combined hashtag input container */}
+                  <div className="flex items-center w-full bg-[#1E1E1E] border border-[#2A2A2A] rounded-lg p-2.5">
+                      <div className="flex flex-wrap gap-2">
+                          {hashtags.map((tag) => (
+                            <span
+                              key={tag}
+                              className="bg-[#6E42E1] text-white px-3 py-1 rounded-md text-sm flex items-center"
+                            >
+                              <span>{tag}</span>
+                              <button className="ml-2 text-white/80 hover:text-white text-xs">X</button>
+                            </span>
+                          ))}
+                      </div>
+                      <button className="ml-auto pl-2">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white/60" viewBox="0 0 20 20" fill="currentColor">
+                             <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                          </svg>
+                      </button>
+                  </div>
+                </div>
+                
+                <div>
+                  <p className="text-white font-medium text-sm mb-3">Tell us a few words about who you are and what you are into.</p>
+                  <Textarea
+                    placeholder="Write in natural language so we can better personalize content for you."
+                    className="bg-[#1E1E1E] border-[#2A2A2A] text-white placeholder:text-white/40 min-h-[120px]"
+                  />
+                </div>
+              </div>
+            )}
+            {/* Account Section */}
+            {activeTab === "Account" && (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-white text-lg font-medium mb-3">Account Details</h3>
+                  <div className="mb-4">
+                    {user?.username && (
+                      <>
+                        <span className="block text-sm text-white/60 mb-1">Username</span>
+                        <span className="block text-base font-medium text-white bg-[#2A2A2A] px-2 py-1 rounded">{user.username}</span>
+                      </>
+                    )}
+                    <span className="block text-sm text-white/60 mb-1 mt-3">Email</span>
+                    <span className="block text-base font-medium text-white bg-[#6E42E1] px-2 py-1 rounded">{user?.email || "Not available"}</span>
+                  </div>
+                </div>
+                <Button
+                  className="w-full bg-red-600 hover:bg-red-700 text-white"
+                  onClick={handleLogout}
+                >
+                  Logout
+                </Button>
+              </div>
+            )}
           </main>
         </div>
       </div>
