@@ -4,6 +4,24 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from "../context/AuthContext";
+import { toast } from "@/hooks/use-toast";
+
+// Helper: Check if string is a valid email
+function isEmail(value: string): boolean {
+  // Simple email regex
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+// Helper: Validate fields and return error message or null
+function validateFields(username: string, password: string): string | null {
+  if (!username && !password) return "Please enter username and password.";
+  if (!username) return "Please enter your username.";
+  if (!password) return "Please enter your password.";
+  if (isEmail(username) && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(username)) {
+    return "Please enter a valid email address.";
+  }
+  return null;
+}
 
 const Login = () => {
   const navigate = useNavigate();
@@ -11,11 +29,30 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { login } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    // Validation
+    if (!username) {
+      toast({ title: "Missing Username", description: "Please enter your username." });
+      return;
+    }
+    if (!password) {
+      toast({ title: "Missing Password", description: "Please enter your password." });
+      return;
+    }
+    // If username looks like an email, validate format
+    if (username.includes("@")) {
+      if (!isEmail(username)) {
+        toast({ title: "Invalid Email", description: "Please enter a valid email address." });
+        return;
+      }
+    }
+
     setLoading(true);
     try {
       const res = await fetch("/api/auth/login", {
@@ -25,26 +62,39 @@ const Login = () => {
           email: username,
           password,
         }),
-        credentials: "include", // Ensure cookies are sent
+        credentials: "include",
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.message || "Login failed.");
+        // Check for invalid credentials
+        if (
+          data.message &&
+          typeof data.message === "string" &&
+          /invalid|incorrect|wrong/i.test(data.message)
+        ) {
+          setError("Email or password is incorrect");
+          toast({ title: "Login Failed", description: "Email or password is incorrect" });
+        } else {
+          setError(data.message || "Login failed.");
+          toast({ title: "Login Failed", description: data.message || "Login failed." });
+        }
       } else {
         login(data.token, data.user);
         navigate("/dashboard");
+        toast({ title: "Logged in successfully" });
       }
     } catch (err) {
       setError("Network error. Please try again.");
+      toast({ title: "Network Error", description: "Please try again." });
     } finally {
       setLoading(false);
     }
   };
+
   const handleGoogleAuth = () => {
-    window.location.href =  `${import.meta.env.VITE_API_BASE_URL}/auth/google/login`; // backend OAuth route
+    window.location.href =  `${import.meta.env.VITE_API_BASE_URL}/auth/google/login`;
   };
 
-  // (Later you can do the same for Facebook/GitHub if needed)
   const handleFacebookAuth = () => {
     window.location.href =  `${import.meta.env.VITE_API_BASE_URL}/auth/facebook/login`;
   };
@@ -116,18 +166,20 @@ const Login = () => {
               </div>
               
               <div className="relative">
-                <Input 
-                  type="password" 
+                <Input
+                  type={showPassword ? "text" : "password"}
                   placeholder="Password"
                   className="w-full pr-12"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
-                <button 
+                <button
                   type="button"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  onClick={() => setShowPassword((prev) => !prev)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/50 hover:text-white"
                 >
-                  👁
+                  {showPassword ? "🙈" : "👁"}
                 </button>
               </div>
 
