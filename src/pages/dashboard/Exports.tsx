@@ -122,6 +122,7 @@ const Exports = () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ s3Key }),
+          credentials: "include",
         });
       } catch (e) {
         // Optionally handle error (e.g., show toast)
@@ -199,7 +200,10 @@ const Exports = () => {
       const poll = async () => {
         try {
           // Always use backend job_id for polling
-          const res = await fetch(`/api/video/crop/${item.job_id}`);
+          const res = await fetch(`/api/video/crop/${item.job_id}`, {
+            method: "GET",
+            credentials: "include"
+          });
           if (!res.ok) return;
           const data = await res.json();
           // Log backend response for each completed/failed job

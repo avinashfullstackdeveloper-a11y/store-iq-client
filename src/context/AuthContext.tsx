@@ -1,45 +1,139 @@
 // AuthContext for authentication state and JWT management
 
-import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useEffect,
+} from "react";
+
+interface User {
+  id: string;
+  email: string;
+  username?: string; // Add other user fields as needed
+  timezone?: string;
+}
 
 interface AuthContextType {
-  user: any;
+  user: User | null;
   token: string | null;
-  login: (token: string, user: any) => void;
+  login: (token: string, user: User) => void;
   logout: () => void;
+  updateTimezone: (timezone: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [token, setToken] = useState<string | null>(null);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
 
+  // Restore user/token on mount
   useEffect(() => {
-    // Load token from localStorage on mount
-    const storedToken = localStorage.getItem("jwt_token");
-    const storedUser = localStorage.getItem("user");
-    if (storedToken) setToken(storedToken);
-    if (storedUser && storedUser !== "undefined") setUser(JSON.parse(storedUser));
+    const storedToken = localStorage.getItem("token");
+    const handleAuthMeResponse = async (res: Response) => {
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.user) {
+          setUser(data.user);
+          setAuthError(null);
+        } else {
+          setUser(null);
+          setToken(null);
+          localStorage.removeItem("token");
+          setAuthError("Authentication failed.");
+        }
+      } else if (res.status === 401 || res.status === 403) {
+        setUser(null);
+        setToken(null);
+        localStorage.removeItem("token");
+        setAuthError("Session expired. Please log in again.");
+      } else if (res.status >= 500) {
+        setAuthError(
+          "The server is temporarily unavailable. Please try again later."
+        );
+        // Do not clear user/token
+      } else {
+        setAuthError("An unknown error occurred.");
+      }
+    };
+
+    if (storedToken) {
+      setToken(storedToken);
+      fetch("/api/auth/me", {
+        headers: {
+          Authorization: `Bearer ${storedToken}`,
+        },
+        credentials: "include",
+      })
+        .then(handleAuthMeResponse)
+        .catch(() => {
+          setAuthError(
+            "Unable to connect to the server. Please check your connection."
+          );
+          // Do not clear user/token
+        });
+    } else {
+      // Try cookie-based session
+      fetch("/api/auth/me", {
+        credentials: "include",
+      })
+        .then(handleAuthMeResponse)
+        .catch(() => {
+          setAuthError(
+            "Unable to connect to the server. Please check your connection."
+          );
+        });
+    }
   }, []);
 
-  const login = (jwt: string, userObj: any) => {
-    setToken(jwt);
+  const login = (_jwt: string, userObj: User) => {
+    setToken(_jwt); // Store token in state
     setUser(userObj);
-    localStorage.setItem("jwt_token", jwt);
-    localStorage.setItem("user", JSON.stringify(userObj));
-    // In production, use httpOnly cookies for JWT storage for better security
+    if (_jwt) {
+      localStorage.setItem("token", _jwt); // Persist token
+    }
+    // Optionally, persist user info if needed
+    // localStorage.setItem("user", JSON.stringify(userObj));
   };
 
   const logout = () => {
     setToken(null);
     setUser(null);
-    localStorage.removeItem("jwt_token");
-    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    // localStorage.removeItem("user");
+  };
+
+  // PATCH user's timezone and update state
+  const updateTimezone = async (timezone: string) => {
+    if (!user) return;
+    try {
+      const res = await fetch("/api/auth/me", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        credentials: "include",
+        body: JSON.stringify({ timezone }),
+      });
+      if (!res.ok) throw new Error("Failed to update timezone");
+      setUser((prev) => (prev ? { ...prev, timezone } : prev));
+    } catch (err) {
+      // Optionally handle error (toast, etc)
+      // console.error(err);
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout }}>
+    <AuthContext.Provider value={{ user, token, login, logout, updateTimezone }}>
+      {authError && (
+        <div style={{ color: "red", textAlign: "center", margin: "1em" }}>
+          {authError}
+        </div>
+      )}
       {children}
     </AuthContext.Provider>
   );
