@@ -79,6 +79,7 @@ const Videos = () => {
     const fetchVideos = async () => {
       setLoading(true);
       setError(null);
+
       try {
         const token = localStorage.getItem("jwt_token");
         if (!token) throw new Error("User not authenticated (no token found)");
@@ -114,6 +115,7 @@ const Videos = () => {
         setLoading(false);
       }
     };
+
     fetchVideos();
   }, []);
 
