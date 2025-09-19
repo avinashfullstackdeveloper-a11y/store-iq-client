@@ -2,7 +2,6 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 
 import React, { useState } from "react";
-import AdvancedVideoPlayer from "@/components/AdvancedVideoPlayer";
 import Loader from "@/components/ui/Loader";
 import { ToastProvider, Toast, ToastTitle, ToastDescription, ToastViewport } from "@/components/ui/toast";
 
@@ -31,14 +30,17 @@ const Publish = () => {
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
   // Platform connection
+  // Real OAuth connect: redirect to backend OAuth endpoint
   const handleConnect = (platform: "youtube" | "instagram") => {
-    setTimeout(() => {
-      if (platform === "youtube") setYtConnected(true);
-      if (platform === "instagram") setIgConnected(true);
-    }, 1000);
+    if (platform === "youtube") {
+      window.location.href = YT_OAUTH_URL;
+    } else if (platform === "instagram") {
+      window.location.href = IG_OAUTH_URL;
+    }
   };
 
   // Fetch user videos on mount
+  // On mount: check connection status for YouTube/Instagram
   React.useEffect(() => {
     const fetchVideos = async () => {
       setLoading(true);
@@ -54,7 +56,23 @@ const Publish = () => {
         setLoading(false);
       }
     };
+
+    // Check OAuth connection status from backend
+    const fetchConnectionStatus = async () => {
+      try {
+        const res = await fetch("/api/auth/status", { credentials: "include" });
+        if (res.ok) {
+          const status = await res.json();
+          setYtConnected(!!status.youtube);
+          setIgConnected(!!status.instagram);
+        }
+      } catch {
+        // Ignore errors, keep as not connected
+      }
+    };
+
     fetchVideos();
+    fetchConnectionStatus();
   }, []);
 
   // Platform selection per video
@@ -161,7 +179,6 @@ const Publish = () => {
                     size="sm"
                     className="bg-red-600 hover:bg-red-700 text-white rounded"
                     onClick={() => handleConnect("youtube")}
-                    disabled={ytConnected}
                   >
                     Connect
                   </Button>
@@ -178,7 +195,6 @@ const Publish = () => {
                     size="sm"
                     className="bg-gradient-to-r from-pink-500 to-yellow-400 text-white rounded"
                     onClick={() => handleConnect("instagram")}
-                    disabled={igConnected}
                   >
                     Connect
                   </Button>
