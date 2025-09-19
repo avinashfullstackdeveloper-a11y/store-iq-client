@@ -32,6 +32,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Restore user/token on mount
   useEffect(() => {
+    // Only run auth check on non-public routes
+    const publicRoutes = ["/", "/login", "/signup"];
+    const pathname = window.location.pathname;
+    if (publicRoutes.includes(pathname)) {
+      setUser(null);
+      setToken(null);
+      setAuthError(null);
+      return;
+    }
+
     const storedToken = localStorage.getItem("token");
     const handleAuthMeResponse = async (res: Response) => {
       if (res.ok) {
@@ -120,7 +130,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         body: JSON.stringify({ timezone }),
       });
       if (!res.ok) throw new Error("Failed to update timezone");
-      setUser((prev) => (prev ? { ...prev, timezone } : prev));
+      // Re-fetch user from backend to ensure state matches persisted value
+      const userRes = await fetch("/api/auth/me", {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        credentials: "include",
+      });
+      if (userRes.ok) {
+        const data = await userRes.json();
+        if (data && data.user) {
+          setUser(data.user);
+        }
+      }
     } catch (err) {
       // Optionally handle error (toast, etc)
       // console.error(err);
