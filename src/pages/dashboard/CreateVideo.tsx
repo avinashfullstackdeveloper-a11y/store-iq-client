@@ -205,7 +205,7 @@ Each scene should have a different background. Use a modern sans-serif font and 
             voice: selectedVoice,
           },
         }),
-        credentials: "include",
+        
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
