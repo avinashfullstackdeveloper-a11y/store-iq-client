@@ -1,9 +1,15 @@
+/* global gapi */
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 
 import React, { useState } from "react";
+
 import Loader from "@/components/ui/Loader";
 import { ToastProvider, Toast, ToastTitle, ToastDescription, ToastViewport } from "@/components/ui/toast";
+
+// Google OAuth config
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+const GOOGLE_SCOPES = "https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly";
 
 const YT_OAUTH_URL = "/api/auth/youtube"; // Placeholder, replace with actual
 const IG_OAUTH_URL = "/api/auth/instagram"; // Placeholder, replace with actual
@@ -31,9 +37,96 @@ const Publish = () => {
 
   // Platform connection
   // Real OAuth connect: redirect to backend OAuth endpoint
+  /**
+   * Dynamically loads the Google Identity Services (GIS) script.
+   */
+  const loadGisScript = (): Promise<void> =>
+    new Promise((resolve, reject) => {
+      if (document.getElementById("google-identity-services")) return resolve();
+      const script = document.createElement("script");
+      script.src = "https://accounts.google.com/gsi/client";
+      script.async = true;
+      script.defer = true;
+      script.id = "google-identity-services";
+      script.onload = () => resolve();
+      script.onerror = reject;
+      document.body.appendChild(script);
+    });
+  
+  /**
+   * YouTube OAuth flow using Google Identity Services (GIS)
+   */
+  const handleYouTubeOAuth = async () => {
+    try {
+      setLoading(true);
+  
+      if (!GOOGLE_CLIENT_ID || typeof GOOGLE_CLIENT_ID !== "string" || GOOGLE_CLIENT_ID.trim() === "") {
+        console.error("Missing GOOGLE_CLIENT_ID. Check your environment variables.");
+        setToast({ type: "error", message: "Google Client ID is not configured. Please contact support." });
+        setLoading(false);
+        return;
+      }
+      if (!GOOGLE_SCOPES || typeof GOOGLE_SCOPES !== "string" || GOOGLE_SCOPES.trim() === "") {
+        console.error("Missing GOOGLE_SCOPES. Check your code configuration.");
+        setToast({ type: "error", message: "Google OAuth scopes are not configured. Please contact support." });
+        setLoading(false);
+        return;
+      }
+  
+      await loadGisScript();
+  
+      // @ts-ignore
+      if (!window.google || !window.google.accounts || !window.google.accounts.oauth2) {
+        setToast({ type: "error", message: "Google Identity Services failed to load." });
+        setLoading(false);
+        return;
+      }
+  
+      // Use Token Client for YouTube OAuth
+      // See: https://developers.google.com/identity/oauth2/web/guides/use-token-model
+      const tokenClient = window.google.accounts.oauth2.initTokenClient({
+        client_id: GOOGLE_CLIENT_ID,
+        scope: GOOGLE_SCOPES,
+        prompt: "consent",
+        callback: async (tokenResponse: any) => {
+          if (tokenResponse.error || !tokenResponse.access_token) {
+            setToast({ type: "error", message: tokenResponse.error_description || "YouTube OAuth failed" });
+            setLoading(false);
+            return;
+          }
+          try {
+            // Send access token to backend
+            const res = await fetch("/api/auth/link-youtube", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+              body: JSON.stringify({
+                accessToken: tokenResponse.access_token,
+                refreshToken: tokenResponse.refresh_token || undefined,
+              }),
+            });
+            if (!res.ok) throw new Error("Failed to link YouTube account");
+            setYtConnected(true);
+            setToast({ type: "success", message: "YouTube account linked!" });
+          } catch (err) {
+            setToast({ type: "error", message: (err as Error)?.message || "YouTube OAuth failed" });
+          } finally {
+            setLoading(false);
+          }
+        },
+      });
+  
+      tokenClient.requestAccessToken();
+    } catch (err) {
+      setToast({ type: "error", message: (err as Error)?.message || "YouTube OAuth failed" });
+      setLoading(false);
+      console.error("YouTube OAuth error:", err);
+    }
+  };
+
   const handleConnect = (platform: "youtube" | "instagram") => {
     if (platform === "youtube") {
-      window.location.href = YT_OAUTH_URL;
+      handleYouTubeOAuth();
     } else if (platform === "instagram") {
       window.location.href = IG_OAUTH_URL;
     }
@@ -179,8 +272,9 @@ const Publish = () => {
                     size="sm"
                     className="bg-red-600 hover:bg-red-700 text-white rounded"
                     onClick={() => handleConnect("youtube")}
+                    disabled={loading}
                   >
-                    Connect
+                    {loading ? "Connecting..." : "Connect"}
                   </Button>
                 )}
               </div>
