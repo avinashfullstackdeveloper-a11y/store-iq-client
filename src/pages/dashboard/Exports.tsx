@@ -345,13 +345,7 @@ const Exports = () => {
           <h2 className="text-2xl font-bold text-white mb-6">In Progress</h2>
           {exportHistory.filter((item) => item.status !== "Completed").length > 0 && (
             <div className="flex flex-col items-center mb-6">
-              <Loader
-                size="large"
-                variant="spinner"
-                primaryColor="#A259FF"
-                overlayColor="transparent"
-                message="Your export in progress"
-              />
+              
             </div>
           )}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

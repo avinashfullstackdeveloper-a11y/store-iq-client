@@ -193,26 +193,27 @@ Each scene should have a different background. Use a modern sans-serif font and 
     setVideoUrl(null);
     setVideoS3Key(null);
     try {
-      const res = await fetch("/api/generate-video", {
+      const res = await fetch("http://localhost:5000/ai/generate-video", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+         credentials: "include", 
         body: JSON.stringify({
-          script: generatedScript,
+            prompt,
           config: {
             duration: duration[0],
             preset: selectedPreset,
             voice: selectedVoice,
           },
         }),
-        credentials: "include",
+        
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err?.error || "Failed to generate video.");
       }
       const data = await res.json();
-      if (!data?.videoUrl) throw new Error("No video URL returned from API.");
-      setVideoUrl(data.videoUrl);
+      if (!data?.s3Url) throw new Error("No video URL returned from API.");
+      setVideoUrl(data.s3Url);
       setVideoS3Key(data.s3Key || null); // Expect backend to return s3Key
       setVideoStatus("success");
     } catch (err: unknown) {
