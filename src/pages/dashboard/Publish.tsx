@@ -170,7 +170,8 @@ const Publish = () => {
               }),
             });
             if (!res.ok) throw new Error("Failed to link YouTube account");
-            setYtConnected(true);
+            // After successful link, re-fetch connection status from backend
+            await fetchConnectionStatus();
             setToast({ type: "success", message: "YouTube account linked!" });
           } catch (err) {
             setToast({
@@ -204,6 +205,20 @@ const Publish = () => {
 
   // Fetch user videos on mount
   // On mount: check connection status for YouTube/Instagram
+  // Check OAuth connection status from backend
+  const fetchConnectionStatus = async () => {
+    try {
+      const res = await fetch("/api/auth/status", { credentials: "include" });
+      if (res.ok) {
+        const status = await res.json();
+        setYtConnected(!!status.youtube);
+        setIgConnected(!!status.instagram);
+      }
+    } catch {
+      // Ignore errors, keep as not connected
+    }
+  };
+
   React.useEffect(() => {
     const fetchVideos = async () => {
       setLoading(true);
@@ -217,20 +232,6 @@ const Publish = () => {
         setError((err as Error)?.message || "Unknown error");
       } finally {
         setLoading(false);
-      }
-    };
-
-    // Check OAuth connection status from backend
-    const fetchConnectionStatus = async () => {
-      try {
-        const res = await fetch("/api/auth/status", { credentials: "include" });
-        if (res.ok) {
-          const status = await res.json();
-          setYtConnected(!!status.youtube);
-          setIgConnected(!!status.instagram);
-        }
-      } catch {
-        // Ignore errors, keep as not connected
       }
     };
 

@@ -300,7 +300,7 @@ const Login = () => {
               <div className="text-center text-white/60 pt-4">
                 Don't have an account ?
                 <a
-                  href="/pages/signup"
+                  href="/signup"
                   className="text-storiq-purple hover:text-storiq-purple-light ml-1 font-semibold"
                 >
                   Signup

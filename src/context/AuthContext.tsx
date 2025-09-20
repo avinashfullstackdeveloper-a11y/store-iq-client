@@ -33,9 +33,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Restore user/token on mount
   useEffect(() => {
     // Only run auth check on non-public routes
-    const publicRoutes = ["/", "/login", "/signup"];
+    // Treat any /login* or /signup* route as public
     const pathname = window.location.pathname;
-    if (publicRoutes.includes(pathname)) {
+
+    // Normalize path: remove trailing slash and lowercase
+    const normalize = (path: string) =>
+      path.replace(/\/+$/, "").toLowerCase();
+
+    const normalizedPath = normalize(pathname);
+
+    const isPublic =
+      normalizedPath === "/" ||
+      normalizedPath.startsWith("/login") ||
+      normalizedPath.startsWith("/signup");
+
+    if (isPublic) {
       setUser(null);
       setToken(null);
       setAuthError(null);
