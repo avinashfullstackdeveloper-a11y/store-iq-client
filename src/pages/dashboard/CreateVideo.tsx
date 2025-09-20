@@ -21,7 +21,6 @@ function isErrorWithMessage(err: unknown): err is { message: string } {
 
 const CreateVideo = () => {
   const { user } = useAuth();
-  console.log("Current user in CreateVideo:", user);
   // --- STATE MANAGEMENT ---
   // --- STATUS MANAGEMENT ---
   type Status = "idle" | "loading" | "success" | "error";

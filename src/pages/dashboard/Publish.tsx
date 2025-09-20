@@ -5,11 +5,18 @@ import { Button } from "@/components/ui/button";
 import React, { useState } from "react";
 
 import Loader from "@/components/ui/Loader";
-import { ToastProvider, Toast, ToastTitle, ToastDescription, ToastViewport } from "@/components/ui/toast";
+import {
+  ToastProvider,
+  Toast,
+  ToastTitle,
+  ToastDescription,
+  ToastViewport,
+} from "@/components/ui/toast";
 
 // Google OAuth config
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-const GOOGLE_SCOPES = "https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly";
+const GOOGLE_SCOPES =
+  "https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly";
 
 const YT_OAUTH_URL = "/api/auth/youtube"; // Placeholder, replace with actual
 const IG_OAUTH_URL = "/api/auth/instagram"; // Placeholder, replace with actual
@@ -18,6 +25,31 @@ const Publish = () => {
   // Connection status
   const [ytConnected, setYtConnected] = useState(false);
   const [igConnected, setIgConnected] = useState(false);
+
+  // Unified YouTube connect/disconnect handler
+  const handleYouTubeButton = async () => {
+    setLoading(true);
+    setToast(null);
+    try {
+      if (!ytConnected) {
+        // Connect flow
+        await handleYouTubeOAuth();
+      } else {
+        // Disconnect flow
+        const res = await fetch("/api/auth/disconnect-youtube", {
+          method: "POST",
+          credentials: "include",
+        });
+        if (!res.ok) throw new Error("Failed to disconnect YouTube");
+        setYtConnected(false);
+        setToast({ type: "success", message: "YouTube disconnected." });
+      }
+    } catch (err) {
+      setToast({ type: "error", message: (err as Error)?.message || "YouTube action failed." });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Videos state
   interface Video {
@@ -33,7 +65,10 @@ const Publish = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [postingId, setPostingId] = useState<string | null>(null);
-  const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [toast, setToast] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
 
   // Platform connection
   // Real OAuth connect: redirect to backend OAuth endpoint
@@ -52,36 +87,61 @@ const Publish = () => {
       script.onerror = reject;
       document.body.appendChild(script);
     });
-  
+
   /**
    * YouTube OAuth flow using Google Identity Services (GIS)
    */
   const handleYouTubeOAuth = async () => {
     try {
       setLoading(true);
-  
-      if (!GOOGLE_CLIENT_ID || typeof GOOGLE_CLIENT_ID !== "string" || GOOGLE_CLIENT_ID.trim() === "") {
-        console.error("Missing GOOGLE_CLIENT_ID. Check your environment variables.");
-        setToast({ type: "error", message: "Google Client ID is not configured. Please contact support." });
+
+      if (
+        !GOOGLE_CLIENT_ID ||
+        typeof GOOGLE_CLIENT_ID !== "string" ||
+        GOOGLE_CLIENT_ID.trim() === ""
+      ) {
+        console.error(
+          "Missing GOOGLE_CLIENT_ID. Check your environment variables."
+        );
+        setToast({
+          type: "error",
+          message:
+            "Google Client ID is not configured. Please contact support.",
+        });
         setLoading(false);
         return;
       }
-      if (!GOOGLE_SCOPES || typeof GOOGLE_SCOPES !== "string" || GOOGLE_SCOPES.trim() === "") {
+      if (
+        !GOOGLE_SCOPES ||
+        typeof GOOGLE_SCOPES !== "string" ||
+        GOOGLE_SCOPES.trim() === ""
+      ) {
         console.error("Missing GOOGLE_SCOPES. Check your code configuration.");
-        setToast({ type: "error", message: "Google OAuth scopes are not configured. Please contact support." });
+        setToast({
+          type: "error",
+          message:
+            "Google OAuth scopes are not configured. Please contact support.",
+        });
         setLoading(false);
         return;
       }
-  
+
       await loadGisScript();
-  
+
       // @ts-ignore
-      if (!window.google || !window.google.accounts || !window.google.accounts.oauth2) {
-        setToast({ type: "error", message: "Google Identity Services failed to load." });
+      if (
+        !window.google ||
+        !window.google.accounts ||
+        !window.google.accounts.oauth2
+      ) {
+        setToast({
+          type: "error",
+          message: "Google Identity Services failed to load.",
+        });
         setLoading(false);
         return;
       }
-  
+
       // Use Token Client for YouTube OAuth
       // See: https://developers.google.com/identity/oauth2/web/guides/use-token-model
       const tokenClient = window.google.accounts.oauth2.initTokenClient({
@@ -90,7 +150,11 @@ const Publish = () => {
         prompt: "consent",
         callback: async (tokenResponse: any) => {
           if (tokenResponse.error || !tokenResponse.access_token) {
-            setToast({ type: "error", message: tokenResponse.error_description || "YouTube OAuth failed" });
+            setToast({
+              type: "error",
+              message:
+                tokenResponse.error_description || "YouTube OAuth failed",
+            });
             setLoading(false);
             return;
           }
@@ -109,16 +173,22 @@ const Publish = () => {
             setYtConnected(true);
             setToast({ type: "success", message: "YouTube account linked!" });
           } catch (err) {
-            setToast({ type: "error", message: (err as Error)?.message || "YouTube OAuth failed" });
+            setToast({
+              type: "error",
+              message: (err as Error)?.message || "YouTube OAuth failed",
+            });
           } finally {
             setLoading(false);
           }
         },
       });
-  
+
       tokenClient.requestAccessToken();
     } catch (err) {
-      setToast({ type: "error", message: (err as Error)?.message || "YouTube OAuth failed" });
+      setToast({
+        type: "error",
+        message: (err as Error)?.message || "YouTube OAuth failed",
+      });
       setLoading(false);
       console.error("YouTube OAuth error:", err);
     }
@@ -170,9 +240,13 @@ const Publish = () => {
 
   // Platform selection per video
   type PlatformSelections = { [videoId: string]: { yt: boolean; ig: boolean } };
-  const [platformSelections, setPlatformSelections] = useState<PlatformSelections>({});
+  const [platformSelections, setPlatformSelections] =
+    useState<PlatformSelections>({});
 
-  const handlePlatformChange = (videoId: string, platform: "youtube" | "instagram") => {
+  const handlePlatformChange = (
+    videoId: string,
+    platform: "youtube" | "instagram"
+  ) => {
     setPlatformSelections((prev) => ({
       ...prev,
       [videoId]: {
@@ -184,9 +258,15 @@ const Publish = () => {
 
   // Handle posting per video
   const handlePost = async (video: Video) => {
-    const selection = platformSelections[video.id || video.s3Key || ""] || { yt: false, ig: false };
+    const selection = platformSelections[video.id || video.s3Key || ""] || {
+      yt: false,
+      ig: false,
+    };
     if ((!selection.yt && !selection.ig) || (!ytConnected && !igConnected)) {
-      setToast({ type: "error", message: "Please connect platforms and select at least one." });
+      setToast({
+        type: "error",
+        message: "Please connect platforms and select at least one.",
+      });
       return;
     }
     setPostingId(video.id || video.s3Key || "");
@@ -239,13 +319,22 @@ const Publish = () => {
 
       if (success) {
         setToast({ type: "success", message: "Video posted successfully!" });
-        setPlatformSelections((prev) => ({ ...prev, [video.id || video.s3Key || ""]: { yt: false, ig: false } }));
+        setPlatformSelections((prev) => ({
+          ...prev,
+          [video.id || video.s3Key || ""]: { yt: false, ig: false },
+        }));
       } else {
-        setToast({ type: "error", message: errorMsg.trim() || "Failed to post video." });
+        setToast({
+          type: "error",
+          message: errorMsg.trim() || "Failed to post video.",
+        });
       }
     } catch (err) {
       setPostingId(null);
-      setToast({ type: "error", message: (err as Error)?.message || "Failed to post video." });
+      setToast({
+        type: "error",
+        message: (err as Error)?.message || "Failed to post video.",
+      });
     }
   };
 
@@ -254,8 +343,12 @@ const Publish = () => {
       <DashboardLayout>
         <div className="p-8">
           <div className="mb-8">
-            <h1 className="text-4xl font-bold text-white mb-2">Publish to YouTube & Instagram</h1>
-            <p className="text-white/60">Connect, generate/select a video, choose platforms, and post!</p>
+            <h1 className="text-4xl font-bold text-white mb-2">
+              Publish to YouTube & Instagram
+            </h1>
+            <p className="text-white/60">
+              Connect, generate/select a video, choose platforms, and post!
+            </p>
           </div>
 
           {/* Social Connect Section */}
@@ -266,7 +359,14 @@ const Publish = () => {
                 <span className="text-2xl">📺</span>
                 <span className="text-white font-medium">YouTube</span>
                 {ytConnected ? (
-                  <span className="ml-2 px-2 py-1 bg-green-600 text-white rounded text-xs">Connected</span>
+                  <Button
+                    size="sm"
+                    className="bg-red-600 hover:bg-red-700 text-white rounded"
+                    onClick={handleYouTubeButton}
+                    disabled={loading}
+                  >
+                    {loading ? "Disconnecting..." : "Disconnect"}
+                  </Button>
                 ) : (
                   <Button
                     size="sm"
@@ -283,7 +383,9 @@ const Publish = () => {
                 <span className="text-2xl">📸</span>
                 <span className="text-white font-medium">Instagram</span>
                 {igConnected ? (
-                  <span className="ml-2 px-2 py-1 bg-green-600 text-white rounded text-xs">Connected</span>
+                  <span className="ml-2 px-2 py-1 bg-green-600 text-white rounded text-xs">
+                    Connected
+                  </span>
                 ) : (
                   <Button
                     size="sm"
@@ -295,7 +397,9 @@ const Publish = () => {
                 )}
               </div>
             </div>
-            <div className="text-white/60 text-xs mt-2 md:mt-0">Connect your accounts to enable posting</div>
+            <div className="text-white/60 text-xs mt-2 md:mt-0">
+              Connect your accounts to enable posting
+            </div>
           </div>
 
           {/* User Videos Section */}
@@ -306,21 +410,39 @@ const Publish = () => {
             ) : error ? (
               <div className="text-destructive">{error}</div>
             ) : videos.length === 0 ? (
-              <div className="text-white/40">No videos found. Create or upload videos to see them here.</div>
+              <div className="text-white/40">
+                No videos found. Create or upload videos to see them here.
+              </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {videos.map((video) => (
-                  <div key={video.id || video.s3Key} className="bg-storiq-dark-lighter rounded-xl p-4 flex flex-col gap-2 border border-storiq-border">
+                  <div
+                    key={video.id || video.s3Key}
+                    className="bg-storiq-dark-lighter rounded-xl p-4 flex flex-col gap-2 border border-storiq-border"
+                  >
                     <div className="aspect-w-16 aspect-h-9 mb-2">
-                      <video src={video.url} controls className="w-full rounded" />
+                      <video
+                        src={video.url}
+                        controls
+                        className="w-full rounded"
+                      />
                     </div>
-                    <div className="text-white font-semibold">{video.title || "Untitled Video"}</div>
+                    <div className="text-white font-semibold">
+                      {video.title || "Untitled Video"}
+                    </div>
                     <div className="flex gap-4 items-center mt-2">
                       <label className="flex items-center gap-2 text-white">
                         <input
                           type="checkbox"
-                          checked={!!platformSelections[video.id || video.s3Key]?.yt}
-                          onChange={() => handlePlatformChange(video.id || video.s3Key, "youtube")}
+                          checked={
+                            !!platformSelections[video.id || video.s3Key]?.yt
+                          }
+                          onChange={() =>
+                            handlePlatformChange(
+                              video.id || video.s3Key,
+                              "youtube"
+                            )
+                          }
                           disabled={!ytConnected}
                           className="accent-red-600"
                         />
@@ -329,8 +451,15 @@ const Publish = () => {
                       <label className="flex items-center gap-2 text-white">
                         <input
                           type="checkbox"
-                          checked={!!platformSelections[video.id || video.s3Key]?.ig}
-                          onChange={() => handlePlatformChange(video.id || video.s3Key, "instagram")}
+                          checked={
+                            !!platformSelections[video.id || video.s3Key]?.ig
+                          }
+                          onChange={() =>
+                            handlePlatformChange(
+                              video.id || video.s3Key,
+                              "instagram"
+                            )
+                          }
                           disabled={!igConnected}
                           className="accent-pink-500"
                         />
@@ -342,10 +471,13 @@ const Publish = () => {
                         onClick={() => handlePost(video)}
                         disabled={
                           postingId === (video.id || video.s3Key) ||
-                          (!platformSelections[video.id || video.s3Key]?.yt && !platformSelections[video.id || video.s3Key]?.ig)
+                          (!platformSelections[video.id || video.s3Key]?.yt &&
+                            !platformSelections[video.id || video.s3Key]?.ig)
                         }
                       >
-                        {postingId === (video.id || video.s3Key) ? "Posting..." : "Post"}
+                        {postingId === (video.id || video.s3Key)
+                          ? "Posting..."
+                          : "Post"}
                       </Button>
                     </div>
                   </div>
@@ -363,7 +495,9 @@ const Publish = () => {
               onOpenChange={() => setToast(null)}
               className="mt-4"
             >
-              <ToastTitle>{toast.type === "success" ? "Success" : "Error"}</ToastTitle>
+              <ToastTitle>
+                {toast.type === "success" ? "Success" : "Error"}
+              </ToastTitle>
               <ToastDescription>{toast.message}</ToastDescription>
             </Toast>
           )}
@@ -379,10 +513,9 @@ const Publish = () => {
             />
           )}
         </div>
-        </DashboardLayout>
-      </ToastProvider>
-    );
-  };
-
+      </DashboardLayout>
+    </ToastProvider>
+  );
+};
 
 export default Publish;
