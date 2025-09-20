@@ -27,7 +27,6 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  console.log("AuthProvider rendered");
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
@@ -35,7 +34,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Restore user/token on mount or route change
   useEffect(() => {
-    console.log("AuthProvider useEffect running");
     // Only run auth check on non-public routes
     // Treat any /login* or /signup* route as public
     const pathname = location.pathname;
@@ -49,8 +47,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       publicRoutes.includes(normalizedPath) ||
       normalizedPath.startsWith("/login/") ||
       normalizedPath.startsWith("/signup/");
-
-    console.log("AuthContext route check:", { normalizedPath, isPublic });
 
     if (isPublic) {
       setUser(null);
@@ -72,6 +68,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           localStorage.removeItem("token");
           setAuthError("Authentication failed.");
         }
+      } else if (res.status === 404) {
+        // User not found: clear tokens, logout, redirect to login
+        setUser(null);
+        setToken(null);
+        localStorage.removeItem("token");
+        setAuthError("User not found. Please log in again.");
+        // Optional: call logout() if you want to centralize logic
+        // logout();
+        window.location.assign("/login");
       } else if (res.status === 401 || res.status === 403) {
         setUser(null);
         setToken(null);
