@@ -3,23 +3,77 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { toast } from "@/hooks/use-toast";
 
 const Signup = () => {
   const [username, setUsername] = useState("");
   const [emailOrPhone, setEmailOrPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
 
+  // Helper: Check if any field is empty
+  const isAnyFieldEmpty = () =>
+    !username.trim() || !emailOrPhone.trim() || !password.trim() || !confirmPassword.trim();
+
+  // Helper: Email regex validation
+  const isValidEmail = (email: string) => {
+    // RFC 5322 Official Standard
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
+  // Helper: Password strength
+  const isStrongPassword = (pwd: string) => {
+    // Min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char
+    return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/.test(pwd);
+  };
+
+  // Helper: Passwords match
+  const doPasswordsMatch = () => password === confirmPassword;
+
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
 
-    if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+    // Empty field check
+    if (isAnyFieldEmpty()) {
+      toast({
+        title: "Missing Fields",
+        description: "Please fill in all fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Email format validation
+    if (!isValidEmail(emailOrPhone)) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Password strength check
+    if (!isStrongPassword(password)) {
+      toast({
+        title: "Weak Password",
+        description:
+          "Password must be at least 8 characters and include uppercase, lowercase, number, and special character.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Passwords match check
+    if (!doPasswordsMatch()) {
+      toast({
+        title: "Password Mismatch",
+        description: "Passwords do not match.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -36,14 +90,27 @@ const Signup = () => {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.message || "Registration failed.");
+        toast({
+          title: "Registration Failed",
+          description: data.message || "Registration failed.",
+          variant: "destructive",
+        });
       } else {
         // Auto-login after signup
         login(data.token, data.user);
+        toast({
+          title: "Signed up successfully",
+          description: "Welcome! You have been signed up and logged in.",
+          variant: "default",
+        });
         navigate("/dashboard");
       }
     } catch (err) {
-      setError("Network error. Please try again.");
+      toast({
+        title: "Network Error",
+        description: "Network error. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -150,9 +217,7 @@ const Signup = () => {
                 required
               />
 
-              {error && (
-                <div className="text-red-400 text-sm text-center">{error}</div>
-              )}
+              {/* All error/success feedback is now handled via toast notifications */}
 
               <Button
                 variant="gradient"

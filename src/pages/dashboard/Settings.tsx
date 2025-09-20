@@ -1,13 +1,5 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
@@ -24,13 +16,34 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { DateTime, Info } from "luxon";
 
+// Cookie helpers
+function setCookie(name: string, value: string, days = 365) {
+  const expires = new Date(Date.now() + days * 864e5).toUTCString();
+  document.cookie = name + "=" + encodeURIComponent(value) + "; expires=" + expires + "; path=/";
+}
+function getCookie(name: string) {
+  return document.cookie.split("; ").reduce((r, v) => {
+    const parts = v.split("=");
+    return parts[0] === name ? decodeURIComponent(parts[1]) : r
+  }, "");
+}
+
 const Settings = () => {
   const { user, logout, updateTimezone } = useAuth();
   const navigate = useNavigate();
   // Use IANA timezone, default to user's or system's
-  const [timezone, setTimezone] = useState(user?.timezone || DateTime.local().zoneName);
+  const [timezone, setTimezone] = useState(
+    user?.timezone || DateTime.local().zoneName
+  );
   const [updatingTimezone, setUpdatingTimezone] = useState(false);
-  const [currentTime, setCurrentTime] = useState(DateTime.now().setZone(timezone));
+  const [currentTime, setCurrentTime] = useState(
+    DateTime.now().setZone(timezone)
+  );
+
+  // Persist timezone to cookie when it changes (in case setTimezone is called elsewhere)
+  useEffect(() => {
+    setCookie("selectedTimezone", timezone);
+  }, [timezone]);
 
   // Static list of common IANA timezones
   const timezones = [
@@ -87,7 +100,7 @@ const Settings = () => {
     "Asia/Kamchatka",
     "Pacific/Guam",
     "Pacific/Fiji",
-    "Pacific/Tongatapu"
+    "Pacific/Tongatapu",
   ];
 
   // Update clock every second
@@ -106,6 +119,7 @@ const Settings = () => {
   const handleTimezoneChange = async (value: string) => {
     setUpdatingTimezone(true);
     setTimezone(value);
+    setCookie("selectedTimezone", value);
     await updateTimezone(value);
     setUpdatingTimezone(false);
   };
@@ -177,15 +191,15 @@ const Settings = () => {
                       <SelectValue placeholder="Select a timezone" />
                     </SelectTrigger>
                     <SelectContent className="bg-[#1E1E1E] border-[#2A2A2A] text-white">
-                     {timezones.map((tz) => (
-                       <SelectItem
-                         key={tz}
-                         value={tz}
-                         className="focus:bg-[#6E42E1]/50 focus:text-white"
-                       >
-                         {tz}
-                       </SelectItem>
-                     ))}
+                      {timezones.map((tz) => (
+                        <SelectItem
+                          key={tz}
+                          value={tz}
+                          className="focus:bg-[#6E42E1]/50 focus:text-white"
+                        >
+                          {tz}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -194,9 +208,7 @@ const Settings = () => {
                   <span className="text-white font-mono text-lg">
                     {currentTime.toFormat("cccc, dd LLL yyyy HH:mm:ss")}
                   </span>
-                  <span className="text-white/60 text-sm">
-                    ({timezone})
-                  </span>
+                  <span className="text-white/60 text-sm">({timezone})</span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <Switch
