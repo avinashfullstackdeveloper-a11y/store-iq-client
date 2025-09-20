@@ -7,6 +7,7 @@ import React, {
   ReactNode,
   useEffect,
 } from "react";
+import { useLocation } from "react-router-dom";
 
 interface User {
   id: string;
@@ -26,26 +27,30 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  console.log("AuthProvider rendered");
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
+  const location = useLocation();
 
-  // Restore user/token on mount
+  // Restore user/token on mount or route change
   useEffect(() => {
+    console.log("AuthProvider useEffect running");
     // Only run auth check on non-public routes
     // Treat any /login* or /signup* route as public
-    const pathname = window.location.pathname;
+    const pathname = location.pathname;
 
-    // Normalize path: remove trailing slash and lowercase
-    const normalize = (path: string) =>
-      path.replace(/\/+$/, "").toLowerCase();
+        // Normalize path: remove trailing slash and lowercase, default to "/"
+        let normalizedPath = pathname ? pathname.replace(/\/+$/, "").toLowerCase() : "/";
+        if (normalizedPath === "") normalizedPath = "/";
 
-    const normalizedPath = normalize(pathname);
-
+    const publicRoutes = ["/", "/login", "/signup", "/about", "/tools"];
     const isPublic =
-      normalizedPath === "/" ||
-      normalizedPath.startsWith("/login") ||
-      normalizedPath.startsWith("/signup");
+      publicRoutes.includes(normalizedPath) ||
+      normalizedPath.startsWith("/login/") ||
+      normalizedPath.startsWith("/signup/");
+
+    console.log("AuthContext route check:", { normalizedPath, isPublic });
 
     if (isPublic) {
       setUser(null);
@@ -109,7 +114,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           );
         });
     }
-  }, []);
+  }, [location.pathname]);
 
   const login = (_jwt: string, userObj: User) => {
     setToken(_jwt); // Store token in state
