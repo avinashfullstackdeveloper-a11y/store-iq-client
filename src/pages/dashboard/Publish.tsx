@@ -61,6 +61,8 @@ const Publish = () => {
     thumbnail?: string;
     duration?: number;
     s3Key?: string;
+    publishCount?: number;
+    publishedToYouTube?: boolean;
   }
 
   const [videos, setVideos] = useState<Video[]>([]);
@@ -221,22 +223,23 @@ const Publish = () => {
     }
   };
 
-  React.useEffect(() => {
-    const fetchVideos = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await fetch("/api/videos", { credentials: "include" });
-        if (!res.ok) throw new Error("Failed to fetch videos");
-        const data = await res.json();
-        setVideos(Array.isArray(data) ? data : []);
-      } catch (err) {
-        setError((err as Error)?.message || "Unknown error");
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Fetch videos from backend
+  const fetchVideos = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/videos", { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch videos");
+      const data = await res.json();
+      setVideos(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setError((err as Error)?.message || "Unknown error");
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  React.useEffect(() => {
     fetchVideos();
     fetchConnectionStatus();
   }, []);
@@ -326,6 +329,8 @@ const Publish = () => {
           ...prev,
           [video.id || video.s3Key || ""]: { yt: false, ig: false },
         }));
+        // Refresh video list after successful publish
+        await fetchVideos();
       } else {
         setToast({
           type: "error",
@@ -613,6 +618,17 @@ const VideoPublishCard = ({
         <h3 className="text-white font-medium mb-2 truncate">
           {video.title || "Untitled Video"}
         </h3>
+        {/* Publish info */}
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-xs text-white/60">
+            Published {video.publishCount ?? 0} time{(video.publishCount ?? 0) === 1 ? "" : "s"}
+          </span>
+          {video.publishedToYouTube && (
+            <span className="inline-flex items-center px-2 py-0.5 rounded bg-green-700 text-green-100 text-xs font-semibold ml-2">
+              Published
+            </span>
+          )}
+        </div>
 
         {/* Platform selection - always visible */}
         <div className="flex justify-between items-center mb-4">

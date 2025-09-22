@@ -43,6 +43,8 @@ interface Video {
   description?: string;
   createdAt?: string;
   s3Key?: string;
+  publishCount?: number;
+  publishedToYouTube?: boolean;
 }
 
 const Videos = () => {
@@ -554,6 +556,17 @@ const Videos = () => {
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
+                        </div>
+                        {/* Publish info */}
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-xs text-white/60">
+                            Published {video.publishCount ?? 0} time{(video.publishCount ?? 0) === 1 ? "" : "s"}
+                          </span>
+                          {video.publishedToYouTube && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded bg-green-700 text-green-100 text-xs font-semibold ml-2">
+                              Published
+                            </span>
+                          )}
                         </div>
                         <p className="text-white/60 text-sm mb-3 line-clamp-2">
                           {video.subtitle ||

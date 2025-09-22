@@ -142,22 +142,29 @@ const Stats = () => {
               <span className="text-white/60">No stats available.</span>
             </div>
           ) : (
-            stats.map((stat, index) => (
-              <div key={index} className="bg-storiq-card-bg border border-storiq-border rounded-2xl p-6">
-                <h3 className="text-white/60 text-sm mb-2">{stat.title}</h3>
-                <div className="text-3xl font-bold text-white mb-2">{stat.value}</div>
-                <div className="flex items-center space-x-2">
-                  <span className={`text-sm font-semibold px-2 py-1 rounded ${
-                    stat.changeType === 'positive'
-                      ? 'bg-green-500/20 text-green-400'
-                      : 'bg-red-500/20 text-red-400'
-                  }`}>
-                    {stat.change}
-                  </span>
-                  <span className="text-white/50 text-sm">{stat.comparison}</span>
+            stats.map((stat, index) => {
+              // Rename the published videos card for clarity
+              const displayTitle =
+                stat.title === "Videos Published to YouTube"
+                  ? "Published Videos"
+                  : stat.title;
+              return (
+                <div key={index} className="bg-storiq-card-bg border border-storiq-border rounded-2xl p-6">
+                  <h3 className="text-white/60 text-sm mb-2">{displayTitle}</h3>
+                  <div className="text-3xl font-bold text-white mb-2">{stat.value}</div>
+                  <div className="flex items-center space-x-2">
+                    <span className={`text-sm font-semibold px-2 py-1 rounded ${
+                      stat.changeType === 'positive'
+                        ? 'bg-green-500/20 text-green-400'
+                        : 'bg-red-500/20 text-red-400'
+                    }`}>
+                      {stat.change}
+                    </span>
+                    <span className="text-white/50 text-sm">{stat.comparison}</span>
+                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
 
