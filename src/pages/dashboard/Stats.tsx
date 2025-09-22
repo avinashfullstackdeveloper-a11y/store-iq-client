@@ -38,8 +38,10 @@ const Stats = () => {
   };
   type TimeseriesPoint = {
     label: string;
-    generated: number;
-    download: number;
+    videoGeneratedCount: number;
+    scriptGeneratedCount: number;
+    publishedCount: number;
+    aiVideosGeneratedCount?: number; // for type safety, optional
   };
 
   const [stats, setStats] = useState<Stat[]>([]);
@@ -67,7 +69,15 @@ const Stats = () => {
         const timeseriesData = await timeseriesRes.json();
         if (!ignore) {
           setStats(summaryData.stats || []);
-          setTimeseries(timeseriesData.data || []);
+          setTimeseries(
+            (timeseriesData.data || []).map((point: any) => ({
+              label: point.label,
+              videoGeneratedCount: point.aiVideosGeneratedCount ?? 0,
+              scriptGeneratedCount: point.scriptGeneratedCount ?? 0,
+              publishedCount: point.publishedCount ?? 0,
+              aiVideosGeneratedCount: point.aiVideosGeneratedCount, // keep for future-proofing
+            }))
+          );
         }
       } catch (e) {
         if (!ignore) setError(e instanceof Error ? e.message : "Error loading stats");
@@ -191,13 +201,17 @@ const Stats = () => {
                   margin={{ top: 20, right: 30, left: 0, bottom: 0 }}
                 >
                   <defs>
-                    <linearGradient id="colorDownload" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.3} />
-                      <stop offset="100%" stopColor="#3b82f6" stopOpacity={0} />
-                    </linearGradient>
-                    <linearGradient id="colorGenerated" x1="0" y1="0" x2="0" y2="1">
+                    <linearGradient id="colorVideoGenerated" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="#ef4444" stopOpacity={0.3} />
                       <stop offset="100%" stopColor="#ef4444" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="colorScriptGenerated" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#10b981" stopOpacity={0.3} />
+                      <stop offset="100%" stopColor="#10b981" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="colorPublished" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.3} />
+                      <stop offset="100%" stopColor="#3b82f6" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid stroke="#FFFFFF" strokeOpacity={0.1} vertical={false} />
@@ -232,20 +246,30 @@ const Stats = () => {
                   />
                   <Area
                     type="monotone"
-                    dataKey="generated"
+                    dataKey="videoGeneratedCount"
                     name="Video Generated"
                     stroke="#ef4444"
-                    fill="url(#colorGenerated)"
+                    fill="url(#colorVideoGenerated)"
                     strokeWidth={2}
                     dot={{ r: 4, fill: "#ef4444", stroke: "#1c1c24", strokeWidth: 2 }}
                     activeDot={{ r: 6 }}
                   />
                   <Area
                     type="monotone"
-                    dataKey="download"
-                    name="Video Download"
+                    dataKey="scriptGeneratedCount"
+                    name="Script Generated"
+                    stroke="#10b981"
+                    fill="url(#colorScriptGenerated)"
+                    strokeWidth={2}
+                    dot={{ r: 4, fill: "#10b981", stroke: "#1c1c24", strokeWidth: 2 }}
+                    activeDot={{ r: 6 }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="publishedCount"
+                    name="Published"
                     stroke="#3b82f6"
-                    fill="url(#colorDownload)"
+                    fill="url(#colorPublished)"
                     strokeWidth={2}
                     dot={{ r: 4, fill: "#3b82f6", stroke: "#1c1c24", strokeWidth: 2 }}
                     activeDot={{ r: 6 }}
