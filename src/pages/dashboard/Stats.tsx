@@ -30,10 +30,10 @@ const VIDEO_TYPE_OPTIONS = [
 ];
 
 const DATE_RANGE_OPTIONS = [
+  { value: "last-1-day", label: "Last 1 day" },
   { value: "last-7-days", label: "Last 7 days" },
   { value: "last-30-days", label: "Last 30 days" },
   { value: "last-90-days", label: "Last 90 days" },
-  { value: "last-year", label: "Last year" },
 ];
 
 const CHART_TYPES = [
@@ -94,15 +94,59 @@ const Stats = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Helper to convert dateRange to startDate and endDate
+  function getDateRangeParams(range: string) {
+    const now = new Date();
+    let startDate: Date | null = null;
+    let endDate: Date | null = null;
+
+    switch (range) {
+      case "last-1-day":
+        startDate = new Date(now);
+        startDate.setDate(now.getDate() - 1);
+        endDate = now;
+        break;
+      case "last-7-days":
+        startDate = new Date(now);
+        startDate.setDate(now.getDate() - 6);
+        endDate = now;
+        break;
+      case "last-30-days":
+        startDate = new Date(now);
+        startDate.setDate(now.getDate() - 29);
+        endDate = now;
+        break;
+      case "last-90-days":
+        startDate = new Date(now);
+        startDate.setDate(now.getDate() - 89);
+        endDate = now;
+        break;
+      default:
+        startDate = null;
+        endDate = null;
+    }
+    // Always use full ISO string for backend compatibility
+    return {
+      startDate: startDate ? startDate.toISOString() : "",
+      endDate: endDate ? endDate.toISOString() : "",
+    };
+  }
+
   useEffect(() => {
     let ignore = false;
     async function fetchData() {
       setLoading(true);
       setError(null);
       try {
+        const { startDate, endDate } = getDateRangeParams(dateRange);
+        const params = [];
+        if (startDate) params.push(`startDate=${startDate}`);
+        if (endDate) params.push(`endDate=${endDate}`);
+        const query = params.length ? `?${params.join("&")}` : "";
+
         const [summaryRes, timeseriesRes] = await Promise.all([
-          fetch(`/api/stats/summary?dateRange=${dateRange}`),
-          fetch(`/api/stats/timeseries?dateRange=${dateRange}`)
+          fetch(`/api/stats/summary${query}`),
+          fetch(`/api/stats/timeseries${query}`)
         ]);
 
         if (!summaryRes.ok || !timeseriesRes.ok) {
