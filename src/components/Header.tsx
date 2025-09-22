@@ -40,7 +40,7 @@ const Header = () => {
           </div>
           
           <div className="flex items-center">
-            <Link to="/pages/signup" className="text-black text-sm font-semibold px-4 py-1.5 rounded-full hover:bg-gray-200 transition-colors duration-300">
+            <Link to="/signup" className="text-black text-sm font-semibold px-4 py-1.5 rounded-full hover:bg-gray-200 transition-colors duration-300">
               SIGN UP
             </Link>
           </div>
