@@ -49,15 +49,6 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           </Link>
         </div>
 
-        {/* Create New Video Button - UPDATED to be a Link */}
-        <div className="px-6 mb-8">
-          <Link to="/dashboard/create-video">
-            <Button className="w-full bg-storiq-purple hover:bg-storiq-purple/80 text-white rounded-xl py-3 flex items-center justify-center space-x-2">
-              <Plus size={20} />
-              <span>Create New Video</span>
-            </Button>
-          </Link>
-        </div>
 
         {/* Navigation - UPDATED to use NavLink */}
         <nav className="flex-1 px-6 space-y-8">
