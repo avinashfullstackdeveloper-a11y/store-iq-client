@@ -276,7 +276,7 @@ const Publish = () => {
     try {
       // Prepare payload
       const payload = {
-        videoId: video.id || video.s3Key,
+        s3Key: video.s3Key,
         // Add more metadata here if needed
       };
 
