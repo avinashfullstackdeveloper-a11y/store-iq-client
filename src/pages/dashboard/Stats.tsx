@@ -1,38 +1,85 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
+import React, { useEffect, useState } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
+
+const VIDEO_TYPE_OPTIONS = [
+  { value: "all-videos", label: "All videos" },
+  { value: "published", label: "Published" },
+  { value: "drafts", label: "Drafts" },
+];
+
+const DATE_RANGE_OPTIONS = [
+  { value: "last-30-days", label: "Last 30 days" },
+  { value: "last-7-days", label: "Last 7 days" },
+  { value: "last-90-days", label: "Last 90 days" },
+];
+
 const Stats = () => {
-  const stats = [
-    {
-      title: "Views",
-      value: "12,345",
-      change: "+15%",
-      changeType: "positive",
-      comparison: "vs last month"
-    },
-    {
-      title: "Watch time",
-      value: "234h 56m",
-      change: "+15%",
-      changeType: "positive",
-      comparison: "vs last month"
-    },
-    {
-      title: "Engagement rate",
-      value: "4.5%",
-      change: "-9%",
-      changeType: "negative",
-      comparison: "vs last month"
-    },
-    {
-      title: "Click-through rate",
-      value: "2.1%",
-      // As per the image, this should be +16%
-      change: "+16%",
-      changeType: "positive",
-      comparison: "vs last month"
+  const [videoType, setVideoType] = useState("all-videos");
+  const [dateRange, setDateRange] = useState("last-30-days");
+  type Stat = {
+    title: string;
+    value: string | number;
+    change: string;
+    changeType: "positive" | "negative";
+    comparison: string;
+  };
+  type TimeseriesPoint = {
+    label: string;
+    generated: number;
+    download: number;
+  };
+
+  const [stats, setStats] = useState<Stat[]>([]);
+  const [timeseries, setTimeseries] = useState<TimeseriesPoint[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch stats and timeseries when filters change
+  useEffect(() => {
+    let ignore = false;
+    async function fetchData() {
+      setLoading(true);
+      setError(null);
+      try {
+        const summaryRes = await fetch(
+          `/api/stats/summary?videoType=${videoType}&dateRange=${dateRange}`
+        );
+        const timeseriesRes = await fetch(
+          `/api/stats/timeseries?videoType=${videoType}&dateRange=${dateRange}`
+        );
+        if (!summaryRes.ok || !timeseriesRes.ok) {
+          throw new Error("Failed to fetch stats");
+        }
+        const summaryData = await summaryRes.json();
+        const timeseriesData = await timeseriesRes.json();
+        if (!ignore) {
+          setStats(summaryData.stats || []);
+          setTimeseries(timeseriesData.data || []);
+        }
+      } catch (e) {
+        if (!ignore) setError(e instanceof Error ? e.message : "Error loading stats");
+      } finally {
+        if (!ignore) setLoading(false);
+      }
     }
-  ];
+    fetchData();
+    return () => {
+      ignore = true;
+    };
+  }, [videoType, dateRange]);
 
   return (
     <DashboardLayout>
@@ -44,125 +91,161 @@ const Stats = () => {
 
         {/* Filters */}
         <div className="flex space-x-4 mb-8">
-          <Select defaultValue="all-videos">
+          <Select value={videoType} onValueChange={setVideoType}>
             <SelectTrigger className="w-48 bg-storiq-card-bg border-storiq-border text-white">
               <SelectValue placeholder="All videos" />
             </SelectTrigger>
             <SelectContent className="bg-storiq-card-bg border-storiq-border">
-              <SelectItem value="all-videos" className="text-white hover:bg-storiq-purple/20">All videos</SelectItem>
-              <SelectItem value="published" className="text-white hover:bg-storiq-purple/20">Published</SelectItem>
-              <SelectItem value="drafts" className="text-white hover:bg-storiq-purple/20">Drafts</SelectItem>
+              {VIDEO_TYPE_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value} className="text-white hover:bg-storiq-purple/20">
+                  {opt.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
 
-          <Select defaultValue="last-30-days">
+          <Select value={dateRange} onValueChange={setDateRange}>
             <SelectTrigger className="w-48 bg-storiq-card-bg border-storiq-border text-white">
               <SelectValue placeholder="Last 30 days" />
             </SelectTrigger>
             <SelectContent className="bg-storiq-card-bg border-storiq-border">
-              <SelectItem value="last-30-days" className="text-white hover:bg-storiq-purple/20">Last 30 days</SelectItem>
-              <SelectItem value="last-7-days" className="text-white hover:bg-storiq-purple/20">Last 7 days</SelectItem>
-              <SelectItem value="last-90-days" className="text-white hover:bg-storiq-purple/20">Last 90 days</SelectItem>
+              {DATE_RANGE_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value} className="text-white hover:bg-storiq-purple/20">
+                  {opt.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {stats.map((stat, index) => (
-            <div key={index} className="bg-storiq-card-bg border border-storiq-border rounded-2xl p-6">
-              <h3 className="text-white/60 text-sm mb-2">{stat.title}</h3>
-              <div className="text-3xl font-bold text-white mb-2">{stat.value}</div>
-              <div className="flex items-center space-x-2">
-                <span className={`text-sm font-semibold px-2 py-1 rounded ${
-                  stat.changeType === 'positive'
-                    ? 'bg-green-500/20 text-green-400'
-                    : 'bg-red-500/20 text-red-400'
-                }`}>
-                  {stat.change}
-                </span>
-                <span className="text-white/50 text-sm">{stat.comparison}</span>
-              </div>
+          {loading ? (
+            <>
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="bg-storiq-card-bg border border-storiq-border rounded-2xl p-6 flex flex-col space-y-4">
+                  <Skeleton className="h-4 w-1/3 bg-white/10" />
+                  <Skeleton className="h-8 w-2/3 bg-white/20" />
+                  <div className="flex items-center space-x-2">
+                    <Skeleton className="h-6 w-16 bg-white/10" />
+                    <Skeleton className="h-4 w-12 bg-white/10" />
+                  </div>
+                </div>
+              ))}
+            </>
+          ) : error ? (
+            <div className="col-span-4 flex justify-center items-center h-32">
+              <span className="text-red-400">{error}</span>
             </div>
-          ))}
+          ) : stats.length === 0 ? (
+            <div className="col-span-4 flex justify-center items-center h-32">
+              <span className="text-white/60">No stats available.</span>
+            </div>
+          ) : (
+            stats.map((stat, index) => (
+              <div key={index} className="bg-storiq-card-bg border border-storiq-border rounded-2xl p-6">
+                <h3 className="text-white/60 text-sm mb-2">{stat.title}</h3>
+                <div className="text-3xl font-bold text-white mb-2">{stat.value}</div>
+                <div className="flex items-center space-x-2">
+                  <span className={`text-sm font-semibold px-2 py-1 rounded ${
+                    stat.changeType === 'positive'
+                      ? 'bg-green-500/20 text-green-400'
+                      : 'bg-red-500/20 text-red-400'
+                  }`}>
+                    {stat.change}
+                  </span>
+                  <span className="text-white/50 text-sm">{stat.comparison}</span>
+                </div>
+              </div>
+            ))
+          )}
         </div>
 
         {/* Chart */}
         <div className="bg-storiq-card-bg border border-storiq-border rounded-2xl p-6">
           <h3 className="text-white text-xl font-bold mb-6">Overall Statistics</h3>
-          
-          {/* Chart implemented with SVG to match the provided image. */}
-          {/* In a real application, you would use a charting library like Recharts or Chart.js */}
-          <div className="h-80 relative pr-4 pb-8">
-            <svg width="100%" height="100%" viewBox="0 0 1150 250">
-              <defs>
-                <linearGradient id="blue-gradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3"/>
-                  <stop offset="100%" stopColor="#3b82f6" stopOpacity="0"/>
-                </linearGradient>
-                <linearGradient id="red-gradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#ef4444" stopOpacity="0.3"/>
-                  <stop offset="100%" stopColor="#ef4444" stopOpacity="0"/>
-                </linearGradient>
-              </defs>
-
-              {/* Grid Lines */}
-              <line x1="0" y1="250" x2="1150" y2="250" stroke="#FFFFFF" strokeOpacity="0.1" />
-              <line x1="0" y1="187.5" x2="1150" y2="187.5" stroke="#FFFFFF" strokeOpacity="0.1" />
-              <line x1="0" y1="125" x2="1150" y2="125" stroke="#FFFFFF" strokeOpacity="0.1" />
-              <line x1="0" y1="62.5" x2="1150" y2="62.5" stroke="#FFFFFF" strokeOpacity="0.1" />
-
-              {/* Red Line (Video Generated) - Area and Stroke */}
-              <path d="M 50 230 C 100 200, 100 190, 150 190 S 200 175, 250 165 S 300 170, 350 170 S 400 220, 450 210 S 500 180, 550 190 S 600 160, 650 170 S 700 140, 750 150 S 800 170, 850 160 S 900 130, 950 140 S 1000 190, 1050 180 S 1100 160, 1150 165 V 250 H 50 Z" fill="url(#red-gradient)" />
-              <path d="M 50 230 C 100 200, 100 190, 150 190 S 200 175, 250 165 S 300 170, 350 170 S 400 220, 450 210 S 500 180, 550 190 S 600 160, 650 170 S 700 140, 750 150 S 800 170, 850 160 S 900 130, 950 140 S 1000 190, 1050 180 S 1100 160, 1150 165" fill="none" stroke="#ef4444" strokeWidth="2"/>
-
-              {/* Blue Line (Video Download) - Area and Stroke */}
-              <path d="M 50 80 C 100 90, 100 120, 150 110 S 200 65, 250 75 S 300 110, 350 100 S 400 160, 450 150 S 500 110, 550 120 S 600 65, 650 75 S 700 150, 750 140 S 800 90, 850 100 S 900 180, 950 170 S 1000 150, 1050 160 S 1100 220, 1150 210 V 250 H 50 Z" fill="url(#blue-gradient)" />
-              <path d="M 50 80 C 100 90, 100 120, 150 110 S 200 65, 250 75 S 300 110, 350 100 S 400 160, 450 150 S 500 110, 550 120 S 600 65, 650 75 S 700 150, 750 140 S 800 90, 850 100 S 900 180, 950 170 S 1000 150, 1050 160 S 1100 220, 1150 210" fill="none" stroke="#3b82f6" strokeWidth="2"/>
-
-              {/* Highlight line and circles for July */}
-              <line x1="650" y1="0" x2="650" y2="250" stroke="#FFFFFF" strokeOpacity="0.2"/>
-              <circle cx="650" cy="170" r="5" fill="#ef4444" stroke="#1c1c24" strokeWidth="2" />
-              <circle cx="650" cy="75" r="5" fill="#3b82f6" stroke="#1c1c24" strokeWidth="2" />
-            </svg>
-
-            {/* Y-axis labels */}
-            <div className="absolute left-0 -top-1 h-full flex flex-col justify-between text-white/40 text-sm py-8">
-              <span>250</span>
-              <span>200</span>
-              <span>150</span>
-              <span>100</span>
-              <span>50</span>
-              <span>0</span>
-            </div>
-            
-            {/* X-axis labels */}
-            <div className="absolute -bottom-1 left-0 right-0 flex justify-around text-white/40 text-sm pl-4 pr-8">
-              <span>Jan</span>
-              <span>Feb</span>
-              <span>Mar</span>
-              <span>Apr</span>
-              <span>May</span>
-              <span>Jun</span>
-              <span>Jul</span>
-              <span>Aug</span>
-              <span>Sep</span>
-              <span>Oct</span>
-              <span>Nov</span>
-              <span>Dec</span>
-            </div>
-          </div>
-          
-          {/* Legend */}
-          <div className="flex justify-center space-x-6 mt-4">
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-              <span className="text-white/60 text-sm">Video Generated</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-              <span className="text-white/60 text-sm">Video Download</span>
-            </div>
+          <div className="h-80 relative pr-4 pb-8 flex items-center justify-center">
+            {loading ? (
+              <div className="w-full h-full flex items-center justify-center">
+                <Skeleton className="w-full h-64 bg-white/10 rounded-xl" />
+              </div>
+            ) : error ? (
+              <div className="w-full h-full flex items-center justify-center">
+                <span className="text-red-400">{error}</span>
+              </div>
+            ) : timeseries.length === 0 ? (
+              <div className="w-full h-full flex items-center justify-center">
+                <span className="text-white/60">No chart data available.</span>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart
+                  data={timeseries}
+                  margin={{ top: 20, right: 30, left: 0, bottom: 0 }}
+                >
+                  <defs>
+                    <linearGradient id="colorDownload" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.3} />
+                      <stop offset="100%" stopColor="#3b82f6" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="colorGenerated" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#ef4444" stopOpacity={0.3} />
+                      <stop offset="100%" stopColor="#ef4444" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid stroke="#FFFFFF" strokeOpacity={0.1} vertical={false} />
+                  <XAxis
+                    dataKey="label"
+                    tick={{ fill: "#a1a1aa", fontSize: 14 }}
+                    axisLine={false}
+                    tickLine={false}
+                    padding={{ left: 10, right: 10 }}
+                  />
+                  <YAxis
+                    tick={{ fill: "#a1a1aa", fontSize: 14 }}
+                    axisLine={false}
+                    tickLine={false}
+                    width={40}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      background: "#232336",
+                      border: "1px solid #3b3b4f",
+                      borderRadius: "8px",
+                      color: "#fff",
+                    }}
+                    labelStyle={{ color: "#a1a1aa" }}
+                    cursor={{ stroke: "#a1a1aa", strokeOpacity: 0.2 }}
+                  />
+                  <Legend
+                    verticalAlign="top"
+                    align="center"
+                    iconType="circle"
+                    wrapperStyle={{ color: "#a1a1aa", fontSize: 14, marginBottom: 12 }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="generated"
+                    name="Video Generated"
+                    stroke="#ef4444"
+                    fill="url(#colorGenerated)"
+                    strokeWidth={2}
+                    dot={{ r: 4, fill: "#ef4444", stroke: "#1c1c24", strokeWidth: 2 }}
+                    activeDot={{ r: 6 }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="download"
+                    name="Video Download"
+                    stroke="#3b82f6"
+                    fill="url(#colorDownload)"
+                    strokeWidth={2}
+                    dot={{ r: 4, fill: "#3b82f6", stroke: "#1c1c24", strokeWidth: 2 }}
+                    activeDot={{ r: 6 }}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
       </div>
