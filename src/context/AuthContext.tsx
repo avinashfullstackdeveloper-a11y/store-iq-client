@@ -7,6 +7,7 @@ import React, {
   ReactNode,
   useEffect,
 } from "react";
+import { useLocation } from "react-router-dom";
 
 interface User {
   id: string;
@@ -29,13 +30,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
+  const location = useLocation();
 
-  // Restore user/token on mount
+  // Restore user/token on mount or route change
   useEffect(() => {
     // Only run auth check on non-public routes
-    const publicRoutes = ["/", "/login", "/signup"];
-    const pathname = window.location.pathname;
-    if (publicRoutes.includes(pathname)) {
+    // Treat any /login* or /signup* route as public
+    const pathname = location.pathname;
+
+        // Normalize path: remove trailing slash and lowercase, default to "/"
+        let normalizedPath = pathname ? pathname.replace(/\/+$/, "").toLowerCase() : "/";
+        if (normalizedPath === "") normalizedPath = "/";
+
+    const publicRoutes = ["/", "/login", "/signup", "/about", "/tools"];
+    const isPublic =
+      publicRoutes.includes(normalizedPath) ||
+      normalizedPath.startsWith("/login/") ||
+      normalizedPath.startsWith("/signup/");
+
+    if (isPublic) {
       setUser(null);
       setToken(null);
       setAuthError(null);
@@ -55,6 +68,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           localStorage.removeItem("token");
           setAuthError("Authentication failed.");
         }
+      } else if (res.status === 404) {
+        // User not found: clear tokens, logout, redirect to login
+        setUser(null);
+        setToken(null);
+        localStorage.removeItem("token");
+        setAuthError("User not found. Please log in again.");
+        // Optional: call logout() if you want to centralize logic
+        // logout();
+        window.location.assign("/login");
       } else if (res.status === 401 || res.status === 403) {
         setUser(null);
         setToken(null);
@@ -97,7 +119,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           );
         });
     }
-  }, []);
+  }, [location.pathname]);
 
   const login = (_jwt: string, userObj: User) => {
     setToken(_jwt); // Store token in state

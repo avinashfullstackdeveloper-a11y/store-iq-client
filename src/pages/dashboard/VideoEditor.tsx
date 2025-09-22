@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
 import { Slider } from "@/components/ui/slider";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { useAuth } from "@/context/AuthContext";
@@ -44,6 +45,7 @@ const VideoEditor: React.FC = () => {
   const params = useParams();
   const location = useLocation();
   const { user } = useAuth();
+  const { toast } = useToast();
   console.log('user', user);
   const userId = user && user.id ? user.id : null;
   const wildcard = params['*']; // full path after /dashboard/video-editor/
@@ -51,7 +53,7 @@ const VideoEditor: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
-  const [exportCompleted, setExportCompleted] = useState(false);
+  const [exportDisabled, setExportDisabled] = useState(false);
 
   // Cropping state
   const [start, setStart] = useState(0);
@@ -268,18 +270,13 @@ const VideoEditor: React.FC = () => {
           </div>
         </div>
         <Button
-          className={`mt-6 ${exportCompleted ? "bg-green-600 hover:bg-green-700 text-white" : ""}`}
+          className="mt-6"
           disabled={
             start >= end ||
             !userId ||
-            isExporting ||
-            (exportCompleted && false) // keep enabled after export completes
+            isExporting || exportDisabled
           }
           onClick={async () => {
-            if (exportCompleted) {
-              window.location.href = "/dashboard/exports";
-              return;
-            }
             if (isExporting) return;
             setIsExporting(true);
             try {
@@ -319,25 +316,26 @@ const VideoEditor: React.FC = () => {
               if (!response.ok) throw new Error("Failed to export video");
               const data = await response.json();
               // Prepare export entry with job_id and status
-              // Use backend job_id or jobId for polling and as the job_id in export entry
               const jobId = data.job_id || data.jobId;
               const exportEntry = {
                 filename: video.title || "Untitled",
                 date: new Date().toISOString(),
                 crop: { start, end },
                 url: video.url,
-                job_id: jobId, // always save as job_id
+                job_id: jobId,
                 status: data.status,
-                export_id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // unique id for UI actions
+                export_id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                 userId: userId
               };
-              // Get existing exports from localStorage
               const existing = JSON.parse(localStorage.getItem("exports") || "[]");
-              // Add new entry
               existing.push(exportEntry);
-              // Save back to localStorage
               localStorage.setItem("exports", JSON.stringify(existing));
-              setExportCompleted(true);
+              // Show toast instead of changing button state
+              toast({
+                description: "added to export job go to export",
+                duration: 4000,
+              });
+              setExportDisabled(true);
             } catch (err) {
               alert("Export failed. Please try again.");
             } finally {
@@ -347,11 +345,9 @@ const VideoEditor: React.FC = () => {
         >
           {isExporting
             ? "Export in progress"
-            : exportCompleted
-              ? "Go to export"
-              : userId
-                ? "Export"
-                : "Sign in to Export"}
+            : userId
+              ? "Export"
+              : "Sign in to Export"}
         </Button>
       </div>
     </DashboardLayout>

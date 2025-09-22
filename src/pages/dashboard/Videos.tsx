@@ -81,8 +81,8 @@ const Videos = () => {
       setError(null);
 
       try {
-        let url = "/api/videos";
-        let fetchOptions: RequestInit = { credentials: "include" };
+        const url = "/api/videos";
+        const fetchOptions: RequestInit = { credentials: "include" };
         // User ID is determined by session cookie on backend
         const res = await fetch(url, fetchOptions);
         if (res.status === 401) {
