@@ -15,6 +15,7 @@ import { useNavigate } from "react-router-dom";
 
 import { useState, useEffect } from "react";
 import { DateTime, Info } from "luxon";
+import useYouTubeConnect from "@/hooks/useYouTubeConnect";
 
 // Cookie helpers
 function setCookie(name: string, value: string, days = 365) {
@@ -31,6 +32,7 @@ function getCookie(name: string) {
 const Settings = () => {
   const { user, logout, updateTimezone } = useAuth();
   const navigate = useNavigate();
+  const { ytConnected, loading: ytLoading, handleYouTubeOAuth, disconnectYouTube } = useYouTubeConnect();
   // Use IANA timezone, default to user's or system's
   const [timezone, setTimezone] = useState(
     user?.timezone || DateTime.local().zoneName
@@ -320,15 +322,26 @@ const Settings = () => {
                   before clicking on one of the following buttons.
                 </p>
                 <div className="flex space-x-4">
-                  <Button className="bg-black hover:bg-gray-800 text-white font-bold">
-                    Add TikTok
-                  </Button>
                   <Button className="bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white font-bold hover:opacity-90">
                     Add Instagram
                   </Button>
-                  <Button className="bg-red-600 hover:bg-red-700 text-white font-bold">
-                    Add Youtube
-                  </Button>
+                  {ytConnected ? (
+                    <Button
+                      className="bg-green-700 text-white font-bold"
+                      onClick={disconnectYouTube}
+                      disabled={ytLoading}
+                    >
+                      {ytLoading ? "Unlinking..." : "YouTube linked (Unlink)"}
+                    </Button>
+                  ) : (
+                    <Button
+                      className="bg-red-600 hover:bg-red-700 text-white font-bold"
+                      onClick={handleYouTubeOAuth}
+                      disabled={ytLoading}
+                    >
+                      {ytLoading ? "Linking..." : "Add Youtube"}
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
                     className="border-[#2A2A2A] bg-[#1E1E1E] text-white hover:bg-[#6E42E1] hover:text-white hover:border-[#6E42E1]"
