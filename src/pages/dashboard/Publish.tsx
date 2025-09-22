@@ -3,6 +3,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import React, { useState } from "react";
 import Loader from "@/components/ui/Loader";
+import { Dialog, DialogTrigger, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import {
   ToastProvider,
   Toast,
@@ -349,23 +350,30 @@ const Publish = () => {
               Content Publishing
             </h1>
             <p className="text-white/70 text-sm md:text-base">
-              Connect your accounts, select videos, and publish to multiple platforms
+              Connect your accounts, select videos, and publish to multiple
+              platforms
             </p>
           </div>
 
           {/* Social Connect Section */}
           <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-2xl p-6 mb-8">
-            <h2 className="text-xl font-semibold text-white mb-4">Platform Connections</h2>
+            <h2 className="text-xl font-semibold text-white mb-4">
+              Platform Connections
+            </h2>
             <p className="text-white/60 text-sm mb-6">
               Connect your social accounts to enable publishing
             </p>
-            
+
             <div className="flex flex-col md:flex-row gap-6">
               {/* YouTube Card */}
               <div className="flex-1 bg-gray-800/50 border border-gray-700 rounded-xl p-5 flex flex-col">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center">
-                    <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <svg
+                      className="w-5 h-5 text-white"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
                       <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z" />
                     </svg>
                   </div>
@@ -384,13 +392,30 @@ const Publish = () => {
                   >
                     {loading ? (
                       <span className="flex items-center">
-                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        <svg
+                          className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
                         </svg>
                         Disconnecting...
                       </span>
-                    ) : "Disconnect YouTube"}
+                    ) : (
+                      "Disconnect YouTube"
+                    )}
                   </Button>
                 ) : (
                   <Button
@@ -400,13 +425,30 @@ const Publish = () => {
                   >
                     {loading ? (
                       <span className="flex items-center">
-                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        <svg
+                          className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
                         </svg>
                         Connecting...
                       </span>
-                    ) : "Connect YouTube"}
+                    ) : (
+                      "Connect YouTube"
+                    )}
                   </Button>
                 )}
               </div>
@@ -415,7 +457,11 @@ const Publish = () => {
               <div className="flex-1 bg-gray-800/50 border border-gray-700 rounded-xl p-5 flex flex-col">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-600 to-pink-500 flex items-center justify-center">
-                    <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <svg
+                      className="w-5 h-5 text-white"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
                       <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
                     </svg>
                   </div>
@@ -442,16 +488,18 @@ const Publish = () => {
             </div>
           </div>
 
- <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-2xl p-6 mb-8">
+          <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-2xl p-6 mb-8">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
               <div>
-                <h2 className="text-xl font-semibold text-white">Your Videos</h2>
+                <h2 className="text-xl font-semibold text-white">
+                  Your Videos
+                </h2>
                 <p className="text-white/60 text-sm mt-1">
                   Select videos to publish to connected platforms
                 </p>
               </div>
             </div>
-            
+
             {loading ? (
               <div className="flex justify-center items-center py-12">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
@@ -462,8 +510,18 @@ const Publish = () => {
               </div>
             ) : videos.length === 0 ? (
               <div className="text-center py-12 border-2 border-dashed border-gray-700 rounded-xl">
-                <svg className="w-12 h-12 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                <svg
+                  className="w-12 h-12 text-gray-600 mx-auto mb-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                  ></path>
                 </svg>
                 <p className="text-white/60 mb-4">No videos available</p>
                 <Button>Create Your First Video</Button>
@@ -501,38 +559,61 @@ const VideoPublishCard = ({
   platformSelections,
   handlePlatformChange,
   handlePost,
-  postingId
+  postingId,
 }) => {
   const [expanded, setExpanded] = useState(false);
+  const [open, setOpen] = useState(false);
   const videoId = video.id || video.s3Key || "";
   const selection = platformSelections[videoId] || { yt: false, ig: false };
-  
+
   return (
     <div className="bg-gray-800/50 rounded-xl overflow-hidden border border-gray-700 transition-all hover:border-purple-500/30 hover:shadow-lg hover:shadow-purple-500/10">
       {/* Video thumbnail and basic info */}
-      <div className="relative aspect-video bg-gray-900">
-        <video
-          src={video.url}
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 hover:opacity-100 transition-opacity flex items-end p-4">
-          <Button size="sm" className="w-full">
-            Preview
-          </Button>
-        </div>
-        {video.duration && (
-          <div className="absolute top-3 right-3 bg-black/70 text-xs text-white px-2 py-1 rounded">
-            {Math.floor(video.duration / 60)}:
-            {String(video.duration % 60).padStart(2, '0')}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <div className="relative aspect-video bg-gray-900">
+          <video
+            src={video.url}
+            className="w-full h-full object-cover"
+            tabIndex={-1}
+            muted
+            playsInline
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 hover:opacity-100 transition-opacity flex items-end p-4">
+            <DialogTrigger asChild>
+              <Button
+                size="sm"
+                className="w-full"
+                onClick={() => setOpen(true)}
+              >
+                Preview
+              </Button>
+            </DialogTrigger>
           </div>
-        )}
-      </div>
-      
+          {video.duration && (
+            <div className="absolute top-3 right-3 bg-black/70 text-xs text-white px-2 py-1 rounded">
+              {Math.floor(video.duration / 60)}:
+              {String(video.duration % 60).padStart(2, "0")}
+            </div>
+          )}
+        </div>
+        <DialogContent className="max-w-2xl w-full">
+          <DialogTitle>Video Preview</DialogTitle>
+          <div className="aspect-video w-full bg-black flex items-center justify-center">
+            <video
+              src={video.url}
+              className="w-full h-full"
+              controls
+              autoPlay
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <div className="p-4">
         <h3 className="text-white font-medium mb-2 truncate">
           {video.title || "Untitled Video"}
         </h3>
-        
+
         {/* Platform selection - always visible */}
         <div className="flex justify-between items-center mb-4">
           <div className="flex gap-2">
@@ -549,47 +630,62 @@ const VideoPublishCard = ({
               onClick={() => handlePlatformChange(videoId, "instagram")}
             />
           </div>
-          
-          <button 
+
+          <button
             onClick={() => setExpanded(!expanded)}
             className="text-white/60 hover:text-white transition-colors"
           >
-            <svg 
-              className={`w-5 h-5 transform transition-transform ${expanded ? 'rotate-180' : ''}`} 
-              fill="none" 
-              stroke="currentColor" 
+            <svg
+              className={`w-5 h-5 transform transition-transform ${
+                expanded ? "rotate-180" : ""
+              }`}
+              fill="none"
+              stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M19 9l-7 7-7-7"
+              />
             </svg>
           </button>
         </div>
-        
+
         {/* Expanded options */}
         {expanded && (
           <div className="mt-4 pt-4 border-t border-gray-700">
             <div className="grid grid-cols-2 gap-3 mb-4">
               <div className="bg-gray-900/50 p-3 rounded-lg">
-                <label className="text-xs text-white/60 block mb-1">Title</label>
-                <input 
-                  type="text" 
+                <label className="text-xs text-white/60 block mb-1">
+                  Title
+                </label>
+                <input
+                  type="text"
                   defaultValue={video.title || ""}
                   className="w-full bg-transparent text-white text-sm focus:outline-none focus:ring-1 focus:ring-purple-500 rounded px-2 py-1"
                   placeholder="Enter title"
                 />
               </div>
               <div className="bg-gray-900/50 p-3 rounded-lg">
-                <label className="text-xs text-white/60 block mb-1">Description</label>
+                <label className="text-xs text-white/60 block mb-1">
+                  Description
+                </label>
                 <button className="w-full text-left text-white/70 text-sm hover:text-white">
                   Add description...
                 </button>
               </div>
             </div>
-            
+
             <div className="bg-gray-900/50 p-3 rounded-lg mb-4">
-              <label className="text-xs text-white/60 block mb-2">Schedule</label>
+              <label className="text-xs text-white/60 block mb-2">
+                Schedule
+              </label>
               <div className="flex items-center gap-2">
-                <div className="flex-1 text-white text-sm">Publish immediately</div>
+                <div className="flex-1 text-white text-sm">
+                  Publish immediately
+                </div>
                 <button className="text-purple-400 hover:text-purple-300 text-sm font-medium">
                   Schedule
                 </button>
@@ -597,27 +693,41 @@ const VideoPublishCard = ({
             </div>
           </div>
         )}
-        
+
         {/* Publish button */}
         <Button
           className="w-full"
           onClick={() => handlePost(video)}
-          disabled={
-            postingId === videoId ||
-            (!selection.yt && !selection.ig)
-          }
-          variant={(!selection.yt && !selection.ig) ? "outline" : "default"}
+          disabled={postingId === videoId || (!selection.yt && !selection.ig)}
+          variant={!selection.yt && !selection.ig ? "outline" : "default"}
         >
           {postingId === videoId ? (
             <span className="flex items-center justify-center">
-              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              <svg
+                className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
               </svg>
               Publishing...
             </span>
           ) : (
-            `Publish to ${getPlatformCount(selection)} platform${getPlatformCount(selection) !== 1 ? 's' : ''}`
+            `Publish to ${getPlatformCount(selection)} platform${
+              getPlatformCount(selection) !== 1 ? "s" : ""
+            }`
           )}
         </Button>
       </div>
@@ -635,7 +745,7 @@ const PlatformButton = ({ platform, connected, selected, onClick }) => {
           <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z" />
         </svg>
       ),
-      color: "red"
+      color: "red",
     },
     instagram: {
       name: "Instagram",
@@ -644,26 +754,31 @@ const PlatformButton = ({ platform, connected, selected, onClick }) => {
           <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
         </svg>
       ),
-      color: "purple"
-    }
+      color: "purple",
+    },
   };
-  
+
   const config = platformConfig[platform];
-  
+
   return (
     <button
       onClick={onClick}
       disabled={!connected}
       className={`
         flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-all
-        ${selected 
-          ? `bg-${config.color}-500 text-white` 
-          : connected 
-            ? `bg-gray-700 text-white/80 hover:bg-gray-600 hover:text-white` 
+        ${
+          selected
+            ? `bg-${config.color}-500 text-white`
+            : connected
+            ? `bg-gray-700 text-white/80 hover:bg-gray-600 hover:text-white`
             : `bg-gray-800 text-white/40 cursor-not-allowed`
         }
       `}
-      title={connected ? `Publish to ${config.name}` : `Connect ${config.name} to enable publishing`}
+      title={
+        connected
+          ? `Publish to ${config.name}`
+          : `Connect ${config.name} to enable publishing`
+      }
     >
       {config.icon}
       <span className="sr-only">{config.name}</span>
