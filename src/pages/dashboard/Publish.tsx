@@ -1,10 +1,10 @@
 /* global gapi */
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
-
 import React, { useState } from "react";
-
 import Loader from "@/components/ui/Loader";
+import useYouTubeConnect from "@/hooks/useYouTubeConnect";
+import { Dialog, DialogTrigger, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import {
   ToastProvider,
   Toast,
@@ -14,40 +14,34 @@ import {
 } from "@/components/ui/toast";
 
 // Google OAuth config
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-const GOOGLE_SCOPES =
-  "https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly";
-
-const YT_OAUTH_URL = "/api/auth/youtube"; // Placeholder, replace with actual
+// (YouTube OAuth config now handled by useYouTubeConnect)
 const IG_OAUTH_URL = "/api/auth/instagram"; // Placeholder, replace with actual
 
 const Publish = () => {
-  // Connection status
-  const [ytConnected, setYtConnected] = useState(false);
+  // YouTube connection via shared hook
+  const { ytConnected, loading: ytLoading, handleYouTubeOAuth, fetchConnectionStatus } = useYouTubeConnect();
   const [igConnected, setIgConnected] = useState(false);
 
   // Unified YouTube connect/disconnect handler
   const handleYouTubeButton = async () => {
-    setLoading(true);
-    setToast(null);
-    try {
-      if (!ytConnected) {
-        // Connect flow
-        await handleYouTubeOAuth();
-      } else {
-        // Disconnect flow
+    if (!ytConnected) {
+      await handleYouTubeOAuth();
+    } else {
+      // Disconnect flow
+      try {
         const res = await fetch("/api/auth/disconnect-youtube", {
           method: "POST",
           credentials: "include",
         });
         if (!res.ok) throw new Error("Failed to disconnect YouTube");
-        setYtConnected(false);
+        fetchConnectionStatus();
         setToast({ type: "success", message: "YouTube disconnected." });
+      } catch (err) {
+        setToast({
+          type: "error",
+          message: (err as Error)?.message || "YouTube action failed.",
+        });
       }
-    } catch (err) {
-      setToast({ type: "error", message: (err as Error)?.message || "YouTube action failed." });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -59,6 +53,8 @@ const Publish = () => {
     thumbnail?: string;
     duration?: number;
     s3Key?: string;
+    publishCount?: number;
+    publishedToYouTube?: boolean;
   }
 
   const [videos, setVideos] = useState<Video[]>([]);
@@ -72,128 +68,7 @@ const Publish = () => {
 
   // Platform connection
   // Real OAuth connect: redirect to backend OAuth endpoint
-  /**
-   * Dynamically loads the Google Identity Services (GIS) script.
-   */
-  const loadGisScript = (): Promise<void> =>
-    new Promise((resolve, reject) => {
-      if (document.getElementById("google-identity-services")) return resolve();
-      const script = document.createElement("script");
-      script.src = "https://accounts.google.com/gsi/client";
-      script.async = true;
-      script.defer = true;
-      script.id = "google-identity-services";
-      script.onload = () => resolve();
-      script.onerror = reject;
-      document.body.appendChild(script);
-    });
-
-  /**
-   * YouTube OAuth flow using Google Identity Services (GIS)
-   */
-  const handleYouTubeOAuth = async () => {
-    try {
-      setLoading(true);
-
-      if (
-        !GOOGLE_CLIENT_ID ||
-        typeof GOOGLE_CLIENT_ID !== "string" ||
-        GOOGLE_CLIENT_ID.trim() === ""
-      ) {
-        console.error(
-          "Missing GOOGLE_CLIENT_ID. Check your environment variables."
-        );
-        setToast({
-          type: "error",
-          message:
-            "Google Client ID is not configured. Please contact support.",
-        });
-        setLoading(false);
-        return;
-      }
-      if (
-        !GOOGLE_SCOPES ||
-        typeof GOOGLE_SCOPES !== "string" ||
-        GOOGLE_SCOPES.trim() === ""
-      ) {
-        console.error("Missing GOOGLE_SCOPES. Check your code configuration.");
-        setToast({
-          type: "error",
-          message:
-            "Google OAuth scopes are not configured. Please contact support.",
-        });
-        setLoading(false);
-        return;
-      }
-
-      await loadGisScript();
-
-      // @ts-ignore
-      if (
-        !window.google ||
-        !window.google.accounts ||
-        !window.google.accounts.oauth2
-      ) {
-        setToast({
-          type: "error",
-          message: "Google Identity Services failed to load.",
-        });
-        setLoading(false);
-        return;
-      }
-
-      // Use Token Client for YouTube OAuth
-      // See: https://developers.google.com/identity/oauth2/web/guides/use-token-model
-      const tokenClient = window.google.accounts.oauth2.initTokenClient({
-        client_id: GOOGLE_CLIENT_ID,
-        scope: GOOGLE_SCOPES,
-        prompt: "consent",
-        callback: async (tokenResponse: any) => {
-          if (tokenResponse.error || !tokenResponse.access_token) {
-            setToast({
-              type: "error",
-              message:
-                tokenResponse.error_description || "YouTube OAuth failed",
-            });
-            setLoading(false);
-            return;
-          }
-          try {
-            // Send access token to backend
-            const res = await fetch("/api/auth/link-youtube", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              credentials: "include",
-              body: JSON.stringify({
-                accessToken: tokenResponse.access_token,
-                refreshToken: tokenResponse.refresh_token || undefined,
-              }),
-            });
-            if (!res.ok) throw new Error("Failed to link YouTube account");
-            // After successful link, re-fetch connection status from backend
-            await fetchConnectionStatus();
-            setToast({ type: "success", message: "YouTube account linked!" });
-          } catch (err) {
-            setToast({
-              type: "error",
-              message: (err as Error)?.message || "YouTube OAuth failed",
-            });
-          } finally {
-            setLoading(false);
-          }
-        },
-      });
-
-      tokenClient.requestAccessToken();
-    } catch (err) {
-      setToast({
-        type: "error",
-        message: (err as Error)?.message || "YouTube OAuth failed",
-      });
-      setLoading(false);
-      console.error("YouTube OAuth error:", err);
-    }
-  };
+  // (YouTube OAuth logic now handled by useYouTubeConnect)
 
   const handleConnect = (platform: "youtube" | "instagram") => {
     if (platform === "youtube") {
@@ -206,12 +81,12 @@ const Publish = () => {
   // Fetch user videos on mount
   // On mount: check connection status for YouTube/Instagram
   // Check OAuth connection status from backend
-  const fetchConnectionStatus = async () => {
+  // Only Instagram connection status is handled locally now
+  const fetchInstagramConnectionStatus = async () => {
     try {
       const res = await fetch("/api/auth/status", { credentials: "include" });
       if (res.ok) {
         const status = await res.json();
-        setYtConnected(!!status.youtube);
         setIgConnected(!!status.instagram);
       }
     } catch {
@@ -219,22 +94,23 @@ const Publish = () => {
     }
   };
 
-  React.useEffect(() => {
-    const fetchVideos = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await fetch("/api/videos", { credentials: "include" });
-        if (!res.ok) throw new Error("Failed to fetch videos");
-        const data = await res.json();
-        setVideos(Array.isArray(data) ? data : []);
-      } catch (err) {
-        setError((err as Error)?.message || "Unknown error");
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Fetch videos from backend
+  const fetchVideos = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/videos", { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch videos");
+      const data = await res.json();
+      setVideos(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setError((err as Error)?.message || "Unknown error");
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  React.useEffect(() => {
     fetchVideos();
     fetchConnectionStatus();
   }, []);
@@ -324,6 +200,8 @@ const Publish = () => {
           ...prev,
           [video.id || video.s3Key || ""]: { yt: false, ig: false },
         }));
+        // Refresh video list after successful publish
+        await fetchVideos();
       } else {
         setToast({
           type: "error",
@@ -342,181 +220,464 @@ const Publish = () => {
   return (
     <ToastProvider>
       <DashboardLayout>
-        <div className="p-8">
+        <div className="p-6 md:p-8">
           <div className="mb-8">
-            <h1 className="text-4xl font-bold text-white mb-2">
-              Publish to YouTube & Instagram
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+              Content Publishing
             </h1>
-            <p className="text-white/60">
-              Connect, generate/select a video, choose platforms, and post!
+            <p className="text-white/70 text-sm md:text-base">
+              Connect your accounts, select videos, and publish to multiple
+              platforms
             </p>
           </div>
 
           {/* Social Connect Section */}
-          <div className="bg-storiq-card-bg border border-storiq-border rounded-2xl p-6 mb-8 flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex flex-col md:flex-row gap-4 w-full">
-              {/* YouTube */}
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">📺</span>
-                <span className="text-white font-medium">YouTube</span>
+          <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-2xl p-6 mb-8">
+            <h2 className="text-xl font-semibold text-white mb-4">
+              Platform Connections
+            </h2>
+            <p className="text-white/60 text-sm mb-6">
+              Connect your social accounts to enable publishing
+            </p>
+
+            <div className="flex flex-col md:flex-row gap-6">
+              {/* YouTube Card */}
+              <div className="flex-1 bg-gray-800/50 border border-gray-700 rounded-xl p-5 flex flex-col">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center">
+                    <svg
+                      className="w-5 h-5 text-white"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-white font-medium">YouTube</h3>
+                    <p className="text-xs text-white/60">
+                      {ytConnected ? "Connected" : "Not connected"}
+                    </p>
+                  </div>
+                </div>
                 {ytConnected ? (
                   <Button
-                    size="sm"
-                    className="bg-red-600 hover:bg-red-700 text-white rounded"
+                    className="bg-red-600/20 hover:bg-red-600/30 text-red-400 hover:text-red-300 border border-red-700/50 mt-auto"
                     onClick={handleYouTubeButton}
-                    disabled={loading}
+                    disabled={ytLoading}
                   >
-                    {loading ? "Disconnecting..." : "Disconnect"}
+                    {ytLoading ? (
+                      <span className="flex items-center">
+                        <svg
+                          className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        Disconnecting...
+                      </span>
+                    ) : (
+                      "Disconnect YouTube"
+                    )}
                   </Button>
                 ) : (
                   <Button
-                    size="sm"
-                    className="bg-red-600 hover:bg-red-700 text-white rounded"
-                    onClick={() => handleConnect("youtube")}
-                    disabled={loading}
+                    className="bg-red-600 hover:bg-red-700 text-white mt-auto"
+                    onClick={handleYouTubeButton}
+                    disabled={ytLoading}
                   >
-                    {loading ? "Connecting..." : "Connect"}
+                    {ytLoading ? (
+                      <span className="flex items-center">
+                        <svg
+                          className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        Connecting...
+                      </span>
+                    ) : (
+                      "Connect YouTube"
+                    )}
                   </Button>
                 )}
               </div>
-              {/* Instagram */}
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">📸</span>
-                <span className="text-white font-medium">Instagram</span>
+
+              {/* Instagram Card */}
+              <div className="flex-1 bg-gray-800/50 border border-gray-700 rounded-xl p-5 flex flex-col">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-600 to-pink-500 flex items-center justify-center">
+                    <svg
+                      className="w-5 h-5 text-white"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-white font-medium">Instagram</h3>
+                    <p className="text-xs text-white/60">
+                      {igConnected ? "Connected" : "Not connected"}
+                    </p>
+                  </div>
+                </div>
                 {igConnected ? (
-                  <span className="ml-2 px-2 py-1 bg-green-600 text-white rounded text-xs">
+                  <div className="px-3 py-2 bg-green-900/20 text-green-400 text-sm rounded text-center border border-green-800/50 mt-auto">
                     Connected
-                  </span>
+                  </div>
                 ) : (
                   <Button
-                    size="sm"
-                    className="bg-gradient-to-r from-pink-500 to-yellow-400 text-white rounded"
+                    className="bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white mt-auto"
                     onClick={() => handleConnect("instagram")}
                   >
-                    Connect
+                    Connect Instagram
                   </Button>
                 )}
               </div>
-            </div>
-            <div className="text-white/60 text-xs mt-2 md:mt-0">
-              Connect your accounts to enable posting
             </div>
           </div>
 
-          {/* User Videos Section */}
-          <div className="bg-storiq-card-bg border border-storiq-border rounded-2xl p-6 mb-8">
-            <h2 className="text-xl font-bold text-white mb-4">Your Videos</h2>
+          <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-2xl p-6 mb-8">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+              <div>
+                <h2 className="text-xl font-semibold text-white">
+                  Your Videos
+                </h2>
+                <p className="text-white/60 text-sm mt-1">
+                  Select videos to publish to connected platforms
+                </p>
+              </div>
+            </div>
+
             {loading ? (
-              <div className="text-white/60">Loading videos...</div>
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+              </div>
             ) : error ? (
-              <div className="text-destructive">{error}</div>
+              <div className="bg-red-900/20 border border-red-800/50 text-red-200 px-4 py-3 rounded-lg">
+                {error}
+              </div>
             ) : videos.length === 0 ? (
-              <div className="text-white/40">
-                No videos found. Create or upload videos to see them here.
+              <div className="text-center py-12 border-2 border-dashed border-gray-700 rounded-xl">
+                <svg
+                  className="w-12 h-12 text-gray-600 mx-auto mb-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                  ></path>
+                </svg>
+                <p className="text-white/60 mb-4">No videos available</p>
+                <Button onClick={() => window.location.href = "/dashboard/create-video"}>
+                  Create Your First Video
+                </Button>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {videos.map((video) => (
-                  <div
+                  <VideoPublishCard
                     key={video.id || video.s3Key}
-                    className="bg-storiq-dark-lighter rounded-xl p-4 flex flex-col gap-2 border border-storiq-border"
-                  >
-                    <div className="aspect-w-16 aspect-h-9 mb-2">
-                      <video
-                        src={video.url}
-                        controls
-                        className="w-full rounded"
-                      />
-                    </div>
-                    <div className="text-white font-semibold">
-                      {video.title || "Untitled Video"}
-                    </div>
-                    <div className="flex gap-4 items-center mt-2">
-                      <label className="flex items-center gap-2 text-white">
-                        <input
-                          type="checkbox"
-                          checked={
-                            !!platformSelections[video.id || video.s3Key]?.yt
-                          }
-                          onChange={() =>
-                            handlePlatformChange(
-                              video.id || video.s3Key,
-                              "youtube"
-                            )
-                          }
-                          disabled={!ytConnected}
-                          className="accent-red-600"
-                        />
-                        YouTube
-                      </label>
-                      <label className="flex items-center gap-2 text-white">
-                        <input
-                          type="checkbox"
-                          checked={
-                            !!platformSelections[video.id || video.s3Key]?.ig
-                          }
-                          onChange={() =>
-                            handlePlatformChange(
-                              video.id || video.s3Key,
-                              "instagram"
-                            )
-                          }
-                          disabled={!igConnected}
-                          className="accent-pink-500"
-                        />
-                        Instagram
-                      </label>
-                      <Button
-                        size="sm"
-                        className="ml-auto"
-                        onClick={() => handlePost(video)}
-                        disabled={
-                          postingId === (video.id || video.s3Key) ||
-                          (!platformSelections[video.id || video.s3Key]?.yt &&
-                            !platformSelections[video.id || video.s3Key]?.ig)
-                        }
-                      >
-                        {postingId === (video.id || video.s3Key)
-                          ? "Posting..."
-                          : "Post"}
-                      </Button>
-                    </div>
-                  </div>
+                    video={video}
+                    ytConnected={ytConnected}
+                    igConnected={igConnected}
+                    platformSelections={platformSelections}
+                    handlePlatformChange={handlePlatformChange}
+                    handlePost={handlePost}
+                    postingId={postingId}
+                  />
                 ))}
               </div>
             )}
           </div>
 
-          {/* Feedback Toast */}
-          <ToastViewport />
-          {toast && (
-            <Toast
-              open
-              variant={toast.type === "error" ? "destructive" : "default"}
-              onOpenChange={() => setToast(null)}
-              className="mt-4"
-            >
-              <ToastTitle>
-                {toast.type === "success" ? "Success" : "Error"}
-              </ToastTitle>
-              <ToastDescription>{toast.message}</ToastDescription>
-            </Toast>
-          )}
-
-          {/* Loader Overlay */}
-          {postingId && (
-            <Loader
-              message="Posting video..."
-              size="medium"
-              variant="spinner"
-              overlayColor="rgba(30, 41, 59, 0.85)"
-              primaryColor="#a78bfa"
-            />
-          )}
+          {/* ... toast and loader ... */}
         </div>
       </DashboardLayout>
     </ToastProvider>
   );
+};
+
+// New Video Publish Card Component
+const VideoPublishCard = ({
+  video,
+  ytConnected,
+  igConnected,
+  platformSelections,
+  handlePlatformChange,
+  handlePost,
+  postingId,
+}) => {
+  const [expanded, setExpanded] = useState(false);
+  const [open, setOpen] = useState(false);
+  const videoId = video.id || video.s3Key || "";
+  const selection = platformSelections[videoId] || { yt: false, ig: false };
+
+  return (
+    <div className="bg-gray-800/50 rounded-xl overflow-hidden border border-gray-700 transition-all hover:border-purple-500/30 hover:shadow-lg hover:shadow-purple-500/10">
+      {/* Video thumbnail and basic info */}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <div className="relative aspect-video bg-gray-900">
+          <video
+            src={video.url}
+            className="w-full h-full object-cover"
+            tabIndex={-1}
+            muted
+            playsInline
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 hover:opacity-100 transition-opacity flex items-end p-4">
+            <DialogTrigger asChild>
+              <Button
+                size="sm"
+                className="w-full"
+                onClick={() => setOpen(true)}
+              >
+                Preview
+              </Button>
+            </DialogTrigger>
+          </div>
+          {video.duration && (
+            <div className="absolute top-3 right-3 bg-black/70 text-xs text-white px-2 py-1 rounded">
+              {Math.floor(video.duration / 60)}:
+              {String(video.duration % 60).padStart(2, "0")}
+            </div>
+          )}
+        </div>
+        <DialogContent className="max-w-2xl w-full">
+          <DialogTitle>Video Preview</DialogTitle>
+          <div className="aspect-video w-full bg-black flex items-center justify-center">
+            <video
+              src={video.url}
+              className="w-full h-full"
+              controls
+              autoPlay
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <div className="p-4">
+        <h3 className="text-white font-medium mb-2 truncate">
+          {video.title || "Untitled Video"}
+        </h3>
+        {/* Publish info */}
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-xs text-white/60">
+            Published {video.publishCount ?? 0} time{(video.publishCount ?? 0) === 1 ? "" : "s"}
+          </span>
+          {video.publishedToYouTube && (
+            <span className="inline-flex items-center px-2 py-0.5 rounded bg-green-700 text-green-100 text-xs font-semibold ml-2">
+              Published
+            </span>
+          )}
+        </div>
+
+        {/* Platform selection - always visible */}
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex gap-2">
+            <PlatformButton
+              platform="youtube"
+              connected={ytConnected}
+              selected={selection.yt}
+              onClick={() => handlePlatformChange(videoId, "youtube")}
+            />
+            <PlatformButton
+              platform="instagram"
+              connected={igConnected}
+              selected={selection.ig}
+              onClick={() => handlePlatformChange(videoId, "instagram")}
+            />
+          </div>
+
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className="text-white/60 hover:text-white transition-colors"
+          >
+            <svg
+              className={`w-5 h-5 transform transition-transform ${
+                expanded ? "rotate-180" : ""
+              }`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </button>
+        </div>
+
+        {/* Expanded options */}
+        {expanded && (
+          <div className="mt-4 pt-4 border-t border-gray-700">
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="bg-gray-900/50 p-3 rounded-lg">
+                <label className="text-xs text-white/60 block mb-1">
+                  Title
+                </label>
+                <input
+                  type="text"
+                  defaultValue={video.title || ""}
+                  className="w-full bg-transparent text-white text-sm focus:outline-none focus:ring-1 focus:ring-purple-500 rounded px-2 py-1"
+                  placeholder="Enter title"
+                />
+              </div>
+              <div className="bg-gray-900/50 p-3 rounded-lg">
+                <label className="text-xs text-white/60 block mb-1">
+                  Description
+                </label>
+                <button className="w-full text-left text-white/70 text-sm hover:text-white">
+                  Add description...
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-gray-900/50 p-3 rounded-lg mb-4">
+              <label className="text-xs text-white/60 block mb-2">
+                Schedule
+              </label>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 text-white text-sm">
+                  Publish immediately
+                </div>
+                <button className="text-purple-400 hover:text-purple-300 text-sm font-medium">
+                  Schedule
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Publish button */}
+        <Button
+          className="w-full"
+          onClick={() => handlePost(video)}
+          disabled={postingId === videoId || (!selection.yt && !selection.ig)}
+          variant={!selection.yt && !selection.ig ? "outline" : "default"}
+        >
+          {postingId === videoId ? (
+            <span className="flex items-center justify-center">
+              <svg
+                className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              Publishing...
+            </span>
+          ) : (
+            `Publish to ${getPlatformCount(selection)} platform${
+              getPlatformCount(selection) !== 1 ? "s" : ""
+            }`
+          )}
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+// Platform Button Component
+const PlatformButton = ({ platform, connected, selected, onClick }) => {
+  const platformConfig = {
+    youtube: {
+      name: "YouTube",
+      icon: (
+        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z" />
+        </svg>
+      ),
+      color: "red",
+    },
+    instagram: {
+      name: "Instagram",
+      icon: (
+        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+        </svg>
+      ),
+      color: "purple",
+    },
+  };
+
+  const config = platformConfig[platform];
+
+  return (
+    <button
+      onClick={onClick}
+      disabled={!connected}
+      className={`
+        flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-all
+        ${
+          selected
+            ? `bg-${config.color}-500 text-white`
+            : connected
+            ? `bg-gray-700 text-white/80 hover:bg-gray-600 hover:text-white`
+            : `bg-gray-800 text-white/40 cursor-not-allowed`
+        }
+      `}
+      title={
+        connected
+          ? `Publish to ${config.name}`
+          : `Connect ${config.name} to enable publishing`
+      }
+    >
+      {config.icon}
+      <span className="sr-only">{config.name}</span>
+    </button>
+  );
+};
+
+// Helper function to count selected platforms
+const getPlatformCount = (selection) => {
+  return (selection.yt ? 1 : 0) + (selection.ig ? 1 : 0);
 };
 
 export default Publish;

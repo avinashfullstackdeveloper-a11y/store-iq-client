@@ -24,6 +24,9 @@ import {
   Download,
   MoreVertical,
   FileVideo,
+  Eye,
+  Film,
+  Youtube,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -43,6 +46,8 @@ interface Video {
   description?: string;
   createdAt?: string;
   s3Key?: string;
+  publishCount?: number;
+  publishedToYouTube?: boolean;
 }
 
 const Videos = () => {
@@ -266,30 +271,88 @@ const Videos = () => {
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
+  // Format date
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    });
+  };
+
   // Helper to open delete dialog safely
   function handleOpenDeleteDialog(videoId: string | null) {
     console.log("[handleOpenDeleteDialog] called with videoId:", videoId);
-    // TEMP: Confirm correct videoId received
-    console.log(
-      "TEMP DEBUG: handleOpenDeleteDialog received videoId:",
-      videoId
-    );
     if (videoId) {
       setDeleteVideoId(videoId);
       setDeleteConfirmOpen(true);
     }
   }
 
+  // Filter videos
+  const originalVideos = videos.filter((video: any) => !video.isEdited);
+  const editedVideos = videos.filter((video: any) => video.isEdited);
+
   return (
     <DashboardLayout>
-      <div className="p-6 md:p-8">
+      <div className="p-6 md:p-8 max-w-7xl mx-auto">
+        {/* Header Section */}
         <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
-            Your Videos
-          </h1>
-          <p className="text-white/60">
-            Manage and preview all the videos you've created
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+                Video Library
+              </h1>
+              <p className="text-white/60 text-lg">
+                Manage and preview all your created videos
+              </p>
+            </div>
+            <Button 
+              onClick={() => navigate("/dashboard/create-video")}
+              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold px-6 py-2.5 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
+            >
+              <Film className="h-5 w-5 mr-2" />
+              Create New Video
+            </Button>
+          </div>
+
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-white/60 text-sm">Total Videos</p>
+                  <p className="text-2xl font-bold text-white">{videos.length}</p>
+                </div>
+                <div className="p-2 bg-blue-500/20 rounded-lg">
+                  <Film className="h-6 w-6 text-blue-400" />
+                </div>
+              </div>
+            </div>
+            <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-white/60 text-sm">Original Videos</p>
+                  <p className="text-2xl font-bold text-white">{originalVideos.length}</p>
+                </div>
+                <div className="p-2 bg-green-500/20 rounded-lg">
+                  <Play className="h-6 w-6 text-green-400" />
+                </div>
+              </div>
+            </div>
+            <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-white/60 text-sm">Edited Videos</p>
+                  <p className="text-2xl font-bold text-white">{editedVideos.length}</p>
+                </div>
+                <div className="p-2 bg-purple-500/20 rounded-lg">
+                  <Edit3 className="h-6 w-6 text-purple-400" />
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Preview Modal */}
@@ -299,26 +362,24 @@ const Videos = () => {
             if (!open) closeModal();
           }}
         >
-          <DialogContent className="max-w-4xl p-0 overflow-hidden bg-storiq-card-bg border-0">
-            <DialogHeader className="px-6 pt-6">
-              <DialogTitle className="text-xl text-white">
+          <DialogContent className="max-w-4xl p-0 overflow-hidden bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl">
+            <DialogHeader className="px-6 pt-6 pb-4 border-b border-gray-700">
+              <DialogTitle className="text-xl font-semibold text-white flex items-center gap-2">
+                <Play className="h-5 w-5 text-blue-400" />
                 {modal.title}
               </DialogTitle>
             </DialogHeader>
 
             {/* Video Player Container */}
-            <div className="relative px-6">
+            <div className="relative px-6 py-4">
               <AspectRatio
                 ratio={16 / 9}
-                className="bg-black rounded-lg overflow-hidden"
+                className="bg-black rounded-xl overflow-hidden border border-gray-700"
               >
                 {/* Overlay: Loading spinner */}
                 {modal.loading && (
-                  <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/60 transition-opacity animate-fade-in">
-                    <div
-                      className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"
-                      aria-label="Loading spinner"
-                    ></div>
+                  <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/70 transition-opacity animate-fade-in">
+                    <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
                     <span className="text-white text-lg font-medium">
                       Loading video...
                     </span>
@@ -327,19 +388,22 @@ const Videos = () => {
 
                 {/* Overlay: Error */}
                 {modal.error && (
-                  <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/80 transition-opacity animate-fade-in p-4">
-                    <span className="text-destructive text-lg font-semibold mb-2">
+                  <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/90 transition-opacity animate-fade-in p-6">
+                    <div className="bg-red-500/20 rounded-full p-4 mb-4">
+                      <FileVideo className="h-8 w-8 text-red-400" />
+                    </div>
+                    <span className="text-red-400 text-lg font-semibold mb-2">
                       Failed to load video
                     </span>
-                    <span className="text-white/70 text-center text-sm mb-4">
+                    <span className="text-white/70 text-center text-sm mb-6">
                       {modal.error}
                     </span>
                     <Button
                       variant="outline"
                       onClick={closeModal}
-                      aria-label="Close error overlay"
+                      className="border-gray-600 text-white hover:bg-gray-700"
                     >
-                      Close
+                      Close Preview
                     </Button>
                   </div>
                 )}
@@ -371,15 +435,27 @@ const Videos = () => {
             </div>
 
             {/* Action Buttons */}
-            <DialogFooter className="flex justify-end gap-2 px-6 pb-6">
-              <Button
-                variant="destructive"
-                onClick={() => handleOpenDeleteDialog(modal.videoId)}
-                className="gap-2"
-              >
-                <Trash2 className="h-4 w-4" />
-                Delete
-              </Button>
+            <DialogFooter className="flex justify-between items-center px-6 pb-6 pt-4 bg-gray-800/50">
+              <div className="text-white/60 text-sm">
+                Video ID: {modal.videoId || 'N/A'}
+              </div>
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={closeModal}
+                  className="border-gray-600 text-white hover:bg-gray-700"
+                >
+                  Close
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => handleOpenDeleteDialog(modal.videoId)}
+                  className="gap-2 bg-red-600 hover:bg-red-700"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete Video
+                </Button>
+              </div>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -401,361 +477,302 @@ const Videos = () => {
           />
         )}
 
-        {/* Videos Grid */}
+        {/* Loading State */}
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {[...Array(8)].map((_, i) => (
-              <Card
-                key={i}
-                className="overflow-hidden border-storiq-border bg-storiq-card-bg"
-              >
-                <Skeleton className="h-48 w-full rounded-none" />
+              <Card key={i} className="overflow-hidden border-gray-700 bg-gray-800/50 backdrop-blur-sm rounded-xl">
+                <Skeleton className="h-48 w-full rounded-none bg-gradient-to-br from-gray-700 to-gray-600" />
                 <CardContent className="p-4">
-                  <Skeleton className="h-5 w-3/4 mb-2" />
-                  <Skeleton className="h-4 w-full mb-1" />
-                  <Skeleton className="h-4 w-2/3 mb-3" />
+                  <Skeleton className="h-5 w-3/4 mb-3 bg-gray-600" />
+                  <Skeleton className="h-4 w-full mb-2 bg-gray-600" />
+                  <Skeleton className="h-4 w-2/3 mb-4 bg-gray-600" />
                   <div className="flex justify-between items-center">
-                    <Skeleton className="h-8 w-20" />
-                    <Skeleton className="h-8 w-20" />
+                    <Skeleton className="h-8 w-20 bg-gray-600" />
+                    <Skeleton className="h-8 w-20 bg-gray-600" />
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
         ) : error ? (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="rounded-full bg-destructive/20 p-4 mb-4">
-              <FileVideo className="h-10 w-10 text-destructive" />
+          <div className="flex flex-col items-center justify-center py-16 text-center bg-gray-800/30 rounded-2xl border border-gray-700 backdrop-blur-sm">
+            <div className="rounded-full bg-red-500/20 p-5 mb-5">
+              <FileVideo className="h-12 w-12 text-red-400" />
             </div>
-            <h3 className="text-xl font-medium text-white mb-2">
+            <h3 className="text-2xl font-semibold text-white mb-3">
               Unable to load videos
             </h3>
-            <p className="text-white/40 mb-6 max-w-md">{error}</p>
-            <Button onClick={() => window.location.reload()}>Try Again</Button>
+            <p className="text-white/50 mb-8 max-w-md text-lg">{error}</p>
+            <Button 
+              onClick={() => window.location.reload()}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2.5 rounded-lg"
+            >
+              Try Again
+            </Button>
           </div>
         ) : videos.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="rounded-full bg-storiq-card-bg p-4 mb-4 border border-storiq-border">
-              <FileVideo className="h-12 w-12 text-white/40" />
+          <div className="flex flex-col items-center justify-center py-20 text-center bg-gray-800/30 rounded-2xl border border-gray-700 backdrop-blur-sm">
+            <div className="rounded-full bg-gray-700/50 p-6 mb-6 border border-gray-600">
+              <Film className="h-16 w-16 text-white/30" />
             </div>
-            <h3 className="text-xl font-medium text-white mb-2">
+            <h3 className="text-2xl font-semibold text-white mb-3">
               No videos yet
             </h3>
-            <p className="text-white/40 mb-6">
-              Videos you create will appear here
+            <p className="text-white/40 mb-8 text-lg max-w-sm">
+              Start creating amazing videos to see them appear here
             </p>
-            <Button onClick={() => navigate("/dashboard/create-video")}>
+            <Button 
+              onClick={() => navigate("/dashboard/create-video")}
+              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold px-8 py-3 rounded-lg transition-all duration-200"
+            >
               Create Your First Video
             </Button>
           </div>
         ) : (
-          <div>
-            <h2 className="text-2xl font-bold text-white mb-4">
-              Original Videos
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-10">
-              {videos.filter((video: any) => !video.isEdited)
-                .length === 0 ? (
-                <div className="col-span-4 text-white/60 text-center py-8">
-                  No original videos found.
+          <div className="space-y-12">
+            {/* Original Videos Section */}
+            <section>
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+                    <div className="p-2 bg-green-500/20 rounded-lg">
+                      <Play className="h-5 w-5 text-green-400" />
+                    </div>
+                    Original Videos
+                    <Badge variant="secondary" className="ml-3 bg-green-500/20 text-green-400">
+                      {originalVideos.length}
+                    </Badge>
+                  </h2>
+                  <p className="text-white/40 mt-1">Videos you've uploaded directly</p>
+                </div>
+              </div>
+
+              {originalVideos.length === 0 ? (
+                <div className="text-center py-12 bg-gray-800/30 rounded-2xl border border-gray-700">
+                  <FileVideo className="h-12 w-12 text-white/20 mx-auto mb-4" />
+                  <p className="text-white/40 text-lg">No original videos found</p>
                 </div>
               ) : (
-                videos
-                  .filter((video: any) => !video.isEdited)
-                  .map((video: Video, index) => (
-                    <Card
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {originalVideos.map((video: Video, index) => (
+                    <VideoCard
                       key={video.id || index}
-                      className="group overflow-hidden border-storiq-border bg-storiq-card-bg hover:border-primary/50 transition-all duration-300 hover:shadow-lg"
-                    >
-                      <div className="relative h-48 overflow-hidden">
-                        <img
-                          src={
-                            video.thumbnail
-                              ? video.thumbnail
-                              : generatedThumbs[video.id || video.url]
-                              ? generatedThumbs[video.id || video.url]
-                              : "/placeholder.svg"
-                          }
-                          alt={video.title || "Untitled Video"}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src =
-                              "/placeholder.svg";
-                          }}
-                        />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                          <Button
-                            onClick={() => openModal(video)}
-                            className="rounded-full h-12 w-12"
-                            size="icon"
-                          >
-                            <Play className="h-5 w-5 fill-current ml-1" />
-                          </Button>
-                        </div>
-                        {video.duration && (
-                          <Badge
-                            variant="secondary"
-                            className="absolute bottom-2 right-2"
-                          >
-                            <Clock className="h-3 w-3 mr-1" />
-                            {formatDuration(video.duration)}
-                          </Badge>
-                        )}
-                      </div>
-                      <CardContent className="p-4">
-                        <div className="flex justify-between items-start mb-2">
-                          <h3 className="text-white font-semibold line-clamp-1 flex-1 mr-2">
-                            {video.title || "Untitled Video"}
-                          </h3>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                              >
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={() => openModal(video)}
-                              >
-                                <Play className="h-4 w-4 mr-2" />
-                                Preview
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  if (video.s3Key) {
-                                    navigate(
-                                      `/dashboard/video-editor/${video.s3Key}`,
-                                      { state: { url: video.url } }
-                                    );
-                                  } else if (video.id) {
-                                    navigate(
-                                      `/dashboard/video-editor/${video.id}`,
-                                      { state: { url: video.url } }
-                                    );
-                                  }
-                                }}
-                              >
-                                <Edit3 className="h-4 w-4 mr-2" />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="text-destructive"
-                                onClick={() => handleOpenDeleteDialog(video.id)}
-                                disabled={
-                                  video.id === undefined || video.id === null
-                                }
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                        <p className="text-white/60 text-sm mb-3 line-clamp-2">
-                          {video.subtitle ||
-                            video.description ||
-                            "No description"}
-                        </p>
-                        <div className="flex items-center text-xs text-white/40">
-                          <Calendar className="h-3 w-3 mr-1" />
-                          {video.createdAt
-                            ? new Date(video.createdAt).toLocaleDateString()
-                            : "Unknown date"}
-                        </div>
-                      </CardContent>
-                      <CardFooter className="p-4 pt-0 flex gap-2">
-                        <Button
-                          size="sm"
-                          className="flex-1 gap-2 bg-storiq-purple hover:bg-storiq-purple/80 text-white font-semibold"
-                          onClick={() => openModal(video)}
-                        >
-                          <Play className="h-4 w-4" />
-                          Preview
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex-1 gap-2 !text-white !border-storiq-purple hover:!bg-storiq-purple/80"
-                          onClick={() => {
-                            if (video.s3Key) {
-                              navigate(
-                                `/dashboard/video-editor/${video.s3Key}`,
-                                { state: { url: video.url } }
-                              );
-                            } else if (video.id) {
-                              navigate(`/dashboard/video-editor/${video.id}`, {
-                                state: { url: video.url },
-                              });
-                            }
-                          }}
-                        >
-                          <Edit3 className="h-4 w-4" />
-                          Edit
-                        </Button>
-                      </CardFooter>
-                    </Card>
-                  ))
+                      video={video}
+                      generatedThumbs={generatedThumbs}
+                      onPreview={() => openModal(video)}
+                      onEdit={() => {
+                        if (video.s3Key) {
+                          navigate(`/dashboard/video-editor/${video.s3Key}`, { state: { url: video.url } });
+                        } else if (video.id) {
+                          navigate(`/dashboard/video-editor/${video.id}`, { state: { url: video.url } });
+                        }
+                      }}
+                      onDelete={() => handleOpenDeleteDialog(video.id)}
+                      formatDuration={formatDuration}
+                      formatDate={formatDate}
+                    />
+                  ))}
+                </div>
               )}
-            </div>
-            <h2 className="text-2xl font-bold text-white mb-4">
-              Edited Videos
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {videos.filter((video: any) => video.isEdited)
-                .length === 0 ? (
-                <div className="col-span-4 text-white/60 text-center py-8">
-                  No edited videos found.
+            </section>
+
+            {/* Edited Videos Section */}
+            <section>
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+                    <div className="p-2 bg-purple-500/20 rounded-lg">
+                      <Edit3 className="h-5 w-5 text-purple-400" />
+                    </div>
+                    Edited Videos
+                    <Badge variant="secondary" className="ml-3 bg-purple-500/20 text-purple-400">
+                      {editedVideos.length}
+                    </Badge>
+                  </h2>
+                  <p className="text-white/40 mt-1">Videos you've modified and enhanced</p>
+                </div>
+              </div>
+
+              {editedVideos.length === 0 ? (
+                <div className="text-center py-12 bg-gray-800/30 rounded-2xl border border-gray-700">
+                  <Edit3 className="h-12 w-12 text-white/20 mx-auto mb-4" />
+                  <p className="text-white/40 text-lg">No edited videos found</p>
                 </div>
               ) : (
-                videos
-                  .filter((video: any) => video.isEdited)
-                  .map((video: Video, index) => (
-                    <Card
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {editedVideos.map((video: Video, index) => (
+                    <VideoCard
                       key={video.id || index}
-                      className="group overflow-hidden border-storiq-border bg-storiq-card-bg hover:border-primary/50 transition-all duration-300 hover:shadow-lg"
-                    >
-                      <div className="relative h-48 overflow-hidden">
-                        <img
-                          src={
-                            video.thumbnail
-                              ? video.thumbnail
-                              : generatedThumbs[video.id || video.url]
-                              ? generatedThumbs[video.id || video.url]
-                              : "/placeholder.svg"
-                          }
-                          alt={video.title || "Untitled Video"}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src =
-                              "/placeholder.svg";
-                          }}
-                        />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                          <Button
-                            onClick={() => openModal(video)}
-                            className="rounded-full h-12 w-12"
-                            size="icon"
-                          >
-                            <Play className="h-5 w-5 fill-current ml-1" />
-                          </Button>
-                        </div>
-                        {video.duration && (
-                          <Badge
-                            variant="secondary"
-                            className="absolute bottom-2 right-2"
-                          >
-                            <Clock className="h-3 w-3 mr-1" />
-                            {formatDuration(video.duration)}
-                          </Badge>
-                        )}
-                      </div>
-                      <CardContent className="p-4">
-                        <div className="flex justify-between items-start mb-2">
-                          <h3 className="text-white font-semibold line-clamp-1 flex-1 mr-2">
-                            {video.title || "Untitled Video"}
-                          </h3>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                              >
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={() => openModal(video)}
-                              >
-                                <Play className="h-4 w-4 mr-2" />
-                                Preview
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  if (video.s3Key) {
-                                    navigate(
-                                      `/dashboard/video-editor/${video.s3Key}`,
-                                      { state: { url: video.url } }
-                                    );
-                                  } else if (video.id) {
-                                    navigate(
-                                      `/dashboard/video-editor/${video.id}`,
-                                      { state: { url: video.url } }
-                                    );
-                                  }
-                                }}
-                              >
-                                <Edit3 className="h-4 w-4 mr-2" />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="text-destructive"
-                                onClick={() => handleOpenDeleteDialog(video.id)}
-                                disabled={
-                                  video.id === undefined || video.id === null
-                                }
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                        <p className="text-white/60 text-sm mb-3 line-clamp-2">
-                          {video.subtitle ||
-                            video.description ||
-                            "No description"}
-                        </p>
-                        <div className="flex items-center text-xs text-white/40">
-                          <Calendar className="h-3 w-3 mr-1" />
-                          {video.createdAt
-                            ? new Date(video.createdAt).toLocaleDateString()
-                            : "Unknown date"}
-                        </div>
-                      </CardContent>
-                      <CardFooter className="p-4 pt-0 flex gap-2">
-                        <Button
-                          size="sm"
-                          className="flex-1 gap-2 bg-storiq-purple hover:bg-storiq-purple/80 text-white font-semibold"
-                          onClick={() => openModal(video)}
-                        >
-                          <Play className="h-4 w-4" />
-                          Preview
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex-1 gap-2 !text-white !border-storiq-purple hover:!bg-storiq-purple/80"
-                          onClick={() => {
-                            if (video.s3Key) {
-                              navigate(
-                                `/dashboard/video-editor/${video.s3Key}`,
-                                { state: { url: video.url } }
-                              );
-                            } else if (video.id) {
-                              navigate(`/dashboard/video-editor/${video.id}`, {
-                                state: { url: video.url },
-                              });
-                            }
-                          }}
-                        >
-                          <Edit3 className="h-4 w-4" />
-                          Edit
-                        </Button>
-                      </CardFooter>
-                    </Card>
-                  ))
+                      video={video}
+                      generatedThumbs={generatedThumbs}
+                      onPreview={() => openModal(video)}
+                      onEdit={() => {
+                        if (video.s3Key) {
+                          navigate(`/dashboard/video-editor/${video.s3Key}`, { state: { url: video.url } });
+                        } else if (video.id) {
+                          navigate(`/dashboard/video-editor/${video.id}`, { state: { url: video.url } });
+                        }
+                      }}
+                      onDelete={() => handleOpenDeleteDialog(video.id)}
+                      formatDuration={formatDuration}
+                      formatDate={formatDate}
+                    />
+                  ))}
+                </div>
               )}
-            </div>
+            </section>
           </div>
         )}
       </div>
     </DashboardLayout>
+  );
+};
+
+// Video Card Component for better organization
+interface VideoCardProps {
+  video: Video;
+  generatedThumbs: { [key: string]: string };
+  onPreview: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+  formatDuration: (seconds: number) => string;
+  formatDate: (dateString: string) => string;
+}
+
+const VideoCard: React.FC<VideoCardProps> = ({
+  video,
+  generatedThumbs,
+  onPreview,
+  onEdit,
+  onDelete,
+  formatDuration,
+  formatDate,
+}) => {
+  return (
+    <Card className="group overflow-hidden border-gray-700 bg-gray-800/50 backdrop-blur-sm hover:border-blue-500/50 transition-all duration-300 hover:shadow-xl rounded-xl">
+      <div className="relative h-48 overflow-hidden">
+        <img
+          src={
+            video.thumbnail
+              ? video.thumbnail
+              : generatedThumbs[video.id || video.url]
+              ? generatedThumbs[video.id || video.url]
+              : "/placeholder.svg"
+          }
+          alt={video.title || "Untitled Video"}
+          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = "/placeholder.svg";
+          }}
+        />
+        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+          <Button
+            onClick={onPreview}
+            className="rounded-full h-14 w-14 bg-blue-600 hover:bg-blue-700 shadow-lg"
+            size="icon"
+          >
+            <Play className="h-6 w-6 fill-current ml-1" />
+          </Button>
+        </div>
+        {video.duration && (
+          <Badge className="absolute bottom-3 right-3 bg-black/80 text-white border-0">
+            <Clock className="h-3 w-3 mr-1" />
+            {formatDuration(video.duration)}
+          </Badge>
+        )}
+        {video.publishedToYouTube && (
+          <Badge className="absolute top-3 left-3 bg-red-600 hover:bg-red-700 border-0">
+            <Youtube className="h-3 w-3 mr-1" />
+            YouTube
+          </Badge>
+        )}
+      </div>
+      
+      <CardContent className="p-4">
+        <div className="flex justify-between items-start mb-3">
+          <h3 className="text-white font-semibold line-clamp-2 flex-1 mr-2 text-lg leading-tight">
+            {video.title || "Untitled Video"}
+          </h3>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-white/60 hover:text-white hover:bg-white/10 rounded-lg"
+              >
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="bg-gray-800 border-gray-700">
+              <DropdownMenuItem onClick={onPreview} className="text-white hover:bg-gray-700">
+                <Eye className="h-4 w-4 mr-2" />
+                Preview
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onEdit} className="text-white hover:bg-gray-700">
+                <Edit3 className="h-4 w-4 mr-2" />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="text-red-400 hover:bg-red-500/20"
+                onClick={onDelete}
+                disabled={video.id === undefined || video.id === null}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        {/* Publish info */}
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-xs text-blue-400 font-medium">
+            Published {video.publishCount ?? 0} time{(video.publishCount ?? 0) === 1 ? "" : "s"}
+          </span>
+          {video.publishedToYouTube && (
+            <Badge variant="outline" className="text-green-400 border-green-400/30 text-xs">
+              Published
+            </Badge>
+          )}
+        </div>
+
+        <p className="text-white/60 text-sm mb-4 line-clamp-2 leading-relaxed">
+          {video.subtitle || video.description || "No description available"}
+        </p>
+        
+        <div className="flex items-center justify-between text-xs text-white/40">
+          <div className="flex items-center">
+            <Calendar className="h-3 w-3 mr-1" />
+            {video.createdAt ? formatDate(video.createdAt) : "Unknown date"}
+          </div>
+          <div className="flex items-center gap-1">
+            <Film className="h-3 w-3" />
+            {video.isEdited ? "Edited" : "Original"}
+          </div>
+        </div>
+      </CardContent>
+      
+      <CardFooter className="p-4 pt-0 flex gap-2">
+        <Button
+          size="sm"
+          onClick={onPreview}
+          className="flex-1 gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+        >
+          <Play className="h-4 w-4" />
+          Preview
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onEdit}
+          className="flex-1 gap-2 text-white border-gray-600 hover:bg-gray-700 hover:border-gray-500 rounded-lg transition-colors"
+        >
+          <Edit3 className="h-4 w-4" />
+          Edit
+        </Button>
+      </CardFooter>
+    </Card>
   );
 };
 
