@@ -278,7 +278,7 @@ Each scene should have a different background. Use a modern sans-serif font and 
             <FileText className="w-5 h-5 text-storiq-purple" />
             Generated Script
           </h3>
-          <div className="bg-storiq-card-bg border border-storiq-border rounded-lg p-4 text-white/80 whitespace-pre-wrap max-h-60 overflow-y-auto text-sm leading-relaxed">
+          <div className="bg-storiq-card-bg border border-storiq-border rounded-lg p-4 text-white/80 whitespace-pre-wrap max-h-60 overflow-y-auto text-sm leading-relaxed hide-scrollbar">
             {generatedScript}
           </div>
         </Card>
