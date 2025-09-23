@@ -18,7 +18,7 @@ import {
   FileText,
   Volume2,
   Clock,
-  Settings
+  Settings,
 } from "lucide-react";
 
 function isErrorWithMessage(err: unknown): err is { message: string } {
@@ -61,8 +61,6 @@ Each scene should have a different background. Use a modern sans-serif font and 
   // Form validation error
   const [formError, setFormError] = useState<string | null>(null);
 
-
-
   const handleGenerateVideo = async () => {
     if (!prompt.trim()) {
       setFormError("Prompt cannot be empty.");
@@ -82,7 +80,11 @@ Each scene should have a different background. Use a modern sans-serif font and 
           credentials: "include",
           body: JSON.stringify({
             prompt,
-            config: { duration: duration[0], preset: selectedPreset, voice: selectedVoice },
+            config: {
+              duration: duration[0],
+              preset: selectedPreset,
+              voice: selectedVoice,
+            },
           }),
         }
       );
@@ -173,21 +175,21 @@ Each scene should have a different background. Use a modern sans-serif font and 
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-2 sm:p-4 md:p-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-2xl md:text-3xl font-bold text-white mb-2 flex items-center gap-3">
           <Wand2 className="w-8 h-8 text-storiq-purple" />
           Create New Video
         </h1>
-        <p className="text-white/60 text-lg">
+        <p className="text-white/60 text-base md:text-lg">
           Describe your vision and let AI bring it to life with stunning visuals
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="flex flex-col lg:flex-row gap-4 md:gap-6 lg:gap-8">
         {/* Left Column - Controls */}
-        <div className="flex flex-col gap-8 h-full">
+        <div className="flex flex-col gap-6 md:gap-8 h-full w-full lg:w-[40%] max-lg:mb-4 overflow-y-auto lg:max-h-[calc(100vh-120px)] pr-0 lg:pr-2 scrollbar-thin scrollbar-thumb-storiq-border/40 scrollbar-track-transparent [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
           {/* Prompt Area - moved to top */}
           <Card className="bg-storiq-card-bg/50 border-storiq-border p-6">
             <h3 className="text-white text-lg font-semibold mb-4 flex items-center gap-2">
@@ -195,7 +197,8 @@ Each scene should have a different background. Use a modern sans-serif font and 
               Video Prompt
             </h3>
             <p className="text-white/60 text-sm mb-4">
-              Describe your video in detail. The AI will generate a video based on your description.
+              Describe your video in detail. The AI will generate a video based
+              on your description.
             </p>
 
             <Textarea
@@ -209,9 +212,16 @@ Each scene should have a different background. Use a modern sans-serif font and 
             />
 
             {formError && (
-              <Alert variant="destructive" className="mt-3 border-red-500/50 bg-red-500/10">
-                <AlertTitle className="text-red-200">Validation Error</AlertTitle>
-                <AlertDescription className="text-red-300">{formError}</AlertDescription>
+              <Alert
+                variant="destructive"
+                className="mt-3 border-red-500/50 bg-red-500/10"
+              >
+                <AlertTitle className="text-red-200">
+                  Validation Error
+                </AlertTitle>
+                <AlertDescription className="text-red-300">
+                  {formError}
+                </AlertDescription>
               </Alert>
             )}
           </Card>
@@ -225,7 +235,9 @@ Each scene should have a different background. Use a modern sans-serif font and 
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <span className="text-white/60 text-sm">Target Duration</span>
-                <span className="text-white font-semibold text-lg">{duration[0]}s</span>
+                <span className="text-white font-semibold text-lg">
+                  {duration[0]}s
+                </span>
               </div>
               <Slider
                 value={duration}
@@ -256,7 +268,11 @@ Each scene should have a different background. Use a modern sans-serif font and 
                   variant={selectedVoice === option ? "default" : "outline"}
                   className="w-full justify-start h-11 transition-all duration-200"
                 >
-                  <span className={selectedVoice === option ? "text-white" : "text-white/80"}>
+                  <span
+                    className={
+                      selectedVoice === option ? "text-white" : "text-white/80"
+                    }
+                  >
                     {option}
                   </span>
                 </Button>
@@ -286,9 +302,11 @@ Each scene should have a different background. Use a modern sans-serif font and 
                       {preset}
                     </span>
                   </div>
-                  <span className={`text-sm font-medium ${
-                    selectedPreset === preset ? "text-white" : "text-white/70"
-                  }`}>
+                  <span
+                    className={`text-sm font-medium ${
+                      selectedPreset === preset ? "text-white" : "text-white/70"
+                    }`}
+                  >
                     {preset}
                   </span>
                 </button>
@@ -315,7 +333,10 @@ Each scene should have a different background. Use a modern sans-serif font and 
                 </span>
               )}
             </Button>
-            <form onSubmit={handleUploadVideo} className="flex flex-col gap-2 w-full md:w-auto">
+            <form
+              onSubmit={handleUploadVideo}
+              className="flex flex-col gap-2 w-full md:w-auto"
+            >
               <input
                 type="file"
                 accept="video/*"
@@ -359,72 +380,98 @@ Each scene should have a different background. Use a modern sans-serif font and 
             </form>
           </div>
           {uploadStatus === "error" && uploadError && (
-            <Alert variant="destructive" className="mt-4 border-red-500/50 bg-red-500/10">
+            <Alert
+              variant="destructive"
+              className="mt-4 border-red-500/50 bg-red-500/10"
+            >
               <AlertTitle className="text-red-200">Upload Error</AlertTitle>
-              <AlertDescription className="text-red-300">{uploadError}</AlertDescription>
+              <AlertDescription className="text-red-300">
+                {uploadError}
+              </AlertDescription>
             </Alert>
           )}
         </div>
 
         {/* Right Column - Video Preview */}
-        <div>
-          <Card className="bg-storiq-card-bg/50 border-storiq-border p-6 h-full flex flex-col">
-            <h3 className="text-white text-lg font-semibold mb-4 flex items-center gap-2">
-              <Play className="w-5 h-5 text-storiq-purple" />
-              Video Preview
-            </h3>
+        <div className="w-full lg:w-[60%] flex-shrink-0">
+          <div className="sticky top-6">
+            <Card className="bg-storiq-card-bg/50 border-storiq-border p-4 md:p-6 h-full flex flex-col mx-auto">
+              <h3 className="text-white text-lg font-semibold mb-4 flex items-center gap-2">
+                <Play className="w-5 h-5 text-storiq-purple" />
+                Video Preview
+              </h3>
 
-            {videoStatus === "loading" && (
-              <div className="flex flex-col items-center justify-center p-8 border-2 border-storiq-purple/30 rounded-lg bg-gradient-to-br from-storiq-purple/10 to-transparent">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-storiq-purple mb-4"></div>
-                <span className="text-storiq-purple font-semibold text-lg">
-                  Generating your video...
-                </span>
-                <p className="text-white/60 text-sm mt-2">This may take a few moments</p>
-              </div>
-            )}
-
-            {videoStatus === "error" && videoError && (
-              <Alert variant="destructive" className="mb-4 border-red-500/50 bg-red-500/10">
-                <AlertTitle className="text-red-200">Generation Failed</AlertTitle>
-                <AlertDescription className="text-red-300">{videoError}</AlertDescription>
-              </Alert>
-            )}
-
-            {videoStatus === "success" && videoUrl && (
-              <div className="space-y-4">
-                <div className="p-3 border-2 border-green-500/30 rounded-xl bg-gradient-to-br from-green-500/10 to-transparent">
-                  <AdvancedVideoPlayer
-                    src={videoUrl}
-                    onDelete={handleDeleteVideo}
-                    className="w-full rounded-lg shadow-2xl"
-                  />
-                  <div className="flex items-center justify-center gap-2 mt-3 text-green-400 text-sm font-semibold">
-                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                    Video generated successfully!
-                  </div>
+              {videoStatus === "loading" && (
+                <div className="flex flex-col items-center justify-center p-8 border-2 border-storiq-purple/30 rounded-lg bg-gradient-to-br from-storiq-purple/10 to-transparent">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-storiq-purple mb-4"></div>
+                  <span className="text-storiq-purple font-semibold text-lg">
+                    Generating your video...
+                  </span>
+                  <p className="text-white/60 text-sm mt-2">
+                    This may take a few moments
+                  </p>
                 </div>
+              )}
 
-                {deleteStatus === "error" && deleteError && (
-                  <Alert variant="destructive" className="border-red-500/50 bg-red-500/10">
-                    <AlertTitle className="text-red-200">Delete Error</AlertTitle>
-                    <AlertDescription className="text-red-300">{deleteError}</AlertDescription>
-                  </Alert>
-                )}
-              </div>
-            )}
+              {videoStatus === "error" && videoError && (
+                <Alert
+                  variant="destructive"
+                  className="mb-4 border-red-500/50 bg-red-500/10"
+                >
+                  <AlertTitle className="text-red-200">
+                    Generation Failed
+                  </AlertTitle>
+                  <AlertDescription className="text-red-300">
+                    {videoError}
+                  </AlertDescription>
+                </Alert>
+              )}
 
-            {videoStatus === "idle" && (
-              <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed border-storiq-border rounded-lg bg-gradient-to-br from-storiq-card-bg to-storiq-card-bg/30">
-                <FileText className="w-16 h-16 text-white/20 mb-4" />
-                <span className="text-white/40 text-lg font-medium">No video generated yet</span>
-                <p className="text-white/30 text-sm mt-1">Your creation will appear here</p>
-              </div>
-            )}
-          </Card>
+              {videoStatus === "success" && videoUrl && (
+                <div className="space-y-4">
+                  <div className="p-3 border-2 border-green-500/30 rounded-xl bg-gradient-to-br from-green-500/10 to-transparent">
+                    <AdvancedVideoPlayer
+                      src={videoUrl}
+                      onDelete={handleDeleteVideo}
+                      className="w-full rounded-lg shadow-2xl"
+                    />
+                    <div className="flex items-center justify-center gap-2 mt-3 text-green-400 text-sm font-semibold">
+                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                      Video generated successfully!
+                    </div>
+                  </div>
+
+                  {deleteStatus === "error" && deleteError && (
+                    <Alert
+                      variant="destructive"
+                      className="border-red-500/50 bg-red-500/10"
+                    >
+                      <AlertTitle className="text-red-200">
+                        Delete Error
+                      </AlertTitle>
+                      <AlertDescription className="text-red-300">
+                        {deleteError}
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </div>
+              )}
+
+              {videoStatus === "idle" && (
+                <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed border-storiq-border rounded-lg bg-gradient-to-br from-storiq-card-bg to-storiq-card-bg/30">
+                  <FileText className="w-16 h-16 text-white/20 mb-4" />
+                  <span className="text-white/40 text-lg font-medium">
+                    No video generated yet
+                  </span>
+                  <p className="text-white/30 text-sm mt-1">
+                    Your creation will appear here
+                  </p>
+                </div>
+              )}
+            </Card>
+          </div>
         </div>
       </div>
-
     </div>
   );
 };

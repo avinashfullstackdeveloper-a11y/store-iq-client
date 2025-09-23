@@ -12,7 +12,8 @@ const tabIconClass =
 const CreateVideo = () => {
   return (
     <DashboardLayout>
-      <div className="p-6 max-w-4xl mx-auto">
+      <div className="p-0 w-full min-h-screen flex justify-center">
+        <div className="w-full max-w-5xl">
         <Tabs defaultValue="video" className="w-full">
           <TabsList
             className="mb-6 bg-muted/60 rounded-xl p-1 flex gap-2 shadow-sm w-full"
@@ -61,6 +62,7 @@ const CreateVideo = () => {
             <ImageGenerator />
           </TabsContent>
         </Tabs>
+        </div>
       </div>
     </DashboardLayout>
   );
