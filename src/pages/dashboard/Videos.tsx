@@ -290,9 +290,15 @@ const Videos = () => {
     }
   }
 
-  // Filter videos
-  const originalVideos = videos.filter((video: any) => !video.isEdited);
-  const editedVideos = videos.filter((video: any) => video.isEdited);
+  // Helper: check if file is a video (not image)
+  function isVideoFile(url: string) {
+    return /\.(mp4|mov|webm|avi|mkv)$/i.test(url);
+  }
+
+  // Filter out images from videos
+  const onlyVideos = videos.filter((video: any) => isVideoFile(video.url));
+  const originalVideos = onlyVideos.filter((video: any) => !video.isEdited);
+  const editedVideos = onlyVideos.filter((video: any) => video.isEdited);
 
   return (
     <DashboardLayout>
