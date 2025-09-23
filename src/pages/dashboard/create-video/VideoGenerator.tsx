@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import promptPlaceVideo from "@/assets/videos/prompt-place.mp4";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
@@ -35,7 +36,11 @@ const VideoGenerator = () => {
   // --- STATE MANAGEMENT ---
   type Status = "idle" | "loading" | "success" | "error";
   const [prompt, setPrompt] = useState(
-    `In an ancient garden draped in Ivy, she wore a pink silk dress, her curly hair elegantly tied up. Strange plants surrounded the garden's buildings, whispering ancient secrets. She picked up a large red apple, which suddenly burst into magical flames. She froze—eyes wide with a mix of awe and fear.`
+    `Create a video about sustainable living tips.
+
+Feature a young female character.
+
+Each scene should have a different background. Use a modern sans-serif font and vibrant nature visuals.`
   );
   const [selectedQuality, setSelectedQuality] = useState("720P");
   const [selectedVoiceSpeed, setSelectedVoiceSpeed] = useState("5x");
@@ -411,13 +416,25 @@ const VideoGenerator = () => {
 
               {videoStatus === "idle" && (
                 <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed border-storiq-border rounded-lg bg-gradient-to-br from-storiq-card-bg to-storiq-card-bg/30">
-                  <FileText className="w-16 h-16 text-white/20 mb-4" />
-                  <span className="text-white/40 text-lg font-medium">
-                    No video generated yet
-                  </span>
-                  <p className="text-white/30 text-sm mt-1">
-                    Your creation will appear here
-                  </p>
+                  <video
+                    src={promptPlaceVideo as string}
+                    controls
+                    autoPlay
+                    loop
+                    muted
+                    className="w-full max-w-lg rounded-lg shadow-lg mb-4"
+                    poster=""
+                  />
+                  <div className="w-full flex flex-col items-center mt-2">
+                    <h4 className="text-white/60 text-base font-semibold mb-1">Prompt</h4>
+                    <pre className="text-white/70 text-base font-medium whitespace-pre-line text-center">
+Create a video about sustainable living tips.
+
+Feature a young female character.
+
+Each scene should have a different background. Use a modern sans-serif font and vibrant nature visuals.
+                    </pre>
+                  </div>
                 </div>
               )}
             </Card>
