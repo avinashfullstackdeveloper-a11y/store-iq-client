@@ -205,221 +205,231 @@ Each scene should have a different background. Use a modern sans-serif font and 
   };
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
+    <div className="p-2 sm:p-4 md:p-6 max-w-3xl mx-auto">
+      {/* Header */}
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-2xl md:text-3xl font-bold text-white mb-2 flex items-center gap-3">
           <Wand2 className="w-8 h-8 text-storiq-purple" />
           Script Generator
         </h1>
-        <p className="text-white/60 text-lg">
+        <p className="text-white/60 text-base md:text-lg">
           Describe your vision and let AI generate a script for your video.
         </p>
       </div>
 
-      <Card className="bg-storiq-card-bg/50 border-storiq-border p-6 mb-8">
-        <h3 className="text-white text-lg font-semibold mb-4 flex items-center gap-2">
-          <FileText className="w-5 h-5 text-storiq-purple" />
-          Script Prompt
-        </h3>
-        <Textarea
-          value={prompt}
-          onChange={(e) => {
-            setPrompt(e.target.value);
-            if (formError) setFormError(null);
-          }}
-          placeholder="Describe your video here... Be as detailed as possible for better results."
-          className="bg-storiq-card-bg border-storiq-border text-white placeholder:text-white/40 min-h-[150px] resize-none focus:border-storiq-purple focus:ring-storiq-purple font-medium"
-        />
+      <div className="flex flex-col gap-6 md:gap-8">
+        {/* Prompt Input Card */}
+        <div>
+          <div className="bg-storiq-card-bg/50 border-storiq-border rounded-2xl shadow-2xl p-6 mb-0">
+            <h3 className="text-white text-lg font-semibold mb-4 flex items-center gap-2">
+              <FileText className="w-5 h-5 text-storiq-purple" />
+              Script Prompt
+            </h3>
+            <Textarea
+              value={prompt}
+              onChange={(e) => {
+                setPrompt(e.target.value);
+                if (formError) setFormError(null);
+              }}
+              placeholder="Describe your video here... Be as detailed as possible for better results."
+              className="bg-storiq-card-bg border-storiq-border text-white placeholder:text-white/40 min-h-[150px] resize-none focus:border-storiq-purple focus:ring-storiq-purple font-medium"
+            />
 
-        {formError && (
-          <Alert variant="destructive" className="mt-3 border-red-500/50 bg-red-500/10">
-            <AlertTitle className="text-red-200">Validation Error</AlertTitle>
-            <AlertDescription className="text-red-300">{formError}</AlertDescription>
-          </Alert>
-        )}
-
-        <Button
-          onClick={handleGenerateScript}
-          disabled={scriptStatus === "loading" || !prompt.trim()}
-          className="w-full mt-4 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-semibold h-12 text-base"
-        >
-          {scriptStatus === "loading" ? (
-            <span className="flex items-center gap-2">
-              <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-              Generating Script...
-            </span>
-          ) : (
-            <span className="flex items-center gap-2">
-              <Wand2 className="w-4 h-4" />
-              Generate Script
-            </span>
-          )}
-        </Button>
-
-        {scriptStatus === "error" && scriptError && (
-          <Alert variant="destructive" className="mt-3 border-red-500/50 bg-red-500/10">
-            <AlertTitle className="text-red-200">Script Generation Failed</AlertTitle>
-            <AlertDescription className="text-red-300">{scriptError}</AlertDescription>
-          </Alert>
-        )}
-
-        {scriptStatus === "success" && generatedScript && (
-          <div className="flex items-center gap-2 mt-3 text-green-400 text-sm font-semibold p-3 bg-green-500/10 rounded-lg border border-green-500/20">
-            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-            Script generated successfully!
-          </div>
-        )}
-      </Card>
-
-      {/* Generated Script Display */}
-      {generatedScript && (
-        <Card className="bg-storiq-card-bg/50 border-storiq-border p-6 mb-8">
-          <h3 className="text-white text-lg font-semibold mb-4 flex items-center gap-2">
-            <FileText className="w-5 h-5 text-storiq-purple" />
-            Generated Script
-          </h3>
-          <div className="bg-storiq-card-bg border border-storiq-border rounded-lg p-4 text-white/80 whitespace-pre-wrap max-h-60 overflow-y-auto text-sm leading-relaxed hide-scrollbar">
-            {generatedScript}
-          </div>
-        </Card>
-      )}
-
-      {/* Script History Section */}
-      <Card className="bg-storiq-card-bg/50 border-storiq-border p-6">
-        <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-          <History className="w-6 h-6 text-storiq-purple" />
-          Script History
-        </h2>
-    
-        {/* Clear All History Button */}
-        {scriptHistory.length > 0 && !historyLoading && (
-          <div className="flex justify-end mb-4">
-            <Button
-              size="sm"
-              variant="destructive"
-              onClick={handleClearAllHistory}
-              disabled={clearAllLoading}
-              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-xs"
-            >
-              {clearAllLoading ? "Clearing..." : "Clear All History"}
-            </Button>
-          </div>
-        )}
-        {clearAllError && (
-          <Alert variant="destructive" className="mb-4 border-red-500/50 bg-red-500/10">
-            <AlertTitle className="text-red-200">Error</AlertTitle>
-            <AlertDescription className="text-red-300">{clearAllError}</AlertDescription>
-          </Alert>
-        )}
-    
-        {historyLoading ? (
-          <div className="flex items-center justify-center p-8 text-white/60">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-storiq-purple mr-3"></div>
-            Loading history...
-          </div>
-        ) : historyError ? (
-          <Alert variant="destructive" className="border-red-500/50 bg-red-500/10">
-            <AlertTitle className="text-red-200">Error Loading History</AlertTitle>
-            <AlertDescription className="text-red-300">{historyError}</AlertDescription>
-          </Alert>
-        ) : scriptHistory.length === 0 ? (
-          <div className="text-center py-12 text-white/40">
-            <History className="w-16 h-16 mx-auto mb-4 opacity-30" />
-            <p className="text-lg">No script history found</p>
-            <p className="text-sm mt-1">Your generated scripts will appear here</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {deleteError && (
-              <Alert variant="destructive" className="mb-2 border-red-500/50 bg-red-500/10">
-                <AlertTitle className="text-red-200">Error</AlertTitle>
-                <AlertDescription className="text-red-300">{deleteError}</AlertDescription>
+            {formError && (
+              <Alert variant="destructive" className="mt-3 border-red-500/50 bg-red-500/10">
+                <AlertTitle className="text-red-200">Validation Error</AlertTitle>
+                <AlertDescription className="text-red-300">{formError}</AlertDescription>
               </Alert>
             )}
-            {scriptHistory.map((item, idx) => {
-              const isExpanded = expandedCards[idx] || false;
-              const copied = copiedCards[idx] || false;
-    
-              const handleCopy = () => {
-                navigator.clipboard.writeText(item.script);
-                setCopiedCards((prev) => {
-                  const updated = [...prev];
-                  updated[idx] = true;
-                  return updated;
-                });
-                setTimeout(() => {
-                  setCopiedCards((prev) => {
-                    const updated = [...prev];
-                    updated[idx] = false;
-                    return updated;
-                  });
-                }, 1200);
-              };
-    
-              const handleToggleExpand = () => {
-                setExpandedCards((prev) => {
-                  const updated = [...prev];
-                  updated[idx] = !updated[idx];
-                  return updated;
-                });
-              };
-    
-              return (
-                <Card key={item._id || idx} className="bg-storiq-card-bg border-storiq-border p-5 hover:border-storiq-purple/30 transition-all duration-200">
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="flex-1 min-w-0">
-                      <div className="text-white font-semibold mb-1 line-clamp-2">Prompt: {item.prompt}</div>
-                      <div className="text-white/50 text-xs">
-                        {new Date(item.createdAt).toLocaleString()}
-                      </div>
-                    </div>
-                    <div className="flex gap-2 ml-4">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={handleCopy}
-                        className="h-8 px-3 text-xs border-storiq-purple/50 hover:bg-storiq-purple/20 text-white"
-                      >
-                        <Copy className="w-3 h-3 mr-1 text-white" />
-                        {copied ? "Copied!" : "Copy"}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={handleToggleExpand}
-                        className="h-8 px-3 text-xs border-storiq-purple/50 hover:bg-storiq-purple/20 text-white"
-                      >
-                        {isExpanded ? (
-                          <ChevronUp className="w-3 h-3 mr-1 text-white" />
-                        ) : (
-                          <ChevronDown className="w-3 h-3 mr-1 text-white" />
-                        )}
-                        {isExpanded ? "Less" : "More"}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleDeleteHistoryItem(item._id)}
-                        disabled={deleteLoading === item._id}
-                        className="h-8 px-3 text-xs ml-1 bg-red-600 hover:bg-red-700 text-white"
-                      >
-                        {deleteLoading === item._id ? "Deleting..." : "Delete"}
-                      </Button>
-                    </div>
-                  </div>
-    
-                  <div className={`text-white/70 text-sm leading-relaxed transition-all duration-200 overflow-hidden ${
-                    isExpanded ? "max-h-none" : "max-h-20"
-                  }`}>
-                    <div className="font-semibold text-white/90 mb-1">Script:</div>
-                    {item.script}
-                  </div>
-                </Card>
-              );
-            })}
+
+            <Button
+              onClick={handleGenerateScript}
+              disabled={scriptStatus === "loading" || !prompt.trim()}
+              className="w-full mt-4 bg-gradient-to-r from-storiq-purple to-storiq-purple/80 hover:from-storiq-purple/90 hover:to-storiq-purple/70 text-white font-semibold h-12 text-base transition-all duration-200"
+            >
+              {scriptStatus === "loading" ? (
+                <span className="flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                  Generating Script...
+                </span>
+              ) : (
+                <span className="flex items-center gap-2">
+                  <Wand2 className="w-4 h-4" />
+                  Generate Script
+                </span>
+              )}
+            </Button>
+
+            {scriptStatus === "error" && scriptError && (
+              <Alert variant="destructive" className="mt-3 border-red-500/50 bg-red-500/10">
+                <AlertTitle className="text-red-200">Script Generation Failed</AlertTitle>
+                <AlertDescription className="text-red-300">{scriptError}</AlertDescription>
+              </Alert>
+            )}
+
+            {scriptStatus === "success" && generatedScript && (
+              <div className="flex items-center gap-2 mt-3 text-green-400 text-sm font-semibold p-3 bg-green-500/10 rounded-lg border border-green-500/20">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                Script generated successfully!
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Generated Script Display */}
+        {generatedScript && (
+          <div>
+            <div className="bg-storiq-card-bg/50 border-storiq-border rounded-2xl shadow-2xl p-6 mb-0">
+              <h3 className="text-white text-lg font-semibold mb-4 flex items-center gap-2">
+                <FileText className="w-5 h-5 text-storiq-purple" />
+                Generated Script
+              </h3>
+              <div className="bg-storiq-card-bg border border-storiq-border rounded-lg p-4 text-white/80 whitespace-pre-wrap max-h-60 overflow-y-auto text-sm leading-relaxed hide-scrollbar">
+                {generatedScript}
+              </div>
+            </div>
           </div>
         )}
-      </Card>
+
+        {/* Script History Section */}
+        <div>
+          <div className="bg-storiq-card-bg/50 border-storiq-border rounded-2xl shadow-2xl p-6">
+            <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+              <History className="w-6 h-6 text-storiq-purple" />
+              Script History
+            </h2>
+
+            {/* Clear All History Button */}
+            {scriptHistory.length > 0 && !historyLoading && (
+              <div className="flex justify-end mb-4">
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={handleClearAllHistory}
+                  disabled={clearAllLoading}
+                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-xs"
+                >
+                  {clearAllLoading ? "Clearing..." : "Clear All History"}
+                </Button>
+              </div>
+            )}
+            {clearAllError && (
+              <Alert variant="destructive" className="mb-4 border-red-500/50 bg-red-500/10">
+                <AlertTitle className="text-red-200">Error</AlertTitle>
+                <AlertDescription className="text-red-300">{clearAllError}</AlertDescription>
+              </Alert>
+            )}
+
+            {historyLoading ? (
+              <div className="flex items-center justify-center p-8 text-white/60">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-storiq-purple mr-3"></div>
+                Loading history...
+              </div>
+            ) : historyError ? (
+              <Alert variant="destructive" className="border-red-500/50 bg-red-500/10">
+                <AlertTitle className="text-red-200">Error Loading History</AlertTitle>
+                <AlertDescription className="text-red-300">{historyError}</AlertDescription>
+              </Alert>
+            ) : scriptHistory.length === 0 ? (
+              <div className="text-center py-12 text-white/40">
+                <History className="w-16 h-16 mx-auto mb-4 opacity-30" />
+                <p className="text-lg">No script history found</p>
+                <p className="text-sm mt-1">Your generated scripts will appear here</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {deleteError && (
+                  <Alert variant="destructive" className="mb-2 border-red-500/50 bg-red-500/10">
+                    <AlertTitle className="text-red-200">Error</AlertTitle>
+                    <AlertDescription className="text-red-300">{deleteError}</AlertDescription>
+                  </Alert>
+                )}
+                {scriptHistory.map((item, idx) => {
+                  const isExpanded = expandedCards[idx] || false;
+                  const copied = copiedCards[idx] || false;
+
+                  const handleCopy = () => {
+                    navigator.clipboard.writeText(item.script);
+                    setCopiedCards((prev) => {
+                      const updated = [...prev];
+                      updated[idx] = true;
+                      return updated;
+                    });
+                    setTimeout(() => {
+                      setCopiedCards((prev) => {
+                        const updated = [...prev];
+                        updated[idx] = false;
+                        return updated;
+                      });
+                    }, 1200);
+                  };
+
+                  const handleToggleExpand = () => {
+                    setExpandedCards((prev) => {
+                      const updated = [...prev];
+                      updated[idx] = !updated[idx];
+                      return updated;
+                    });
+                  };
+
+                  return (
+                    <div key={item._id || idx} className="bg-storiq-card-bg border-storiq-border rounded-xl p-5 hover:border-storiq-purple/30 transition-all duration-200">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="text-white font-semibold mb-1 line-clamp-2">Prompt: {item.prompt}</div>
+                          <div className="text-white/50 text-xs">
+                            {new Date(item.createdAt).toLocaleString()}
+                          </div>
+                        </div>
+                        <div className="flex gap-2 ml-4">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={handleCopy}
+                            className="h-8 px-3 text-xs border-storiq-purple/50 hover:bg-storiq-purple/20 text-white"
+                          >
+                            <Copy className="w-3 h-3 mr-1 text-white" />
+                            {copied ? "Copied!" : "Copy"}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={handleToggleExpand}
+                            className="h-8 px-3 text-xs border-storiq-purple/50 hover:bg-storiq-purple/20 text-white"
+                          >
+                            {isExpanded ? (
+                              <ChevronUp className="w-3 h-3 mr-1 text-white" />
+                            ) : (
+                              <ChevronDown className="w-3 h-3 mr-1 text-white" />
+                            )}
+                            {isExpanded ? "Less" : "More"}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleDeleteHistoryItem(item._id)}
+                            disabled={deleteLoading === item._id}
+                            className="h-8 px-3 text-xs ml-1 bg-red-600 hover:bg-red-700 text-white"
+                          >
+                            {deleteLoading === item._id ? "Deleting..." : "Delete"}
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className={`text-white/70 text-sm leading-relaxed transition-all duration-200 overflow-hidden ${
+                        isExpanded ? "max-h-none" : "max-h-20"
+                      }`}>
+                        <div className="font-semibold text-white/90 mb-1">Script:</div>
+                        {item.script}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
