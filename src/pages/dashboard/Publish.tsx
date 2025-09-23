@@ -400,7 +400,9 @@ const Publish = () => {
                   ></path>
                 </svg>
                 <p className="text-white/60 mb-4">No videos available</p>
-                <Button>Create Your First Video</Button>
+                <Button onClick={() => window.location.href = "/dashboard/create-video"}>
+                  Create Your First Video
+                </Button>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

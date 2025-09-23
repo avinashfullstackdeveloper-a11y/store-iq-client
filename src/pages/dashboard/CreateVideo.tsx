@@ -99,7 +99,7 @@ Each scene should have a different background. Use a modern sans-serif font and 
     }
     setHistoryLoading(true);
     setHistoryError(null);
-    const userId = user.id || user.userId || user.email;
+    const userId = user.id || user.email;
     fetch(`/api/scripts/history?userId=${encodeURIComponent(userId)}`, {
       credentials: "include",
     })
@@ -159,7 +159,7 @@ Each scene should have a different background. Use a modern sans-serif font and 
       setScriptStatus("success");
       if (user) {
         console.log("Current user object:", user);
-        const userId = (user && user.userId) || (user && user.id) || (user && user.email);
+        const userId = (user && user.id) || (user && user.email);
         fetch("/api/scripts/history", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -661,21 +661,21 @@ Each scene should have a different background. Use a modern sans-serif font and 
                           size="sm"
                           variant="outline"
                           onClick={handleCopy}
-                          className="h-8 px-3 text-xs border-storiq-purple/50 hover:bg-storiq-purple/20"
+                          className="h-8 px-3 text-xs border-storiq-purple/50 hover:bg-storiq-purple/20 text-white"
                         >
-                          <Copy className="w-3 h-3 mr-1" />
+                          <Copy className="w-3 h-3 mr-1 text-white" />
                           {copied ? "Copied!" : "Copy"}
                         </Button>
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={handleToggleExpand}
-                          className="h-8 px-3 text-xs border-storiq-purple/50 hover:bg-storiq-purple/20"
+                          className="h-8 px-3 text-xs border-storiq-purple/50 hover:bg-storiq-purple/20 text-white"
                         >
                           {isExpanded ? (
-                            <ChevronUp className="w-3 h-3 mr-1" />
+                            <ChevronUp className="w-3 h-3 mr-1 text-white" />
                           ) : (
-                            <ChevronDown className="w-3 h-3 mr-1" />
+                            <ChevronDown className="w-3 h-3 mr-1 text-white" />
                           )}
                           {isExpanded ? "Less" : "More"}
                         </Button>

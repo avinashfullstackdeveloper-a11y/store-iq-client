@@ -58,8 +58,10 @@ const CustomTooltip = ({ active, payload, label }: any) => {
       <div className="bg-storiq-card-bg border border-storiq-border rounded-lg p-4 shadow-lg">
         <p className="text-white font-semibold mb-2">{label}</p>
         {payload.map((entry: any, index: number) => (
-          <p key={index} className="text-sm" style={{ color: entry.color }}>
-            {entry.name}: <span className="font-semibold ml-2">{entry.value}</span>
+          <p key={index} className="text-sm flex items-center gap-2">
+            <span className="inline-block w-3 h-3 rounded-full mr-2" style={{ backgroundColor: entry.color }} />
+            <span className="text-white">{entry.name}:</span>
+            <span className="font-semibold text-white ml-2">{entry.value}</span>
           </p>
         ))}
       </div>
@@ -469,17 +471,17 @@ const Stats = () => {
               </div>
               
               {/* Summary Stats */}
-              <div className="space-y-3 mt-4">
+              <div className="space-y-3 mt-4 overflow-x-auto">
                 {pieData.map((item, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <div 
-                        className="w-3 h-3 rounded-full" 
+                  <div key={index} className="flex items-center justify-between min-w-0 flex-wrap">
+                    <div className="flex items-center space-x-2 min-w-0">
+                      <div
+                        className="w-3 h-3 rounded-full flex-shrink-0"
                         style={{ backgroundColor: item.color }}
                       />
-                      <span className="text-white/70 text-sm">{item.name}</span>
+                      <span className="text-white/70 text-sm truncate">{item.name}</span>
                     </div>
-                    <span className="text-white font-semibold">{item.value}</span>
+                    <span className="text-white font-semibold break-words">{item.value}</span>
                   </div>
                 ))}
               </div>
