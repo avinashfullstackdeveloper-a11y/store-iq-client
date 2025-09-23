@@ -54,6 +54,7 @@ const Videos = () => {
   const navigate = useNavigate();
   // State
   const [videos, setVideos] = useState<Video[]>([]);
+  const [images, setImages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [generatedThumbs, setGeneratedThumbs] = useState<{
@@ -81,25 +82,30 @@ const Videos = () => {
 
   // Fetch videos only (edited/original split is now backend-driven)
   useEffect(() => {
-    const fetchVideos = async () => {
+    const fetchVideosAndImages = async () => {
       setLoading(true);
       setError(null);
-
       try {
+        // Fetch videos
         const url = "/api/videos";
         const fetchOptions: RequestInit = { credentials: "include" };
-        // User ID is determined by session cookie on backend
         const res = await fetch(url, fetchOptions);
         if (res.status === 401) {
           throw new Error("Unauthorized (401): Please log in.");
         }
         if (!res.ok) throw new Error("Failed to fetch videos");
         const data = await res.json();
-        console.log("[Videos] API /api/videos response:", data);
         setVideos(Array.isArray(data) ? data : []);
+        // Fetch images
+        const imgRes = await fetch("/api/images", fetchOptions);
+        if (imgRes.ok) {
+          const imgData = await imgRes.json();
+          setImages(Array.isArray(imgData) ? imgData : []);
+        } else {
+          setImages([]);
+        }
       } catch (err: unknown) {
         let message = "Unknown error";
-        console.error("[Videos][DEBUG] Error in fetchVideos:", err);
         if (
           err &&
           typeof err === "object" &&
@@ -115,8 +121,7 @@ const Videos = () => {
         setLoading(false);
       }
     };
-
-    fetchVideos();
+    fetchVideosAndImages();
   }, []);
 
   // Generate thumbnails
@@ -300,7 +305,7 @@ const Videos = () => {
 
   // Filter out images from videos
   const onlyVideos = videos.filter((video: any) => isVideoFile(video.url));
-  const onlyImages = videos.filter((item: any) => isImageFile(item.url));
+  const onlyImages = images;
   const originalVideos = onlyVideos.filter((video: any) => !video.isEdited);
   const editedVideos = onlyVideos.filter((video: any) => video.isEdited);
 
@@ -327,7 +332,7 @@ const Videos = () => {
   const openImageModal = (img: any) => {
     setImageModal({
       open: true,
-      src: img.url || "",
+      src: img.s3Url || img.url || "",
       title: img.title || img.s3Key || "Untitled Image",
       imageId: img.id || img.s3Key || null,
       loading: false,
@@ -766,7 +771,7 @@ const Videos = () => {
                     <Card key={img.id || img.s3Key || idx} className="group overflow-hidden border-gray-700 bg-gray-800/50 backdrop-blur-sm hover:border-blue-500/50 transition-all duration-300 hover:shadow-xl rounded-xl">
                       <div className="relative h-48 overflow-hidden flex items-center justify-center bg-black">
                         <img
-                          src={img.url}
+                          src={img.s3Url || img.url}
                           alt={img.title || img.s3Key || "Image"}
                           className="object-contain w-full h-full group-hover:scale-105 transition-transform duration-500"
                           onClick={() => openImageModal(img)}
@@ -851,6 +856,17 @@ const Videos = () => {
               src={imageModal.src}
               alt={imageModal.title}
               className="object-contain max-h-[60vh] w-full"
+              // fallback for modal: if src is not s3Url, try to find the image by id in onlyImages
+              onError={e => {
+                const imgObj = onlyImages.find(
+                  (img) =>
+                    img.id === imageModal.imageId ||
+                    img.s3Key === imageModal.imageId
+                );
+                if (imgObj && imgObj.s3Url) {
+                  (e.target as HTMLImageElement).src = imgObj.s3Url;
+                }
+              }}
             />
           )}
         </div>

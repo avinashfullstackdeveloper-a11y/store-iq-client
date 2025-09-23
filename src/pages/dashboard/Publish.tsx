@@ -58,8 +58,11 @@ const Publish = () => {
   }
 
   const [videos, setVideos] = useState<Video[]>([]);
+  const [images, setImages] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [imagesLoading, setImagesLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [imagesError, setImagesError] = useState<string | null>(null);
   const [postingId, setPostingId] = useState<string | null>(null);
   const [toast, setToast] = useState<{
     type: "success" | "error";
@@ -113,6 +116,22 @@ const Publish = () => {
   React.useEffect(() => {
     fetchVideos();
     fetchConnectionStatus();
+    // Fetch images
+    const fetchImages = async () => {
+      setImagesLoading(true);
+      setImagesError(null);
+      try {
+        const res = await fetch("/api/images", { credentials: "include" });
+        if (!res.ok) throw new Error("Failed to fetch images");
+        const data = await res.json();
+        setImages(Array.isArray(data) ? data : []);
+      } catch (err) {
+        setImagesError((err as Error)?.message || "Unknown error");
+      } finally {
+        setImagesLoading(false);
+      }
+    };
+    fetchImages();
   }, []);
 
   // Platform selection per video
@@ -369,11 +388,7 @@ const Publish = () => {
             function isVideoFile(url) {
               return /\.(mp4|mov|webm|avi|mkv)$/i.test(url);
             }
-            function isImageFile(url) {
-              return /\.(png|jpg|jpeg|webp)$/i.test(url);
-            }
             const videoItems = videos.filter((v) => isVideoFile(v.url));
-            const imageItems = videos.filter((v) => isImageFile(v.url));
             return (
               <>
                 {/* Videos Section */}
@@ -445,15 +460,15 @@ const Publish = () => {
                       </p>
                     </div>
                   </div>
-                  {loading ? (
+                  {imagesLoading ? (
                     <div className="flex justify-center items-center py-12">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
                     </div>
-                  ) : error ? (
+                  ) : imagesError ? (
                     <div className="bg-red-900/20 border border-red-800/50 text-red-200 px-4 py-3 rounded-lg">
-                      {error}
+                      {imagesError}
                     </div>
-                  ) : imageItems.length === 0 ? (
+                  ) : images.length === 0 ? (
                     <div className="text-center py-12 border-2 border-dashed border-gray-700 rounded-xl">
                       <svg
                         className="w-12 h-12 text-gray-600 mx-auto mb-4"
@@ -475,14 +490,14 @@ const Publish = () => {
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {imageItems.map((img) => (
+                      {images.map((img, idx) => (
                         <div
-                          key={img.id || img.s3Key || img.url}
+                          key={img.id || img.s3Key || img.url || `image-${idx}`}
                           className="bg-gray-800/50 rounded-xl overflow-hidden border border-gray-700 transition-all hover:border-purple-500/30 hover:shadow-lg hover:shadow-purple-500/10 flex flex-col"
                         >
                           <div className="relative aspect-square bg-black flex items-center justify-center">
                             <img
-                              src={img.url}
+                              src={img.s3Url || img.url}
                               alt={img.title || "Generated Image"}
                               className="object-contain w-full h-full"
                               style={{ maxHeight: 280 }}
