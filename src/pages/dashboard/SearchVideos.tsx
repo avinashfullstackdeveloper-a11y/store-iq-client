@@ -5,19 +5,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider";
 import { ChevronDown, Play, Heart, MessageCircle } from "lucide-react";
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"; // Import Dialog components
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import axios from "axios";
 
 const SearchVideos = () => {
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [searchTerm, setSearchTerm] = useState("how to create a startup");
-  const [showVideoModal, setShowVideoModal] = useState(false); // State for modal visibility
-  const [selectedVideo, setSelectedVideo] = useState<any | null>(null); // State for selected video data
+  const [showVideoModal, setShowVideoModal] = useState(false);
+  const [selectedVideo, setSelectedVideo] = useState<any | null>(null);
+  const [videoResults, setVideoResults] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const handleVideoClick = (video: any) => {
     setSelectedVideo(video);
     setShowVideoModal(true);
   };
-  
+
   const suggestedTags = [
     "how to create a startup",
     "how to go viral on TikTok", 
@@ -25,66 +28,47 @@ const SearchVideos = () => {
     "create personal brand"
   ];
 
-  const videoResults = [
-    {
-      id: 1,
-      thumbnail: "/api/placeholder/300/400",
-      platform: "TikTok",
-      title: "STARTUPS ALWAYS ASK US",
-      views: "9k",
-      likes: "477",
-      comments: "6",
-      author: "@startupMBA.io"
-    },
-    {
-      id: 2,
-      thumbnail: "/api/placeholder/300/400", 
-      platform: "TikTok",
-      title: "frank moved on from CS, he's saturating startups now 😭😭",
-      views: "10k",
-      likes: "512",
-      comments: "15"
-    },
-    {
-      id: 3,
-      thumbnail: "/api/placeholder/300/400",
-      platform: "TikTok", 
-      title: "'Bad' Start up ideas that are actually good",
-      subtitle: "Learn in 2 minutes",
-      views: "16k",
-      likes: "752",
-      comments: "21"
-    },
-    {
-      id: 4,
-      thumbnail: "/api/placeholder/300/400",
-      platform: "TikTok",
-      title: "'Bad' Start up ideas that are actually good", 
-      subtitle: "Learn in 2 minutes",
-      views: "16k",
-      likes: "752",
-      comments: "21"
-    }
-  ];
+  const fetchYouTubeVideos = async () => {
+    if (!searchTerm) return;
+    setLoading(true);
+    try {
+      const res = await axios.post("http://localhost:5000/youtube/search", {
+        query: searchTerm,
+        from: "2024-01-01T00:00:00Z",
+        to: new Date().toISOString(),
+        order: "viewCount"
+      });
 
-  const [filteredVideoResults, setFilteredVideoResults] = useState(videoResults); // New state for filtered results
+      const mappedVideos = res.data.map((video: any) => ({
+        id: video.id,
+        thumbnail: video.snippet.thumbnails.medium.url,
+        platform: "YouTube",
+        title: video.snippet.title,
+        subtitle: video.snippet.description,
+        views: video.statistics.viewCount,
+        likes: video.statistics.likeCount,
+        comments: video.statistics.commentCount,
+        author: video.snippet.channelTitle
+      }));
+
+      setVideoResults(mappedVideos);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSearch = () => {
-    const lowerCaseSearchTerm = searchTerm.toLowerCase();
-    const newFilteredResults = videoResults.filter(video =>
-      video.title.toLowerCase().includes(lowerCaseSearchTerm) ||
-      (video.subtitle && video.subtitle.toLowerCase().includes(lowerCaseSearchTerm)) ||
-      (video.author && video.author.toLowerCase().includes(lowerCaseSearchTerm))
-    );
-    setFilteredVideoResults(newFilteredResults);
+    fetchYouTubeVideos();
   };
 
   return (
     <DashboardLayout>
       <div className="p-8">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">Search Viral TikTok Videos</h1>
-          <p className="text-white/60">Input a topic and hit "Search" to find viral TikTok videos</p>
+          <h1 className="text-4xl font-bold text-white mb-2">Search YouTube Videos</h1>
+          <p className="text-white/60">Input a topic and hit "Search" to find viral YouTube videos</p>
         </div>
 
         {/* Search Bar */}
@@ -98,7 +82,10 @@ const SearchVideos = () => {
                 placeholder="Enter your search topic..."
               />
             </div>
-            <Button className="bg-storiq-purple hover:bg-storiq-purple-light text-white px-8 h-12">
+            <Button 
+              className="bg-storiq-purple hover:bg-storiq-purple-light text-white px-8 h-12"
+              onClick={handleSearch}
+            >
               Search
             </Button>
           </div>
@@ -135,6 +122,7 @@ const SearchVideos = () => {
             <div className="bg-storiq-card-bg border border-storiq-border rounded-2xl p-6 space-y-6">
               {/* Filter Row 1 */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                {/* Sorting */}
                 <div>
                   <label className="text-white text-sm font-medium mb-2 block">Sorting order</label>
                   <Select defaultValue="most-relevant">
@@ -149,6 +137,7 @@ const SearchVideos = () => {
                   </Select>
                 </div>
 
+                {/* Hashtags */}
                 <div>
                   <label className="text-white text-sm font-medium mb-2 block">Must include one of those hashtags</label>
                   <Select defaultValue="select-options">
@@ -163,6 +152,7 @@ const SearchVideos = () => {
                   </Select>
                 </div>
 
+                {/* Minimum likes */}
                 <div>
                   <label className="text-white text-sm font-medium mb-2 block">Minimum number of likes</label>
                   <Input
@@ -172,6 +162,7 @@ const SearchVideos = () => {
                   />
                 </div>
 
+                {/* Language */}
                 <div>
                   <label className="text-white text-sm font-medium mb-2 block">Language</label>
                   <Select defaultValue="english">
@@ -187,17 +178,12 @@ const SearchVideos = () => {
                 </div>
               </div>
 
-              {/* Posting Time Filter */}
+              {/* Posting Time Slider */}
               <div>
                 <label className="text-white text-sm font-medium mb-2 block">Posting Time</label>
                 <p className="text-white/60 text-sm mb-4">Filter videos by creation date</p>
                 <div className="relative">
-                  <Slider
-                    defaultValue={[25, 75]}
-                    max={100}
-                    step={1}
-                    className="w-full"
-                  />
+                  <Slider defaultValue={[25, 75]} max={100} step={1} className="w-full" />
                   <div className="flex justify-between mt-2 text-sm text-white/60">
                     <span>From: 2024/02/05</span>
                     <span>To: 2025/08/05</span>
@@ -209,96 +195,103 @@ const SearchVideos = () => {
         </div>
 
         {/* Video Results */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {videoResults.map((video) => (
-            <div
-              key={video.id}
-              className="bg-storiq-card-bg border border-storiq-border rounded-2xl overflow-hidden hover:border-storiq-purple/50 transition-colors cursor-pointer"
-              onClick={() => handleVideoClick(video)} // Add onClick handler
-            >
-              {/* Video Thumbnail */}
-              <div className="relative aspect-[3/4] bg-gradient-to-br from-orange-500/20 to-red-500/20">
-                <div className="absolute inset-0 bg-black/20"></div>
-                
-                {/* Platform Badge */}
-                <div className="absolute top-3 left-3 flex items-center space-x-1 bg-black/60 backdrop-blur-sm rounded-full px-2 py-1">
-                  <div className="w-4 h-4 bg-white rounded-sm flex items-center justify-center">
-                    <span className="text-xs font-bold text-black">🎵</span>
+        {loading ? (
+          <p className="text-white">Loading...</p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {videoResults.map((video) => (
+              <div
+                key={video.id}
+                className="bg-storiq-card-bg border border-storiq-border rounded-2xl overflow-hidden hover:border-storiq-purple/50 transition-colors cursor-pointer"
+                onClick={() => handleVideoClick(video)}
+              >
+                {/* Video Thumbnail */}
+                <div className="relative aspect-[3/4] bg-gradient-to-br from-orange-500/20 to-red-500/20">
+                <img src={video.thumbnail} alt={video.title} className="absolute inset-0 w-full h-full object-cover"/>
+                  <div className="absolute inset-0 bg-black/20"></div>
+                  
+                  {/* Platform Badge */}
+                  <div className="absolute top-3 left-3 flex items-center space-x-1 bg-black/60 backdrop-blur-sm rounded-full px-2 py-1">
+                    <div className="w-4 h-4 bg-white rounded-sm flex items-center justify-center">
+                      <span className="text-xs font-bold text-black">▶</span>
+                    </div>
+                    {/* <span className="text-white text-xs font-medium">{video.platform}</span> */}
                   </div>
-                  <span className="text-white text-xs font-medium">{video.platform}</span>
-                </div>
 
-                {/* Play Button */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
-                    <Play className="w-6 h-6 text-white ml-1" fill="white" />
-                  </div>
-                </div>
-
-                {/* Video Title Overlay */}
-                {video.title && (
-                  <div className="absolute bottom-3 left-3 right-3">
-                    <div className="bg-black/60 backdrop-blur-sm rounded-lg p-2">
-                      <p className="text-white text-sm font-bold leading-tight">{video.title}</p>
-                      {video.subtitle && (
-                        <p className="text-white/80 text-xs mt-1">{video.subtitle}</p>
-                      )}
+                  {/* Play Button */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                      <Play className="w-6 h-6 text-white ml-1" fill="white" />
                     </div>
                   </div>
-                )}
 
-                {/* Author */}
-                {video.author && (
-                  <div className="absolute bottom-16 left-3">
-                    <p className="text-white text-xs font-medium">{video.author}</p>
-                  </div>
-                )}
-              </div>
+                  {/* Video Title */}
+                  {/* {video.title && (
+                    <div className="absolute bottom-3 left-3 right-3">
+                      <div className="bg-black/60 backdrop-blur-sm rounded-lg p-2">
+                        <p className="text-white text-sm font-bold leading-tight">{video.title}</p>
+                        {video.subtitle && (
+                          <p className="text-white/80 text-xs mt-1">{video.subtitle}</p>
+                        )}
+                      </div>
+                    </div>
+                  )} */}
 
-              {/* Video Stats */}
-              <div className="p-4">
-                <div className="flex items-center justify-between text-white/60 text-sm">
-                  <div className="flex items-center space-x-1">
-                    <Play className="w-4 h-4" />
-                    <span>{video.views}</span>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <Heart className="w-4 h-4" />
-                    <span>{video.likes}</span>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <MessageCircle className="w-4 h-4" />
-                    <span>{video.comments}</span>
+                  {/* Author */}
+                  {video.author && (
+                    <div className="absolute bottom-16 left-3">
+                      <p className="text-white text-xs font-medium">{video.author}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Video Stats */}
+                <div className="p-4">
+                  <div className="flex items-center justify-between text-white/60 text-sm">
+                    <div className="flex items-center space-x-1">
+                      <Play className="w-4 h-4" />
+                      <span>{video.views}</span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <Heart className="w-4 h-4" />
+                      <span>{video.likes}</span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <MessageCircle className="w-4 h-4" />
+                      <span>{video.comments}</span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      </div>
-      {/* Video Playback Modal */}
-      <Dialog open={showVideoModal} onOpenChange={setShowVideoModal}>
-        <DialogContent className="sm:max-w-[600px] bg-storiq-card-bg border-storiq-border text-white">
-          <DialogHeader>
-            <DialogTitle>{selectedVideo?.title}</DialogTitle>
-            <DialogDescription>
-              {selectedVideo?.platform} - {selectedVideo?.views} views
-            </DialogDescription>
-          </DialogHeader>
-          <div className="relative aspect-video bg-black flex items-center justify-center rounded-lg overflow-hidden">
-            {/* Placeholder for video player */}
-            {selectedVideo?.thumbnail && (
-              <img src={`https://placehold.co/600x400?text=Video+Placeholder`} alt="Video Thumbnail" className="w-full h-full object-cover" />
-            )}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-16 h-16 bg-white/30 backdrop-blur-sm rounded-full flex items-center justify-center">
-                <Play className="w-8 h-8 text-white ml-1" fill="white" />
-              </div>
-            </div>
+            ))}
           </div>
-          {/* You might add more video details or actions here */}
-        </DialogContent>
-      </Dialog>
+        )}
+
+        {/* Video Playback Modal */}
+        <Dialog open={showVideoModal} onOpenChange={setShowVideoModal}>
+          <DialogContent className="sm:max-w-[600px] bg-storiq-card-bg border-storiq-border text-white">
+  <DialogHeader>
+    <DialogTitle>{selectedVideo?.title}</DialogTitle>
+    <DialogDescription>
+      {selectedVideo?.platform} - {selectedVideo?.views} views
+    </DialogDescription>
+  </DialogHeader>
+
+  {selectedVideo?.id && (
+    <div className="relative aspect-video w-full rounded-lg overflow-hidden">
+      <iframe
+        className="w-full h-full"
+        src={`https://www.youtube.com/embed/${selectedVideo.id}`}
+        title={selectedVideo.title}
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen
+      />
+    </div>
+  )}
+</DialogContent>
+
+        </Dialog>
+      </div>
     </DashboardLayout>
   );
 };

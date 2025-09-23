@@ -24,6 +24,8 @@ import VideoEditor from "./pages/dashboard/VideoEditor";
 import { AuthProvider } from "./context/AuthContext";
 import { LoaderProvider } from "./context/LoaderContext";
 
+import TextToSpeech from "./pages/dashboard/Aitextmounting";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -48,6 +50,7 @@ const App = () => (
               <Route path="/dashboard/scripts" element={<Scripts />} />
               <Route path="/dashboard/settings" element={<Settings />} />
               <Route path="/dashboard/create-video" element={<CreateVideo />} />
+              <Route path="/dashboard/aitextmounting" element={<TextToSpeech/>} />
               <Route
                 path="/dashboard/search-videos"
                 element={<SearchVideos />}
