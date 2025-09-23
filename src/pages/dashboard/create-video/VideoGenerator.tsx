@@ -44,12 +44,6 @@ Each scene should have a different background. Use a modern sans-serif font and 
   const [duration, setDuration] = useState([30]);
   const [selectedPreset, setSelectedPreset] = useState("Default");
   const [selectedVoice, setSelectedVoice] = useState("Voice Library");
-  const [generatedScript, setGeneratedScript] = useState<string | null>(null);
-
-  // Status for script generation
-  const [scriptStatus, setScriptStatus] = useState<Status>("idle");
-  const [scriptError, setScriptError] = useState<string | null>(null);
-
   // Status for video generation
   const [videoStatus, setVideoStatus] = useState<Status>("idle");
   const [videoError, setVideoError] = useState<string | null>(null);
@@ -67,116 +61,11 @@ Each scene should have a different background. Use a modern sans-serif font and 
   // Form validation error
   const [formError, setFormError] = useState<string | null>(null);
 
-  // --- SCRIPT HISTORY ---
-  type ScriptHistoryItem = {
-    prompt: string;
-    script: string;
-    createdAt: string;
-  };
-  const [scriptHistory, setScriptHistory] = useState<ScriptHistoryItem[]>([]);
-  const [historyLoading, setHistoryLoading] = useState<boolean>(true);
-  const [historyError, setHistoryError] = useState<string | null>(null);
 
-  // --- Per-card state for script history section ---
-  const [expandedCards, setExpandedCards] = useState<boolean[]>([]);
-  const [copiedCards, setCopiedCards] = useState<boolean[]>([]);
-
-  // Keep per-card state arrays in sync with scriptHistory length
-  useEffect(() => {
-    setExpandedCards((prev) =>
-      scriptHistory.map((_, idx) => prev[idx] ?? false)
-    );
-    setCopiedCards((prev) =>
-      scriptHistory.map((_, idx) => false)
-    );
-  }, [scriptHistory]);
-
-  useEffect(() => {
-    if (!user) {
-      setHistoryLoading(false);
-      return;
-    }
-    setHistoryLoading(true);
-    setHistoryError(null);
-    const userId = user.id || user.email;
-    fetch(`/api/scripts/history?userId=${encodeURIComponent(userId)}`, {
-      credentials: "include",
-    })
-      .then(async (res) => {
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          throw new Error(err?.error || "Failed to fetch script history.");
-        }
-        return res.json();
-      })
-      .then((data) => {
-        if (Array.isArray(data)) {
-          setScriptHistory(data);
-        } else {
-          setScriptHistory([]);
-        }
-        setHistoryLoading(false);
-      })
-      .catch((err) => {
-        setHistoryError(
-          err && typeof err.message === "string"
-            ? err.message
-            : "Failed to fetch script history."
-        );
-        setHistoryLoading(false);
-      });
-  }, [user]);
-
-  // --- HANDLERS ---
-  const handleGenerateScript = async () => {
-    if (!prompt.trim()) {
-      setFormError("Prompt cannot be empty.");
-      return;
-    }
-    setFormError(null);
-    setScriptStatus("loading");
-    setScriptError(null);
-    setGeneratedScript(null);
-    setVideoUrl(null);
-    setVideoStatus("idle");
-    setVideoError(null);
-    try {
-      const res = await fetch("/api/generate-script", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt }),
-        credentials: "include",
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err?.error || "Failed to generate script.");
-      }
-      const data = await res.json();
-      if (!data?.script) throw new Error("No script returned from API.");
-      setGeneratedScript(data.script);
-      setScriptStatus("success");
-      if (user) {
-        const userId = (user && user.id) || (user && user.email);
-        fetch("/api/scripts/history", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId, prompt, script: data.script }),
-          credentials: "include",
-        }).catch(() => {});
-      }
-    } catch (err: unknown) {
-      let message = "Unknown error";
-      if (isErrorWithMessage(err)) {
-        message = err.message;
-      }
-      setScriptError(message);
-      setScriptStatus("error");
-    }
-  };
 
   const handleGenerateVideo = async () => {
-    if (!generatedScript) {
-      setFormError("Please generate a script first.");
+    if (!prompt.trim()) {
+      setFormError("Prompt cannot be empty.");
       return;
     }
     setFormError(null);
@@ -364,7 +253,7 @@ Each scene should have a different background. Use a modern sans-serif font and 
             <div className="grid grid-cols-2 gap-4">
               <Button
                 onClick={handleGenerateVideo}
-                disabled={scriptStatus !== "success" || videoStatus === "loading" || !generatedScript}
+                disabled={videoStatus === "loading" || !prompt.trim()}
                 className="h-14 bg-gradient-to-r from-storiq-purple to-storiq-purple/80 hover:from-storiq-purple/90 hover:to-storiq-purple/70 text-white font-semibold text-base transition-all duration-200"
               >
                 {videoStatus === "loading" ? (
@@ -439,10 +328,10 @@ Each scene should have a different background. Use a modern sans-serif font and 
           <Card className="bg-storiq-card-bg/50 border-storiq-border p-6">
             <h3 className="text-white text-lg font-semibold mb-4 flex items-center gap-2">
               <FileText className="w-5 h-5 text-storiq-purple" />
-              Video Description
+              Video Prompt
             </h3>
             <p className="text-white/60 text-sm mb-4">
-              Describe your video in detail. The AI will generate a script based on your description.
+              Describe your video in detail. The AI will generate a video based on your description.
             </p>
 
             <Textarea
@@ -461,52 +350,7 @@ Each scene should have a different background. Use a modern sans-serif font and 
                 <AlertDescription className="text-red-300">{formError}</AlertDescription>
               </Alert>
             )}
-
-            <Button
-              onClick={handleGenerateScript}
-              disabled={scriptStatus === "loading" || !prompt.trim()}
-              className="w-full mt-4 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-semibold h-12 text-base"
-            >
-              {scriptStatus === "loading" ? (
-                <span className="flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                  Generating Script...
-                </span>
-              ) : (
-                <span className="flex items-center gap-2">
-                  <Wand2 className="w-4 h-4" />
-                  Generate Script
-                </span>
-              )}
-            </Button>
-
-            {scriptStatus === "error" && scriptError && (
-              <Alert variant="destructive" className="mt-3 border-red-500/50 bg-red-500/10">
-                <AlertTitle className="text-red-200">Script Generation Failed</AlertTitle>
-                <AlertDescription className="text-red-300">{scriptError}</AlertDescription>
-              </Alert>
-            )}
-
-            {scriptStatus === "success" && generatedScript && (
-              <div className="flex items-center gap-2 mt-3 text-green-400 text-sm font-semibold p-3 bg-green-500/10 rounded-lg border border-green-500/20">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                Script generated successfully!
-              </div>
-            )}
           </Card>
-
-          {/* Generated Script Display */}
-          {generatedScript && (
-            <Card className="bg-storiq-card-bg/50 border-storiq-border p-6">
-              <h3 className="text-white text-lg font-semibold mb-4 flex items-center gap-2">
-                <FileText className="w-5 h-5 text-storiq-purple" />
-                Generated Script
-              </h3>
-              <div className="bg-storiq-card-bg border border-storiq-border rounded-lg p-4 text-white/80 whitespace-pre-wrap max-h-60 overflow-y-auto text-sm leading-relaxed">
-                {generatedScript}
-              </div>
-            </Card>
-          )}
 
           {/* Configuration Sections */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -593,106 +437,6 @@ Each scene should have a different background. Use a modern sans-serif font and 
         </div>
       </div>
 
-      {/* Script History Section */}
-      <Card className="mt-8 bg-storiq-card-bg/50 border-storiq-border p-6">
-        <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-          <History className="w-6 h-6 text-storiq-purple" />
-          Script History
-        </h2>
-
-        {historyLoading ? (
-          <div className="flex items-center justify-center p-8 text-white/60">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-storiq-purple mr-3"></div>
-            Loading history...
-          </div>
-        ) : historyError ? (
-          <Alert variant="destructive" className="border-red-500/50 bg-red-500/10">
-            <AlertTitle className="text-red-200">Error Loading History</AlertTitle>
-            <AlertDescription className="text-red-300">{historyError}</AlertDescription>
-          </Alert>
-        ) : scriptHistory.length === 0 ? (
-          <div className="text-center py-12 text-white/40">
-            <History className="w-16 h-16 mx-auto mb-4 opacity-30" />
-            <p className="text-lg">No script history found</p>
-            <p className="text-sm mt-1">Your generated scripts will appear here</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {scriptHistory.map((item, idx) => {
-              const isExpanded = expandedCards[idx] || false;
-              const copied = copiedCards[idx] || false;
-
-              const handleCopy = () => {
-                navigator.clipboard.writeText(item.script);
-                setCopiedCards((prev) => {
-                  const updated = [...prev];
-                  updated[idx] = true;
-                  return updated;
-                });
-                setTimeout(() => {
-                  setCopiedCards((prev) => {
-                    const updated = [...prev];
-                    updated[idx] = false;
-                    return updated;
-                  });
-                }, 1200);
-              };
-
-              const handleToggleExpand = () => {
-                setExpandedCards((prev) => {
-                  const updated = [...prev];
-                  updated[idx] = !updated[idx];
-                  return updated;
-                });
-              };
-
-              return (
-                <Card key={idx} className="bg-storiq-card-bg border-storiq-border p-5 hover:border-storiq-purple/30 transition-all duration-200">
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="flex-1 min-w-0">
-                      <div className="text-white font-semibold mb-1 line-clamp-2">Prompt: {item.prompt}</div>
-                      <div className="text-white/50 text-xs">
-                        {new Date(item.createdAt).toLocaleString()}
-                      </div>
-                    </div>
-                    <div className="flex gap-2 ml-4">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={handleCopy}
-                        className="h-8 px-3 text-xs border-storiq-purple/50 hover:bg-storiq-purple/20 text-white"
-                      >
-                        <Copy className="w-3 h-3 mr-1 text-white" />
-                        {copied ? "Copied!" : "Copy"}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={handleToggleExpand}
-                        className="h-8 px-3 text-xs border-storiq-purple/50 hover:bg-storiq-purple/20 text-white"
-                      >
-                        {isExpanded ? (
-                          <ChevronUp className="w-3 h-3 mr-1 text-white" />
-                        ) : (
-                          <ChevronDown className="w-3 h-3 mr-1 text-white" />
-                        )}
-                        {isExpanded ? "Less" : "More"}
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className={`text-white/70 text-sm leading-relaxed transition-all duration-200 overflow-hidden ${
-                    isExpanded ? "max-h-none" : "max-h-20"
-                  }`}>
-                    <div className="font-semibold text-white/90 mb-1">Script:</div>
-                    {item.script}
-                  </div>
-                </Card>
-              );
-            })}
-          </div>
-        )}
-      </Card>
     </div>
   );
 };
