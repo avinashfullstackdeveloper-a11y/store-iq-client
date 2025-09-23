@@ -35,15 +35,10 @@ const VideoGenerator = () => {
   // --- STATE MANAGEMENT ---
   type Status = "idle" | "loading" | "success" | "error";
   const [prompt, setPrompt] = useState(
-    `Create a video about sustainable living tips.
-
-Feature a young female character.
-
-Each scene should have a different background. Use a modern sans-serif font and vibrant nature visuals.`
+    `In an ancient garden draped in Ivy, she wore a pink silk dress, her curly hair elegantly tied up. Strange plants surrounded the garden's buildings, whispering ancient secrets. She picked up a large red apple, which suddenly burst into magical flames. She froze—eyes wide with a mix of awe and fear.`
   );
-  const [duration, setDuration] = useState([30]);
-  const [selectedPreset, setSelectedPreset] = useState("Default");
-  const [selectedVoice, setSelectedVoice] = useState("Voice Library");
+  const [selectedQuality, setSelectedQuality] = useState("720P");
+  const [selectedVoiceSpeed, setSelectedVoiceSpeed] = useState("5x");
   // Status for video generation
   const [videoStatus, setVideoStatus] = useState<Status>("idle");
   const [videoError, setVideoError] = useState<string | null>(null);
@@ -81,9 +76,8 @@ Each scene should have a different background. Use a modern sans-serif font and 
           body: JSON.stringify({
             prompt,
             config: {
-              duration: duration[0],
-              preset: selectedPreset,
-              voice: selectedVoice,
+              quality: selectedQuality,
+              voiceSpeed: selectedVoiceSpeed,
             },
           }),
         }
@@ -108,14 +102,8 @@ Each scene should have a different background. Use a modern sans-serif font and 
   };
 
   // --- DATA ---
-  const presets = [
-    "Default",
-    "Ghibli Studio",
-    "Educational",
-    "Anime",
-    "Realist",
-  ];
-  const voiceOptions = ["Voice Library", "Record", "No voice"];
+  const qualityOptions = ["480P", "720P", "1080P"];
+  const voiceSpeedOptions = ["5x", "10x"];
 
   // --- UPLOAD VIDEO HANDLER ---
   const handleUploadVideo = async (e: React.FormEvent) => {
@@ -130,7 +118,6 @@ Each scene should have a different background. Use a modern sans-serif font and 
     setUploadStatus("loading");
     try {
       // ... (existing upload logic remains the same)
-      // For brevity, keeping the upload logic as is since it's functional
     } catch (err: unknown) {
       let message = "Unknown error";
       if (isErrorWithMessage(err)) {
@@ -180,27 +167,18 @@ Each scene should have a different background. Use a modern sans-serif font and 
       <div className="mb-6 md:mb-8">
         <h1 className="text-2xl md:text-3xl font-bold text-white mb-2 flex items-center gap-3">
           <Wand2 className="w-8 h-8 text-storiq-purple" />
-          Create New Video
+          Text to Video
         </h1>
         <p className="text-white/60 text-base md:text-lg">
-          Describe your vision and let AI bring it to life with stunning visuals
+          Transform text description into videos.
         </p>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-4 md:gap-6 lg:gap-8">
         {/* Left Column - Controls */}
         <div className="flex flex-col gap-6 md:gap-8 h-full w-full lg:w-[40%] max-lg:mb-4 overflow-y-auto lg:max-h-[calc(100vh-120px)] pr-0 lg:pr-2 scrollbar-thin scrollbar-thumb-storiq-border/40 scrollbar-track-transparent [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
-          {/* Prompt Area - moved to top */}
+          {/* Prompt Area */}
           <Card className="bg-storiq-card-bg/50 border-storiq-border p-6">
-            <h3 className="text-white text-lg font-semibold mb-4 flex items-center gap-2">
-              <FileText className="w-5 h-5 text-storiq-purple" />
-              Video Prompt
-            </h3>
-            <p className="text-white/60 text-sm mb-4">
-              Describe your video in detail. The AI will generate a video based
-              on your description.
-            </p>
-
             <Textarea
               value={prompt}
               onChange={(e) => {
@@ -208,7 +186,7 @@ Each scene should have a different background. Use a modern sans-serif font and 
                 if (formError) setFormError(null);
               }}
               placeholder="Describe your video here... Be as detailed as possible for better results."
-              className="bg-storiq-card-bg border-storiq-border text-white placeholder:text-white/40 min-h-[150px] resize-none focus:border-storiq-purple focus:ring-storiq-purple font-medium"
+              className="bg-storiq-card-bg border-storiq-border text-white placeholder:text-white/40 min-h-[150px] resize-none focus:border-storiq-purple focus:ring-storiq-purple font-medium [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']"
             />
 
             {formError && (
@@ -226,170 +204,144 @@ Each scene should have a different background. Use a modern sans-serif font and 
             )}
           </Card>
 
-          {/* Duration Control */}
+          {/* Video Quality Selection */}
           <Card className="bg-storiq-card-bg/50 border-storiq-border p-6">
-            <h3 className="text-white text-lg font-semibold mb-4 flex items-center gap-2">
-              <Clock className="w-5 h-5 text-storiq-purple" />
-              Duration
-            </h3>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-white/60 text-sm">Target Duration</span>
-                <span className="text-white font-semibold text-lg">
-                  {duration[0]}s
-                </span>
-              </div>
-              <Slider
-                value={duration}
-                onValueChange={setDuration}
-                max={60}
-                min={5}
-                step={1}
-                className="w-full"
-              />
-              <div className="flex justify-between text-xs text-white/40">
-                <span>5s</span>
-                <span>60s</span>
-              </div>
-            </div>
-          </Card>
-
-          {/* Voice Selection */}
-          <Card className="bg-storiq-card-bg/50 border-storiq-border p-6">
-            <h3 className="text-white text-lg font-semibold mb-4 flex items-center gap-2">
-              <Volume2 className="w-5 h-5 text-storiq-purple" />
-              Voice
-            </h3>
-            <div className="space-y-3">
-              {voiceOptions.map((option) => (
+            <h3 className="text-white text-lg font-semibold mb-4">Video Quality</h3>
+            <div className="grid grid-cols-3 gap-3">
+              {qualityOptions.map((quality) => (
                 <Button
-                  key={option}
-                  onClick={() => setSelectedVoice(option)}
-                  variant={selectedVoice === option ? "default" : "outline"}
-                  className="w-full justify-start h-11 transition-all duration-200"
+                  key={quality}
+                  onClick={() => setSelectedQuality(quality)}
+                  variant={selectedQuality === quality ? "default" : "outline"}
+                  className="h-12 transition-all duration-200"
                 >
-                  <span
-                    className={
-                      selectedVoice === option ? "text-white" : "text-white/80"
-                    }
-                  >
-                    {option}
+                  <span className={selectedQuality === quality ? "text-white" : "text-white/80"}>
+                    {quality}
                   </span>
                 </Button>
               ))}
             </div>
           </Card>
 
-          {/* Visual Style (Preset) Selection */}
+          {/* Voice Speed Selection */}
           <Card className="bg-storiq-card-bg/50 border-storiq-border p-6">
-            <h3 className="text-white text-lg font-semibold mb-4 flex items-center gap-2">
-              <Settings className="w-5 h-5 text-storiq-purple" />
-              Visual Style
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {presets.map((preset) => (
-                <button
-                  key={preset}
-                  onClick={() => setSelectedPreset(preset)}
-                  className={`p-4 rounded-xl border-2 transition-all duration-200 hover:scale-105 ${
-                    selectedPreset === preset
-                      ? "border-storiq-purple bg-gradient-to-br from-storiq-purple/20 to-storiq-purple/10 shadow-lg shadow-storiq-purple/20"
-                      : "border-storiq-border bg-storiq-card-bg hover:border-storiq-purple/50"
-                  }`}
+            <h3 className="text-white text-lg font-semibold mb-4">Voice Speed</h3>
+            <div className="grid grid-cols-2 gap-3">
+              {voiceSpeedOptions.map((speed) => (
+                <Button
+                  key={speed}
+                  onClick={() => setSelectedVoiceSpeed(speed)}
+                  variant={selectedVoiceSpeed === speed ? "default" : "outline"}
+                  className="h-12 transition-all duration-200"
                 >
-                  <div className="aspect-video mb-3 bg-gradient-to-br from-white/10 to-white/5 rounded-lg flex items-center justify-center">
-                    <span className="text-white/60 text-xs font-medium text-center px-2">
-                      {preset}
-                    </span>
-                  </div>
-                  <span
-                    className={`text-sm font-medium ${
-                      selectedPreset === preset ? "text-white" : "text-white/70"
-                    }`}
-                  >
-                    {preset}
+                  <span className={selectedVoiceSpeed === speed ? "text-white" : "text-white/80"}>
+                    {speed}
                   </span>
-                </button>
+                </Button>
               ))}
             </div>
           </Card>
 
-          {/* Action Buttons - moved to bottom */}
-          <div className="flex flex-col md:flex-row gap-4 mt-auto">
-            <Button
-              onClick={handleGenerateVideo}
-              disabled={videoStatus === "loading" || !prompt.trim()}
-              className="h-14 bg-gradient-to-r from-storiq-purple to-storiq-purple/80 hover:from-storiq-purple/90 hover:to-storiq-purple/70 text-white font-semibold text-base transition-all duration-200 w-full md:w-auto"
-            >
-              {videoStatus === "loading" ? (
-                <span className="flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                  Generating...
-                </span>
-              ) : (
-                <span className="flex items-center gap-2">
-                  <Play className="w-4 h-4" />
-                  Generate Video
-                </span>
-              )}
-            </Button>
-            <form
-              onSubmit={handleUploadVideo}
-              className="flex flex-col gap-2 w-full md:w-auto"
-            >
-              <input
-                type="file"
-                accept="video/*"
-                onChange={(e) => {
-                  setSelectedFile(e.target.files?.[0] || null);
-                  setUploadError(null);
-                }}
-                className="hidden"
-                id="video-upload"
-                disabled={uploading}
-              />
-              <label htmlFor="video-upload" className="cursor-pointer w-full">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="h-14 w-full border-storiq-border bg-storiq-card-bg hover:bg-storiq-card-bg/80 text-white font-semibold text-base"
+          {/* Aspect Ratio Selection */}
+          <Card className="bg-storiq-card-bg/50 border-storiq-border p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-white text-lg font-semibold">Aspect Ratio</h3>
+              <div className="flex items-center gap-2 text-green-400 text-sm font-semibold">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                Create +10
+              </div>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-white/60 text-sm">Swipe to explore</span>
+              <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                <span className="text-white text-xs">✓</span>
+              </div>
+            </div>
+          </Card>
+
+          {/* Generate Button */}
+          <Button
+            onClick={handleGenerateVideo}
+            disabled={videoStatus === "loading" || !prompt.trim()}
+            className="h-14 bg-gradient-to-r from-storiq-purple to-storiq-purple/80 hover:from-storiq-purple/90 hover:to-storiq-purple/70 text-white font-semibold text-base transition-all duration-200 w-full"
+          >
+            {videoStatus === "loading" ? (
+              <span className="flex items-center gap-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                Generating...
+              </span>
+            ) : (
+              <span className="flex items-center gap-2">
+                <Play className="w-4 h-4" />
+                Generate Video
+              </span>
+            )}
+          </Button>
+
+          {/* Upload Video Section */}
+          <Card className="bg-storiq-card-bg/50 border-storiq-border p-6">
+            <form onSubmit={handleUploadVideo} className="space-y-4">
+              <h3 className="text-white text-lg font-semibold">Upload Video</h3>
+              <div className="flex flex-col gap-2">
+                <input
+                  type="file"
+                  accept="video/*"
+                  onChange={(e) => {
+                    setSelectedFile(e.target.files?.[0] || null);
+                    setUploadError(null);
+                  }}
+                  className="hidden"
+                  id="video-upload"
                   disabled={uploading}
-                >
-                  <span className="flex items-center gap-2">
-                    <Upload className="w-4 h-4" />
-                    Upload Video
-                  </span>
-                </Button>
-              </label>
-              {selectedFile && (
-                <Button
-                  type="submit"
-                  className="h-10 bg-green-600 hover:bg-green-700 text-white font-semibold"
-                  disabled={uploading}
-                >
-                  {uploading ? (
+                />
+                <label htmlFor="video-upload" className="cursor-pointer w-full">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-12 w-full border-storiq-border bg-storiq-card-bg hover:bg-storiq-card-bg/80 text-white font-semibold"
+                    disabled={uploading}
+                  >
                     <span className="flex items-center gap-2">
-                      <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent"></div>
-                      Uploading...
+                      <Upload className="w-4 h-4" />
+                      Choose File
                     </span>
-                  ) : (
-                    "Confirm Upload"
-                  )}
-                </Button>
-              )}
+                  </Button>
+                </label>
+                {selectedFile && (
+                  <div className="text-white/60 text-sm">
+                    Selected: {selectedFile.name}
+                  </div>
+                )}
+                {selectedFile && (
+                  <Button
+                    type="submit"
+                    className="h-10 bg-green-600 hover:bg-green-700 text-white font-semibold w-full"
+                    disabled={uploading}
+                  >
+                    {uploading ? (
+                      <span className="flex items-center gap-2">
+                        <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent"></div>
+                        Uploading...
+                      </span>
+                    ) : (
+                      "Upload Video"
+                    )}
+                  </Button>
+                )}
+              </div>
             </form>
-          </div>
-          {uploadStatus === "error" && uploadError && (
-            <Alert
-              variant="destructive"
-              className="mt-4 border-red-500/50 bg-red-500/10"
-            >
-              <AlertTitle className="text-red-200">Upload Error</AlertTitle>
-              <AlertDescription className="text-red-300">
-                {uploadError}
-              </AlertDescription>
-            </Alert>
-          )}
+            {uploadStatus === "error" && uploadError && (
+              <Alert
+                variant="destructive"
+                className="mt-4 border-red-500/50 bg-red-500/10"
+              >
+                <AlertTitle className="text-red-200">Upload Error</AlertTitle>
+                <AlertDescription className="text-red-300">
+                  {uploadError}
+                </AlertDescription>
+              </Alert>
+            )}
+          </Card>
         </div>
 
         {/* Right Column - Video Preview */}
