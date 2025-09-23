@@ -294,11 +294,106 @@ const Videos = () => {
   function isVideoFile(url: string) {
     return /\.(mp4|mov|webm|avi|mkv)$/i.test(url);
   }
+  function isImageFile(url: string) {
+    return /\.(png|jpg|jpeg|webp)$/i.test(url);
+  }
 
   // Filter out images from videos
   const onlyVideos = videos.filter((video: any) => isVideoFile(video.url));
+  const onlyImages = videos.filter((item: any) => isImageFile(item.url));
   const originalVideos = onlyVideos.filter((video: any) => !video.isEdited);
   const editedVideos = onlyVideos.filter((video: any) => video.isEdited);
+
+  // Image modal state
+  const [imageModal, setImageModal] = useState<{
+    open: boolean;
+    src: string | null;
+    title: string;
+    imageId: string | null;
+    loading: boolean;
+    error: string | null;
+  }>({
+    open: false,
+    src: null,
+    title: "",
+    imageId: null,
+    loading: true,
+    error: null,
+  });
+  const [deleteImageConfirmOpen, setDeleteImageConfirmOpen] = useState(false);
+  const [deleteImageId, setDeleteImageId] = useState<string | null>(null);
+
+  // Modal handlers for images
+  const openImageModal = (img: any) => {
+    setImageModal({
+      open: true,
+      src: img.url || "",
+      title: img.title || img.s3Key || "Untitled Image",
+      imageId: img.id || img.s3Key || null,
+      loading: false,
+      error: null,
+    });
+  };
+  const closeImageModal = () => {
+    setImageModal({
+      open: false,
+      src: null,
+      title: "",
+      imageId: null,
+      loading: false,
+      error: null,
+    });
+  };
+
+  // Delete handler for images
+  const handleDeleteImage = async () => {
+    if (!deleteImageId) return;
+    try {
+      setLoading(true);
+      setError(null);
+      // Find the image object to get the s3Key
+      const imageToDelete = onlyImages.find((v) => (v.id || v.s3Key) === deleteImageId);
+      if (!imageToDelete || !imageToDelete.s3Key) {
+        throw new Error("Image s3Key not found");
+      }
+      const res = await fetch("/api/delete-video", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ s3Key: imageToDelete.s3Key }),
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to delete image");
+      setVideos((prev) => prev.filter((v) => (v.id || v.s3Key) !== deleteImageId));
+      setDeleteImageId(null);
+      setDeleteImageConfirmOpen(false);
+      closeImageModal();
+    } catch (err: unknown) {
+      let message = "Unknown error";
+      if (
+        err &&
+        typeof err === "object" &&
+        "message" in err &&
+        typeof (err as any).message === "string"
+      ) {
+        message = (err as any).message;
+      } else if (typeof err === "string") {
+        message = err;
+      }
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Helper to open delete dialog safely for images
+  function handleOpenDeleteImageDialog(imageId: string | null) {
+    if (imageId) {
+      setDeleteImageId(imageId);
+      setDeleteImageConfirmOpen(true);
+    }
+  }
 
   return (
     <DashboardLayout>
@@ -324,18 +419,32 @@ const Videos = () => {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            {/* Total Videos (videos + images) */}
             <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-white/60 text-sm">Total Videos</p>
-                  <p className="text-2xl font-bold text-white">{videos.length}</p>
+                  <p className="text-2xl font-bold text-white">{onlyVideos.length}</p>
                 </div>
                 <div className="p-2 bg-blue-500/20 rounded-lg">
                   <Film className="h-6 w-6 text-blue-400" />
                 </div>
               </div>
             </div>
+            {/* Total Images */}
+            <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-white/60 text-sm">Total Images</p>
+                  <p className="text-2xl font-bold text-white">{onlyImages.length}</p>
+                </div>
+                <div className="p-2 bg-blue-500/20 rounded-lg">
+                  <img src="/image.png" alt="Image" className="h-6 w-6" />
+                </div>
+              </div>
+            </div>
+            {/* Original Videos */}
             <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50">
               <div className="flex items-center justify-between">
                 <div>
@@ -347,6 +456,7 @@ const Videos = () => {
                 </div>
               </div>
             </div>
+            {/* Edited Videos */}
             <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50">
               <div className="flex items-center justify-between">
                 <div>
@@ -582,7 +692,7 @@ const Videos = () => {
                 </div>
               )}
             </section>
-
+           
             {/* Edited Videos Section */}
             <section>
               <div className="flex items-center justify-between mb-6">
@@ -628,9 +738,164 @@ const Videos = () => {
                 </div>
               )}
             </section>
+
+            {/* Images Section */}
+            <section>
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+                    <div className="p-2 bg-blue-500/20 rounded-lg">
+                      <img src="/image.png" alt="Image" className="h-5 w-5" />
+                    </div>
+                    Images
+                    <Badge variant="secondary" className="ml-3 bg-blue-500/20 text-blue-400">
+                      {onlyImages.length}
+                    </Badge>
+                  </h2>
+                  <p className="text-white/40 mt-1">AI-generated images</p>
+                </div>
+              </div>
+              {onlyImages.length === 0 ? (
+                <div className="text-center py-12 bg-gray-800/30 rounded-2xl border border-gray-700">
+                  <img src="/image.png" className="h-12 w-12 mx-auto mb-4 opacity-40" alt="No images" />
+                  <p className="text-white/40 text-lg">No images found</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {onlyImages.map((img, idx) => (
+                    <Card key={img.id || img.s3Key || idx} className="group overflow-hidden border-gray-700 bg-gray-800/50 backdrop-blur-sm hover:border-blue-500/50 transition-all duration-300 hover:shadow-xl rounded-xl">
+                      <div className="relative h-48 overflow-hidden flex items-center justify-center bg-black">
+                        <img
+                          src={img.url}
+                          alt={img.title || img.s3Key || "Image"}
+                          className="object-contain w-full h-full group-hover:scale-105 transition-transform duration-500"
+                          onClick={() => openImageModal(img)}
+                          style={{ cursor: "pointer" }}
+                        />
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                          <Button
+                            onClick={() => openImageModal(img)}
+                            className="rounded-full h-14 w-14 bg-blue-600 hover:bg-blue-700 shadow-lg"
+                            size="icon"
+                          >
+                            <Eye className="h-6 w-6 fill-current ml-1" />
+                          </Button>
+                        </div>
+                      </div>
+                      <CardContent className="p-4">
+                        <div className="flex justify-between items-start mb-3">
+                          <h3 className="text-white font-semibold line-clamp-2 flex-1 mr-2 text-lg leading-tight">
+                            {img.title || img.s3Key || "Untitled Image"}
+                          </h3>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-white/60 hover:text-white hover:bg-white/10 rounded-lg"
+                              >
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="bg-gray-800 border-gray-700">
+                              <DropdownMenuItem onClick={() => openImageModal(img)} className="text-white hover:bg-gray-700">
+                                <Eye className="h-4 w-4 mr-2" />
+                                Preview
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-red-400 hover:bg-red-500/20"
+                                onClick={() => handleOpenDeleteImageDialog(img.id || img.s3Key)}
+                                disabled={img.id === undefined && img.s3Key === undefined}
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                        <p className="text-white/60 text-sm mb-2 line-clamp-2 leading-relaxed">
+                          {img.prompt || img.description || "No description available"}
+                        </p>
+                        <div className="flex items-center justify-between text-xs text-white/40">
+                          <div className="flex items-center">
+                            <Calendar className="h-3 w-3 mr-1" />
+                            {img.createdAt ? formatDate(img.createdAt) : "Unknown date"}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </section>
           </div>
         )}
       </div>
+    {/* Image Preview Modal */}
+    <Dialog
+      open={imageModal.open}
+      onOpenChange={(open) => {
+        if (!open) closeImageModal();
+      }}
+    >
+      <DialogContent className="max-w-2xl p-0 overflow-hidden bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b border-gray-700">
+          <DialogTitle className="text-xl font-semibold text-white flex items-center gap-2">
+            <Eye className="h-5 w-5 text-blue-400" />
+            {imageModal.title}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="relative px-6 py-4 flex items-center justify-center bg-black">
+          {imageModal.src && (
+            <img
+              src={imageModal.src}
+              alt={imageModal.title}
+              className="object-contain max-h-[60vh] w-full"
+            />
+          )}
+        </div>
+        <DialogFooter className="flex justify-between items-center px-6 pb-6 pt-4 bg-gray-800/50">
+          <div className="text-white/60 text-sm">
+            Image ID: {imageModal.imageId || 'N/A'}
+          </div>
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              onClick={closeImageModal}
+              className="border-gray-600 text-white hover:bg-gray-700"
+            >
+              Close
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => handleOpenDeleteImageDialog(imageModal.imageId)}
+              className="gap-2 bg-red-600 hover:bg-red-700"
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete Image
+            </Button>
+          </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    {/* Delete Confirmation Dialog for Images */}
+    {deleteImageId && (
+      <ConfirmDialog
+        open={deleteImageConfirmOpen}
+        onOpenChange={(open) => {
+          setDeleteImageConfirmOpen(open);
+          if (!open) setDeleteImageId(null);
+        }}
+        title="Delete Image"
+        description="Are you sure you want to delete this image? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={handleDeleteImage}
+        variant="destructive"
+      />
+    )}
+
     </DashboardLayout>
   );
 };
