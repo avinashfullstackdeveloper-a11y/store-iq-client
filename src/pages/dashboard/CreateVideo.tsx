@@ -28,7 +28,7 @@ const CreateVideo = () => {
         const idx = triggers.indexOf(active);
         let offset = 0;
         for (let i = 0; i < idx; i++) {
-          offset += triggers[i].offsetWidth + 16; // 16px gap-4
+          offset += triggers[i].offsetWidth + 16; // gap-4
         }
         tabsList.style.setProperty("--tab-slider-x", `${offset}px`);
         tabsList.style.setProperty(
@@ -39,7 +39,6 @@ const CreateVideo = () => {
     }
 
     triggers.forEach((el) => el.addEventListener("click", updateSlider));
-    // Also update on mount and on resize
     updateSlider();
     window.addEventListener("resize", updateSlider);
 
@@ -54,48 +53,55 @@ const CreateVideo = () => {
       <div className="w-full min-h-screen">
         <div className="w-full px-4 sm:px-6 lg:px-8 mx-auto mt-8">
           <Tabs defaultValue="video" className="w-full">
-            <div className="flex justify-center mb-8">
+            {/* Centered Tab Bar */}
+            <div className="flex justify-center mb-10">
               <TabsList
                 ref={tabsListRef}
-                className="relative bg-white/90 border border-gray-200 rounded-2xl p-2 flex gap-4 shadow-lg backdrop-blur"
-                style={{ width: "fit-content" }}
+                className="relative w-full max-w-3xl bg-white/80 border border-gray-200 rounded-3xl p-2 flex gap-4 shadow-xl backdrop-blur-lg"
               >
+                {/* Video Tab */}
                 <TabsTrigger
                   value="video"
-                  className="group flex items-center px-6 py-3 rounded-lg font-medium transition-all duration-200 min-w-[140px] justify-center
+                  className="group flex-1 flex items-center justify-center px-6 py-3 rounded-2xl font-medium transition-all duration-300
                     data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-500
-                    data-[state=active]:text-white data-[state=active]:shadow-lg
+                    data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:scale-105
                     data-[state=inactive]:bg-transparent data-[state=inactive]:text-gray-500
-                    hover:bg-blue-50 hover:text-blue-700"
+                    hover:bg-blue-50 hover:text-blue-700 hover:scale-105"
                 >
                   <Video className={tabIconClass} />
                   Video Generator
                 </TabsTrigger>
+
+                {/* Prompt Tab */}
                 <TabsTrigger
                   value="prompt"
-                  className="group flex items-center px-6 py-3 rounded-lg font-medium transition-all duration-200 min-w-[140px] justify-center
+                  className="group flex-1 flex items-center justify-center px-6 py-3 rounded-2xl font-medium transition-all duration-300
                     data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-500
-                    data-[state=active]:text-white data-[state=active]:shadow-lg
+                    data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:scale-105
                     data-[state=inactive]:bg-transparent data-[state=inactive]:text-gray-500
-                    hover:bg-blue-50 hover:text-blue-700"
+                    hover:bg-blue-50 hover:text-blue-700 hover:scale-105"
                 >
                   <Sparkles className={tabIconClass} />
                   Prompt Generator
                 </TabsTrigger>
+
+                {/* Image Tab */}
                 <TabsTrigger
                   value="image"
-                  className="group flex items-center px-6 py-3 rounded-lg font-medium transition-all duration-200 min-w-[140px] justify-center
+                  className="group flex-1 flex items-center justify-center px-6 py-3 rounded-2xl font-medium transition-all duration-300
                     data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-500
-                    data-[state=active]:text-white data-[state=active]:shadow-lg
+                    data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:scale-105
                     data-[state=inactive]:bg-transparent data-[state=inactive]:text-gray-500
-                    hover:bg-blue-50 hover:text-blue-700"
+                    hover:bg-blue-50 hover:text-blue-700 hover:scale-105"
                 >
                   <Image className={tabIconClass} />
                   Image Generator
                 </TabsTrigger>
-                {/* Animated slider indicator */}
+
+                {/* Glowing slider */}
                 <div
-                  className="absolute left-0 top-0 h-full transition-transform duration-300 ease-in-out z-0 rounded-2xl bg-gradient-to-r from-blue-500 to-purple-500 opacity-20 pointer-events-none"
+                  className="absolute left-0 top-0 h-full transition-transform duration-300 ease-in-out z-0 rounded-2xl 
+                    bg-gradient-to-r from-blue-500 to-purple-500 opacity-25 pointer-events-none shadow-lg shadow-blue-500/30"
                   style={{
                     width: "var(--tab-slider-width, 0px)",
                     transform: "translateX(var(--tab-slider-x, 0px))",
@@ -105,6 +111,7 @@ const CreateVideo = () => {
               </TabsList>
             </div>
 
+            {/* Content Area */}
             <div className="w-full">
               <TabsContent value="video" className="mt-0">
                 <VideoGenerator />
