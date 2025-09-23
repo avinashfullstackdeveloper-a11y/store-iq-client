@@ -45,6 +45,7 @@ Each scene should have a different background. Use a modern sans-serif font and 
 
   // --- SCRIPT HISTORY ---
   type ScriptHistoryItem = {
+    _id: string;
     prompt: string;
     script: string;
     createdAt: string;
@@ -52,6 +53,10 @@ Each scene should have a different background. Use a modern sans-serif font and 
   const [scriptHistory, setScriptHistory] = useState<ScriptHistoryItem[]>([]);
   const [historyLoading, setHistoryLoading] = useState<boolean>(true);
   const [historyError, setHistoryError] = useState<string | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState<string | null>(null); // _id of item being deleted
+  const [clearAllLoading, setClearAllLoading] = useState<boolean>(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [clearAllError, setClearAllError] = useState<string | null>(null);
 
   // --- Per-card state for script history section ---
   const [expandedCards, setExpandedCards] = useState<boolean[]>([]);
@@ -147,6 +152,58 @@ Each scene should have a different background. Use a modern sans-serif font and 
     }
   };
 
+  // --- DELETE INDIVIDUAL HISTORY ITEM ---
+  const handleDeleteHistoryItem = async (_id: string) => {
+    setDeleteLoading(_id);
+    setDeleteError(null);
+    try {
+      const res = await fetch(`/api/scripts/history/${_id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.error || "Failed to delete history item.");
+      }
+      setScriptHistory((prev) => prev.filter((item) => item._id !== _id));
+    } catch (err: unknown) {
+      let message = "Unknown error";
+      if (isErrorWithMessage(err)) {
+        message = err.message;
+      }
+      setDeleteError(message);
+    } finally {
+      setDeleteLoading(null);
+    }
+  };
+
+  // --- CLEAR ALL HISTORY ---
+  const handleClearAllHistory = async () => {
+    if (!user) return;
+    setClearAllLoading(true);
+    setClearAllError(null);
+    const userId = user.id || user.email;
+    try {
+      const res = await fetch(`/api/scripts/history?userId=${encodeURIComponent(userId)}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.error || "Failed to clear history.");
+      }
+      setScriptHistory([]);
+    } catch (err: unknown) {
+      let message = "Unknown error";
+      if (isErrorWithMessage(err)) {
+        message = err.message;
+      }
+      setClearAllError(message);
+    } finally {
+      setClearAllLoading(false);
+    }
+  };
+
   return (
     <div className="p-6 max-w-3xl mx-auto">
       <div className="mb-8">
@@ -233,7 +290,28 @@ Each scene should have a different background. Use a modern sans-serif font and 
           <History className="w-6 h-6 text-storiq-purple" />
           Script History
         </h2>
-
+    
+        {/* Clear All History Button */}
+        {scriptHistory.length > 0 && !historyLoading && (
+          <div className="flex justify-end mb-4">
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={handleClearAllHistory}
+              disabled={clearAllLoading}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-xs"
+            >
+              {clearAllLoading ? "Clearing..." : "Clear All History"}
+            </Button>
+          </div>
+        )}
+        {clearAllError && (
+          <Alert variant="destructive" className="mb-4 border-red-500/50 bg-red-500/10">
+            <AlertTitle className="text-red-200">Error</AlertTitle>
+            <AlertDescription className="text-red-300">{clearAllError}</AlertDescription>
+          </Alert>
+        )}
+    
         {historyLoading ? (
           <div className="flex items-center justify-center p-8 text-white/60">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-storiq-purple mr-3"></div>
@@ -252,10 +330,16 @@ Each scene should have a different background. Use a modern sans-serif font and 
           </div>
         ) : (
           <div className="space-y-4">
+            {deleteError && (
+              <Alert variant="destructive" className="mb-2 border-red-500/50 bg-red-500/10">
+                <AlertTitle className="text-red-200">Error</AlertTitle>
+                <AlertDescription className="text-red-300">{deleteError}</AlertDescription>
+              </Alert>
+            )}
             {scriptHistory.map((item, idx) => {
               const isExpanded = expandedCards[idx] || false;
               const copied = copiedCards[idx] || false;
-
+    
               const handleCopy = () => {
                 navigator.clipboard.writeText(item.script);
                 setCopiedCards((prev) => {
@@ -271,7 +355,7 @@ Each scene should have a different background. Use a modern sans-serif font and 
                   });
                 }, 1200);
               };
-
+    
               const handleToggleExpand = () => {
                 setExpandedCards((prev) => {
                   const updated = [...prev];
@@ -279,9 +363,9 @@ Each scene should have a different background. Use a modern sans-serif font and 
                   return updated;
                 });
               };
-
+    
               return (
-                <Card key={idx} className="bg-storiq-card-bg border-storiq-border p-5 hover:border-storiq-purple/30 transition-all duration-200">
+                <Card key={item._id || idx} className="bg-storiq-card-bg border-storiq-border p-5 hover:border-storiq-purple/30 transition-all duration-200">
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex-1 min-w-0">
                       <div className="text-white font-semibold mb-1 line-clamp-2">Prompt: {item.prompt}</div>
@@ -312,9 +396,18 @@ Each scene should have a different background. Use a modern sans-serif font and 
                         )}
                         {isExpanded ? "Less" : "More"}
                       </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => handleDeleteHistoryItem(item._id)}
+                        disabled={deleteLoading === item._id}
+                        className="h-8 px-3 text-xs ml-1 bg-red-600 hover:bg-red-700 text-white"
+                      >
+                        {deleteLoading === item._id ? "Deleting..." : "Delete"}
+                      </Button>
                     </div>
                   </div>
-
+    
                   <div className={`text-white/70 text-sm leading-relaxed transition-all duration-200 overflow-hidden ${
                     isExpanded ? "max-h-none" : "max-h-20"
                   }`}>

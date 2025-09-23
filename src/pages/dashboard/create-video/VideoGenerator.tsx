@@ -8,19 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import AdvancedVideoPlayer from "@/components/AdvancedVideoPlayer";
 import { useAuth } from "@/context/AuthContext";
-import {
-  Wand2,
-  Play,
-  Upload,
-  Copy,
-  ChevronDown,
-  ChevronUp,
-  History,
-  FileText,
-  Volume2,
-  Clock,
-  Settings,
-} from "lucide-react";
+import { Wand2, Play, Upload } from "lucide-react";
 
 function isErrorWithMessage(err: unknown): err is { message: string } {
   return (
@@ -211,7 +199,9 @@ Each scene should have a different background. Use a modern sans-serif font and 
 
           {/* Video Quality Selection */}
           <Card className="bg-storiq-card-bg/50 border-storiq-border p-6">
-            <h3 className="text-white text-lg font-semibold mb-4">Video Quality</h3>
+            <h3 className="text-white text-lg font-semibold mb-4">
+              Video Quality
+            </h3>
             <div className="grid grid-cols-3 gap-3">
               {qualityOptions.map((quality) => (
                 <Button
@@ -220,7 +210,13 @@ Each scene should have a different background. Use a modern sans-serif font and 
                   variant={selectedQuality === quality ? "default" : "outline"}
                   className="h-12 transition-all duration-200"
                 >
-                  <span className={selectedQuality === quality ? "text-white" : "text-white/80"}>
+                  <span
+                    className={
+                      selectedQuality === quality
+                        ? "text-white"
+                        : "text-white/80"
+                    }
+                  >
                     {quality}
                   </span>
                 </Button>
@@ -230,7 +226,9 @@ Each scene should have a different background. Use a modern sans-serif font and 
 
           {/* Voice Speed Selection */}
           <Card className="bg-storiq-card-bg/50 border-storiq-border p-6">
-            <h3 className="text-white text-lg font-semibold mb-4">Voice Speed</h3>
+            <h3 className="text-white text-lg font-semibold mb-4">
+              Voice Speed
+            </h3>
             <div className="grid grid-cols-2 gap-3">
               {voiceSpeedOptions.map((speed) => (
                 <Button
@@ -239,7 +237,13 @@ Each scene should have a different background. Use a modern sans-serif font and 
                   variant={selectedVoiceSpeed === speed ? "default" : "outline"}
                   className="h-12 transition-all duration-200"
                 >
-                  <span className={selectedVoiceSpeed === speed ? "text-white" : "text-white/80"}>
+                  <span
+                    className={
+                      selectedVoiceSpeed === speed
+                        ? "text-white"
+                        : "text-white/80"
+                    }
+                  >
                     {speed}
                   </span>
                 </Button>
@@ -426,13 +430,14 @@ Each scene should have a different background. Use a modern sans-serif font and 
                     poster=""
                   />
                   <div className="w-full flex flex-col items-center mt-2">
-                    <h4 className="text-white/60 text-base font-semibold mb-1">Prompt</h4>
+                    <h4 className="text-white/60 text-base font-semibold mb-1">
+                      Prompt
+                    </h4>
                     <pre className="text-white/70 text-base font-medium whitespace-pre-line text-center">
-Create a video about sustainable living tips.
-
-Feature a young female character.
-
-Each scene should have a different background. Use a modern sans-serif font and vibrant nature visuals.
+                      Create a video about sustainable living tips. Feature a
+                      young female character. Each scene should have a different
+                      background. Use a modern sans-serif font and vibrant
+                      nature visuals.
                     </pre>
                   </div>
                 </div>

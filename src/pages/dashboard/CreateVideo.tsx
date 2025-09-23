@@ -21,8 +21,8 @@ const CreateVideo = () => {
     ) as HTMLElement[];
 
     function updateSlider() {
-      const active = triggers.find((el) =>
-        el.getAttribute("aria-selected") === "true"
+      const active = triggers.find(
+        (el) => el.getAttribute("aria-selected") === "true"
       );
       if (active && tabsList) {
         const idx = triggers.indexOf(active);
@@ -30,10 +30,7 @@ const CreateVideo = () => {
         for (let i = 0; i < idx; i++) {
           offset += triggers[i].offsetWidth + 16; // 16px gap-4
         }
-        tabsList.style.setProperty(
-          "--tab-slider-x",
-          `${offset}px`
-        );
+        tabsList.style.setProperty("--tab-slider-x", `${offset}px`);
         tabsList.style.setProperty(
           "--tab-slider-width",
           `${active.offsetWidth}px`
@@ -41,17 +38,13 @@ const CreateVideo = () => {
       }
     }
 
-    triggers.forEach((el) =>
-      el.addEventListener("click", updateSlider)
-    );
+    triggers.forEach((el) => el.addEventListener("click", updateSlider));
     // Also update on mount and on resize
     updateSlider();
     window.addEventListener("resize", updateSlider);
 
     return () => {
-      triggers.forEach((el) =>
-        el.removeEventListener("click", updateSlider)
-      );
+      triggers.forEach((el) => el.removeEventListener("click", updateSlider));
       window.removeEventListener("resize", updateSlider);
     };
   }, []);
@@ -108,7 +101,7 @@ const CreateVideo = () => {
                 aria-hidden="true"
               />
             </TabsList>
-            
+
             <div className="w-full">
               <TabsContent value="video" className="mt-0">
                 <VideoGenerator />
