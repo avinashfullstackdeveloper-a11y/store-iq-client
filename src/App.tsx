@@ -22,6 +22,7 @@ import ImageGenerator from "./pages/dashboard/create-video/ImageGenerator";
 import PromptGenerator from "./pages/dashboard/create-video/PromptGenerator";
 // import CreateVideo from "./pages/dashboard/CreateVideo";
 import SearchVideos from "./pages/dashboard/SearchVideos";
+import SearchImages from "./pages/dashboard/SearchImages";
 import VideoEditor from "./pages/dashboard/VideoEditor";
 
 import { AuthProvider } from "./context/AuthContext";
@@ -64,6 +65,10 @@ const App = () => (
               <Route
                 path="/dashboard/search-videos"
                 element={<SearchVideos />}
+              />
+              <Route
+                path="/dashboard/search-images"
+                element={<SearchImages />}
               />
               <Route path="/Home" element={<Home />} />{" "}
               {/* The path is "/Home" */}

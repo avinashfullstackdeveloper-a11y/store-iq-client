@@ -46,8 +46,8 @@ const Dashboard = () => {
       href: "/dashboard/search-videos",
     },
     {
-      superTitle: "VIDEO SCRIPT",
-      title: "Generate Scripts",
+      superTitle: "4k images",
+      title: "Search Images",
       image:
         "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3",
     },
@@ -76,7 +76,7 @@ const Dashboard = () => {
       link: "/dashboard/create-image"
     },
     {
-      title: "Prompt Generator",
+      title: "Script Generator",
       subtitle: "Generate creative video scripts",
       image: "/src/assets/images/ai-script-placeholder.png",
       buttonText: "Try Now",
@@ -160,18 +160,28 @@ const Dashboard = () => {
               option.superTitle === "VIDEO SCRIPT" &&
               option.title === "Generate Scripts"
             ) {
+              // Removed the clickable card for "Generate Scripts"
+              return null;
+            }
+
+            // Make "Search Images" quick option a clickable card using navigate
+            if (
+              option.superTitle === "4k images" &&
+              option.title === "Search Images"
+            ) {
               return (
                 <div
                   key={index}
                   role="button"
                   tabIndex={0}
-                  onClick={() => navigate("/dashboard/scripts")}
-                  onKeyPress={(e) => {
-                    if (e.key === "Enter" || e.key === " ")
-                      navigate("/dashboard/scripts");
+                  onClick={() => navigate("/dashboard/search-images")}
+                  onKeyDown={e => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      navigate("/dashboard/search-images");
+                    }
                   }}
                   className="relative overflow-hidden rounded-2xl bg-[#1C1C1C] border border-gray-800/80 p-6 min-h-[180px] flex flex-col justify-end group cursor-pointer transition-all duration-300 hover:border-violet-700/60 hover:shadow-lg hover:shadow-violet-700/20 outline-none"
-                  style={{ cursor: "pointer" }}
+                  style={{ userSelect: "none" }}
                 >
                   <div
                     className="absolute inset-0 bg-cover bg-center opacity-40 group-hover:opacity-50 group-hover:scale-105 transition-all duration-300"
@@ -192,6 +202,7 @@ const Dashboard = () => {
                 </div>
               );
             }
+
             // All other quick options remain as links
             return (
               <a
