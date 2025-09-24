@@ -243,7 +243,7 @@ const Exports = () => {
     pollingEntries.forEach((item) => {
       const poll = async () => {
         try {
-          const res = await fetch(`/api/video/crop/${item.job_id}`, {
+          const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/video/crop/${item.job_id}`, {
             method: "GET",
             credentials: "include"
           });
