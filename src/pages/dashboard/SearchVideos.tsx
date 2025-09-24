@@ -54,7 +54,8 @@ const SearchVideos = () => {
     if (!searchTerm) return;
     setLoading(true);
     try {
-      const res = await axios.post("http://localhost:5000/youtube/search", {
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+      const res = await axios.post(`${apiBaseUrl}/youtube/search`, {
         query: searchTerm,
         from: `${filters.dateRange.from}T00:00:00Z`,
         to: `${filters.dateRange.to}T23:59:59Z`,
