@@ -54,6 +54,7 @@ const Videos = () => {
   const navigate = useNavigate();
   // State
   const [videos, setVideos] = useState<Video[]>([]);
+  const [images, setImages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [generatedThumbs, setGeneratedThumbs] = useState<{
@@ -81,25 +82,30 @@ const Videos = () => {
 
   // Fetch videos only (edited/original split is now backend-driven)
   useEffect(() => {
-    const fetchVideos = async () => {
+    const fetchVideosAndImages = async () => {
       setLoading(true);
       setError(null);
-
       try {
+        // Fetch videos
         const url = "/api/videos";
         const fetchOptions: RequestInit = { credentials: "include" };
-        // User ID is determined by session cookie on backend
         const res = await fetch(url, fetchOptions);
         if (res.status === 401) {
           throw new Error("Unauthorized (401): Please log in.");
         }
         if (!res.ok) throw new Error("Failed to fetch videos");
         const data = await res.json();
-        console.log("[Videos] API /api/videos response:", data);
         setVideos(Array.isArray(data) ? data : []);
+        // Fetch images
+        const imgRes = await fetch("/api/images", fetchOptions);
+        if (imgRes.ok) {
+          const imgData = await imgRes.json();
+          setImages(Array.isArray(imgData) ? imgData : []);
+        } else {
+          setImages([]);
+        }
       } catch (err: unknown) {
         let message = "Unknown error";
-        console.error("[Videos][DEBUG] Error in fetchVideos:", err);
         if (
           err &&
           typeof err === "object" &&
@@ -115,8 +121,7 @@ const Videos = () => {
         setLoading(false);
       }
     };
-
-    fetchVideos();
+    fetchVideosAndImages();
   }, []);
 
   // Generate thumbnails
@@ -274,10 +279,10 @@ const Videos = () => {
   // Format date
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
@@ -290,9 +295,114 @@ const Videos = () => {
     }
   }
 
-  // Filter videos
-  const originalVideos = videos.filter((video: any) => !video.isEdited);
-  const editedVideos = videos.filter((video: any) => video.isEdited);
+  // Helper: check if file is a video (not image)
+  function isVideoFile(url: string) {
+    return /\.(mp4|mov|webm|avi|mkv)$/i.test(url);
+  }
+  function isImageFile(url: string) {
+    return /\.(png|jpg|jpeg|webp)$/i.test(url);
+  }
+
+  // Filter out images from videos
+  const onlyVideos = videos.filter((video: any) => isVideoFile(video.url));
+  const onlyImages = images;
+  const originalVideos = onlyVideos.filter((video: any) => !video.isEdited);
+  const editedVideos = onlyVideos.filter((video: any) => video.isEdited);
+
+  // Image modal state
+  const [imageModal, setImageModal] = useState<{
+    open: boolean;
+    src: string | null;
+    title: string;
+    imageId: string | null;
+    loading: boolean;
+    error: string | null;
+  }>({
+    open: false,
+    src: null,
+    title: "",
+    imageId: null,
+    loading: true,
+    error: null,
+  });
+  const [deleteImageConfirmOpen, setDeleteImageConfirmOpen] = useState(false);
+  const [deleteImageId, setDeleteImageId] = useState<string | null>(null);
+
+  // Modal handlers for images
+  const openImageModal = (img: any) => {
+    setImageModal({
+      open: true,
+      src: img.s3Url || img.url || "",
+      title: img.title || img.s3Key || "Untitled Image",
+      imageId: img.id || img.s3Key || null,
+      loading: false,
+      error: null,
+    });
+  };
+  const closeImageModal = () => {
+    setImageModal({
+      open: false,
+      src: null,
+      title: "",
+      imageId: null,
+      loading: false,
+      error: null,
+    });
+  };
+
+  // Delete handler for images
+  const handleDeleteImage = async () => {
+    if (!deleteImageId) return;
+    try {
+      setLoading(true);
+      setError(null);
+      // Find the image object to get the s3Key
+      const imageToDelete = onlyImages.find(
+        (v) => (v.id || v.s3Key) === deleteImageId
+      );
+      if (!imageToDelete || !imageToDelete.s3Key) {
+        throw new Error("Image s3Key not found");
+      }
+      const res = await fetch("/api/delete-video", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ s3Key: imageToDelete.s3Key }),
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to delete image");
+      setVideos((prev) =>
+        prev.filter((v) => (v.id || v.s3Key) !== deleteImageId)
+      );
+      setDeleteImageId(null);
+      setDeleteImageConfirmOpen(false);
+      closeImageModal();
+    } catch (err: unknown) {
+      let message = "Unknown error";
+      if (
+        err &&
+        typeof err === "object" &&
+        "message" in err &&
+        typeof (err as any).message === "string"
+      ) {
+        message = (err as any).message;
+      } else if (typeof err === "string") {
+        message = err;
+      }
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Helper to open delete dialog safely for images
+  function handleOpenDeleteImageDialog(imageId: string | null) {
+    if (imageId) {
+      setDeleteImageId(imageId);
+      setDeleteImageConfirmOpen(true);
+    }
+  }
 
   return (
     <DashboardLayout>
@@ -302,13 +412,13 @@ const Videos = () => {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div>
               <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
-                Video Library
+                Collection
               </h1>
               <p className="text-white/60 text-lg">
-                Manage and preview all your created videos
+                Manage and preview all your videos and images in one collection
               </p>
             </div>
-            <Button 
+            <Button
               onClick={() => navigate("/dashboard/create-video")}
               className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold px-6 py-2.5 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
             >
@@ -318,34 +428,57 @@ const Videos = () => {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            {/* Total Videos (videos + images) */}
             <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-white/60 text-sm">Total Videos</p>
-                  <p className="text-2xl font-bold text-white">{videos.length}</p>
+                  <p className="text-white/60 text-sm">Total Videos in Collection</p>
+                  <p className="text-2xl font-bold text-white">
+                    {onlyVideos.length}
+                  </p>
                 </div>
                 <div className="p-2 bg-blue-500/20 rounded-lg">
                   <Film className="h-6 w-6 text-blue-400" />
                 </div>
               </div>
             </div>
+            {/* Total Images */}
             <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-white/60 text-sm">Original Videos</p>
-                  <p className="text-2xl font-bold text-white">{originalVideos.length}</p>
+                  <p className="text-white/60 text-sm">Total Images in Collection</p>
+                  <p className="text-2xl font-bold text-white">
+                    {onlyImages.length}
+                  </p>
+                </div>
+                <div className="p-2 bg-blue-500/20 rounded-lg">
+                  <img src="/image.png" alt="Image" className="h-6 w-6" />
+                </div>
+              </div>
+            </div>
+            {/* Original Videos */}
+            <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-white/60 text-sm">Original Videos in Collection</p>
+                  <p className="text-2xl font-bold text-white">
+                    {originalVideos.length}
+                  </p>
                 </div>
                 <div className="p-2 bg-green-500/20 rounded-lg">
                   <Play className="h-6 w-6 text-green-400" />
                 </div>
               </div>
             </div>
+            {/* Edited Videos */}
             <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-white/60 text-sm">Edited Videos</p>
-                  <p className="text-2xl font-bold text-white">{editedVideos.length}</p>
+                  <p className="text-white/60 text-sm">Edited Videos in Collection</p>
+                  <p className="text-2xl font-bold text-white">
+                    {editedVideos.length}
+                  </p>
                 </div>
                 <div className="p-2 bg-purple-500/20 rounded-lg">
                   <Edit3 className="h-6 w-6 text-purple-400" />
@@ -437,7 +570,7 @@ const Videos = () => {
             {/* Action Buttons */}
             <DialogFooter className="flex justify-between items-center px-6 pb-6 pt-4 bg-gray-800/50">
               <div className="text-white/60 text-sm">
-                Video ID: {modal.videoId || 'N/A'}
+                Video ID: {modal.videoId || "N/A"}
               </div>
               <div className="flex gap-3">
                 <Button
@@ -481,7 +614,10 @@ const Videos = () => {
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {[...Array(8)].map((_, i) => (
-              <Card key={i} className="overflow-hidden border-gray-700 bg-gray-800/50 backdrop-blur-sm rounded-xl">
+              <Card
+                key={i}
+                className="overflow-hidden border-gray-700 bg-gray-800/50 backdrop-blur-sm rounded-xl"
+              >
                 <Skeleton className="h-48 w-full rounded-none bg-gradient-to-br from-gray-700 to-gray-600" />
                 <CardContent className="p-4">
                   <Skeleton className="h-5 w-3/4 mb-3 bg-gray-600" />
@@ -504,7 +640,7 @@ const Videos = () => {
               Unable to load videos
             </h3>
             <p className="text-white/50 mb-8 max-w-md text-lg">{error}</p>
-            <Button 
+            <Button
               onClick={() => window.location.reload()}
               className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2.5 rounded-lg"
             >
@@ -522,7 +658,7 @@ const Videos = () => {
             <p className="text-white/40 mb-8 text-lg max-w-sm">
               Start creating amazing videos to see them appear here
             </p>
-            <Button 
+            <Button
               onClick={() => navigate("/dashboard/create-video")}
               className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold px-8 py-3 rounded-lg transition-all duration-200"
             >
@@ -539,19 +675,26 @@ const Videos = () => {
                     <div className="p-2 bg-green-500/20 rounded-lg">
                       <Play className="h-5 w-5 text-green-400" />
                     </div>
-                    Original Videos
-                    <Badge variant="secondary" className="ml-3 bg-green-500/20 text-green-400">
+                    Original Videos in Collection
+                    <Badge
+                      variant="secondary"
+                      className="ml-3 bg-green-500/20 text-green-400"
+                    >
                       {originalVideos.length}
                     </Badge>
                   </h2>
-                  <p className="text-white/40 mt-1">Videos you've uploaded directly</p>
+                  <p className="text-white/40 mt-1">
+                    Videos you've uploaded directly
+                  </p>
                 </div>
               </div>
 
               {originalVideos.length === 0 ? (
                 <div className="text-center py-12 bg-gray-800/30 rounded-2xl border border-gray-700">
                   <FileVideo className="h-12 w-12 text-white/20 mx-auto mb-4" />
-                  <p className="text-white/40 text-lg">No original videos found</p>
+                  <p className="text-white/40 text-lg">
+                    No original videos found
+                  </p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -563,9 +706,13 @@ const Videos = () => {
                       onPreview={() => openModal(video)}
                       onEdit={() => {
                         if (video.s3Key) {
-                          navigate(`/dashboard/video-editor/${video.s3Key}`, { state: { url: video.url } });
+                          navigate(`/dashboard/video-editor/${video.s3Key}`, {
+                            state: { url: video.url },
+                          });
                         } else if (video.id) {
-                          navigate(`/dashboard/video-editor/${video.id}`, { state: { url: video.url } });
+                          navigate(`/dashboard/video-editor/${video.id}`, {
+                            state: { url: video.url },
+                          });
                         }
                       }}
                       onDelete={() => handleOpenDeleteDialog(video.id)}
@@ -585,19 +732,26 @@ const Videos = () => {
                     <div className="p-2 bg-purple-500/20 rounded-lg">
                       <Edit3 className="h-5 w-5 text-purple-400" />
                     </div>
-                    Edited Videos
-                    <Badge variant="secondary" className="ml-3 bg-purple-500/20 text-purple-400">
+                    Edited Videos in Collection
+                    <Badge
+                      variant="secondary"
+                      className="ml-3 bg-purple-500/20 text-purple-400"
+                    >
                       {editedVideos.length}
                     </Badge>
                   </h2>
-                  <p className="text-white/40 mt-1">Videos you've modified and enhanced</p>
+                  <p className="text-white/40 mt-1">
+                    Videos you've modified and enhanced
+                  </p>
                 </div>
               </div>
 
               {editedVideos.length === 0 ? (
                 <div className="text-center py-12 bg-gray-800/30 rounded-2xl border border-gray-700">
                   <Edit3 className="h-12 w-12 text-white/20 mx-auto mb-4" />
-                  <p className="text-white/40 text-lg">No edited videos found</p>
+                  <p className="text-white/40 text-lg">
+                    No edited videos found
+                  </p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -609,9 +763,13 @@ const Videos = () => {
                       onPreview={() => openModal(video)}
                       onEdit={() => {
                         if (video.s3Key) {
-                          navigate(`/dashboard/video-editor/${video.s3Key}`, { state: { url: video.url } });
+                          navigate(`/dashboard/video-editor/${video.s3Key}`, {
+                            state: { url: video.url },
+                          });
                         } else if (video.id) {
-                          navigate(`/dashboard/video-editor/${video.id}`, { state: { url: video.url } });
+                          navigate(`/dashboard/video-editor/${video.id}`, {
+                            state: { url: video.url },
+                          });
                         }
                       }}
                       onDelete={() => handleOpenDeleteDialog(video.id)}
@@ -622,9 +780,201 @@ const Videos = () => {
                 </div>
               )}
             </section>
+
+            {/* Images Section */}
+            <section>
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+                    <div className="p-2 bg-blue-500/20 rounded-lg">
+                      <img src="/image.png" alt="Image" className="h-5 w-5" />
+                    </div>
+                    Images in Collection
+                    <Badge
+                      variant="secondary"
+                      className="ml-3 bg-blue-500/20 text-blue-400"
+                    >
+                      {onlyImages.length}
+                    </Badge>
+                  </h2>
+                  <p className="text-white/40 mt-1">AI-generated images (part of your collection)</p>
+                </div>
+              </div>
+              {onlyImages.length === 0 ? (
+                <div className="text-center py-12 bg-gray-800/30 rounded-2xl border border-gray-700">
+                  <img
+                    src="/image.png"
+                    className="h-12 w-12 mx-auto mb-4 opacity-40"
+                    alt="No images"
+                  />
+                  <p className="text-white/40 text-lg">No images found</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {onlyImages.map((img, idx) => (
+                    <Card
+                      key={img.id || img.s3Key || idx}
+                      className="group overflow-hidden border-gray-700 bg-gray-800/50 backdrop-blur-sm hover:border-blue-500/50 transition-all duration-300 hover:shadow-xl rounded-xl"
+                    >
+                      <div className="relative h-48 overflow-hidden flex items-center justify-center bg-black">
+                        <img
+                          src={img.s3Url || img.url}
+                          alt={img.title || img.s3Key || "Image"}
+                          className="object-contain w-full h-full group-hover:scale-105 transition-transform duration-500"
+                          onClick={() => openImageModal(img)}
+                          style={{ cursor: "pointer" }}
+                        />
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                          <Button
+                            onClick={() => openImageModal(img)}
+                            className="rounded-full h-14 w-14 bg-blue-600 hover:bg-blue-700 shadow-lg"
+                            size="icon"
+                          >
+                            <Eye className="h-6 w-6 fill-current ml-1" />
+                          </Button>
+                        </div>
+                      </div>
+                      <CardContent className="p-4">
+                        <div className="flex justify-between items-start mb-3">
+                          <h3 className="text-white font-semibold line-clamp-2 flex-1 mr-2 text-lg leading-tight">
+                            {img.title || img.s3Key || "Untitled Image"}
+                          </h3>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-white/60 hover:text-white hover:bg-white/10 rounded-lg"
+                              >
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent
+                              align="end"
+                              className="bg-gray-800 border-gray-700"
+                            >
+                              <DropdownMenuItem
+                                onClick={() => openImageModal(img)}
+                                className="text-white hover:bg-gray-700"
+                              >
+                                <Eye className="h-4 w-4 mr-2" />
+                                Preview
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-red-400 hover:bg-red-500/20"
+                                onClick={() =>
+                                  handleOpenDeleteImageDialog(
+                                    img.id || img.s3Key
+                                  )
+                                }
+                                disabled={
+                                  img.id === undefined &&
+                                  img.s3Key === undefined
+                                }
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                        <p className="text-white/60 text-sm mb-2 line-clamp-2 leading-relaxed">
+                          {img.prompt ||
+                            img.description ||
+                            "No description available"}
+                        </p>
+                        <div className="flex items-center justify-between text-xs text-white/40">
+                          <div className="flex items-center">
+                            <Calendar className="h-3 w-3 mr-1" />
+                            {img.createdAt
+                              ? formatDate(img.createdAt)
+                              : "Unknown date"}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </section>
           </div>
         )}
       </div>
+      {/* Image Preview Modal */}
+      <Dialog
+        open={imageModal.open}
+        onOpenChange={(open) => {
+          if (!open) closeImageModal();
+        }}
+      >
+        <DialogContent className="max-w-2xl p-0 overflow-hidden bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl">
+          <DialogHeader className="px-6 pt-6 pb-4 border-b border-gray-700">
+            <DialogTitle className="text-xl font-semibold text-white flex items-center gap-2">
+              <Eye className="h-5 w-5 text-blue-400" />
+              {imageModal.title}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="relative px-6 py-4 flex items-center justify-center bg-black">
+            {imageModal.src && (
+              <img
+                src={imageModal.src}
+                alt={imageModal.title}
+                className="object-contain max-h-[60vh] w-full"
+                // fallback for modal: if src is not s3Url, try to find the image by id in onlyImages
+                onError={(e) => {
+                  const imgObj = onlyImages.find(
+                    (img) =>
+                      img.id === imageModal.imageId ||
+                      img.s3Key === imageModal.imageId
+                  );
+                  if (imgObj && imgObj.s3Url) {
+                    (e.target as HTMLImageElement).src = imgObj.s3Url;
+                  }
+                }}
+              />
+            )}
+          </div>
+          <DialogFooter className="flex justify-between items-center px-6 pb-6 pt-4 bg-gray-800/50">
+            <div className="text-white/60 text-sm">
+              Image ID: {imageModal.imageId || "N/A"}
+            </div>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={closeImageModal}
+                className="border-gray-600 text-white hover:bg-gray-700"
+              >
+                Close
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => handleOpenDeleteImageDialog(imageModal.imageId)}
+                className="gap-2 bg-red-600 hover:bg-red-700"
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete Image
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog for Images */}
+      {deleteImageId && (
+        <ConfirmDialog
+          open={deleteImageConfirmOpen}
+          onOpenChange={(open) => {
+            setDeleteImageConfirmOpen(open);
+            if (!open) setDeleteImageId(null);
+          }}
+          title="Delete Image"
+          description="Are you sure you want to delete this image? This action cannot be undone."
+          confirmText="Delete"
+          cancelText="Cancel"
+          onConfirm={handleDeleteImage}
+          variant="destructive"
+        />
+      )}
     </DashboardLayout>
   );
 };
@@ -688,7 +1038,7 @@ const VideoCard: React.FC<VideoCardProps> = ({
           </Badge>
         )}
       </div>
-      
+
       <CardContent className="p-4">
         <div className="flex justify-between items-start mb-3">
           <h3 className="text-white font-semibold line-clamp-2 flex-1 mr-2 text-lg leading-tight">
@@ -704,12 +1054,21 @@ const VideoCard: React.FC<VideoCardProps> = ({
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-gray-800 border-gray-700">
-              <DropdownMenuItem onClick={onPreview} className="text-white hover:bg-gray-700">
+            <DropdownMenuContent
+              align="end"
+              className="bg-gray-800 border-gray-700"
+            >
+              <DropdownMenuItem
+                onClick={onPreview}
+                className="text-white hover:bg-gray-700"
+              >
                 <Eye className="h-4 w-4 mr-2" />
                 Preview
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={onEdit} className="text-white hover:bg-gray-700">
+              <DropdownMenuItem
+                onClick={onEdit}
+                className="text-white hover:bg-gray-700"
+              >
                 <Edit3 className="h-4 w-4 mr-2" />
                 Edit
               </DropdownMenuItem>
@@ -728,10 +1087,14 @@ const VideoCard: React.FC<VideoCardProps> = ({
         {/* Publish info */}
         <div className="flex items-center justify-between mb-3">
           <span className="text-xs text-blue-400 font-medium">
-            Published {video.publishCount ?? 0} time{(video.publishCount ?? 0) === 1 ? "" : "s"}
+            Published {video.publishCount ?? 0} time
+            {(video.publishCount ?? 0) === 1 ? "" : "s"}
           </span>
           {video.publishedToYouTube && (
-            <Badge variant="outline" className="text-green-400 border-green-400/30 text-xs">
+            <Badge
+              variant="outline"
+              className="text-green-400 border-green-400/30 text-xs"
+            >
               Published
             </Badge>
           )}
@@ -740,7 +1103,7 @@ const VideoCard: React.FC<VideoCardProps> = ({
         <p className="text-white/60 text-sm mb-4 line-clamp-2 leading-relaxed">
           {video.subtitle || video.description || "No description available"}
         </p>
-        
+
         <div className="flex items-center justify-between text-xs text-white/40">
           <div className="flex items-center">
             <Calendar className="h-3 w-3 mr-1" />
@@ -752,7 +1115,7 @@ const VideoCard: React.FC<VideoCardProps> = ({
           </div>
         </div>
       </CardContent>
-      
+
       <CardFooter className="p-4 pt-0 flex gap-2">
         <Button
           size="sm"

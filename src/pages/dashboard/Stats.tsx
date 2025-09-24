@@ -44,6 +44,7 @@ const CHART_TYPES = [
 
 const COLORS = {
   videoGenerated: "#ef4444",
+  imageGenerated: "#f59e42",
   scriptGenerated: "#10b981",
   published: "#3b82f6",
   background: {
@@ -85,10 +86,10 @@ const Stats = () => {
   
   type TimeseriesPoint = {
     label: string;
-    videoGeneratedCount: number;
+    aiVideosGeneratedCount?: number;
+    aiImagesGeneratedCount?: number;
     scriptGeneratedCount: number;
     publishedCount: number;
-    aiVideosGeneratedCount?: number;
   };
 
   const [stats, setStats] = useState<Stat[]>([]);
@@ -177,12 +178,14 @@ const Stats = () => {
   // Calculate total metrics for pie chart
   const totalMetrics = timeseries.reduce((acc, point) => ({
     videoGenerated: acc.videoGenerated + (point.aiVideosGeneratedCount || 0),
+    imageGenerated: acc.imageGenerated + (point.aiImagesGeneratedCount || 0),
     scriptGenerated: acc.scriptGenerated + point.scriptGeneratedCount,
     published: acc.published + point.publishedCount,
-  }), { videoGenerated: 0, scriptGenerated: 0, published: 0 });
+  }), { videoGenerated: 0, imageGenerated: 0, scriptGenerated: 0, published: 0 });
 
   const pieData = [
     { name: "Videos Generated", value: totalMetrics.videoGenerated, color: COLORS.videoGenerated },
+    { name: "Images Generated", value: totalMetrics.imageGenerated, color: COLORS.imageGenerated },
     { name: "Scripts Generated", value: totalMetrics.scriptGenerated, color: COLORS.scriptGenerated },
     { name: "Published", value: totalMetrics.published, color: COLORS.published },
   ].filter(item => item.value > 0);
@@ -205,18 +208,27 @@ const Stats = () => {
             dot={{ fill: COLORS.videoGenerated, r: 4 }}
             activeDot={{ r: 6 }}
           />
-          <Line 
-            type="monotone" 
-            dataKey="scriptGeneratedCount" 
+          <Line
+            type="monotone"
+            dataKey="aiImagesGeneratedCount"
+            name="Images Generated"
+            stroke={COLORS.imageGenerated}
+            strokeWidth={3}
+            dot={{ fill: COLORS.imageGenerated, r: 4 }}
+            activeDot={{ r: 6 }}
+          />
+          <Line
+            type="monotone"
+            dataKey="scriptGeneratedCount"
             name="Scripts Generated"
             stroke={COLORS.scriptGenerated}
             strokeWidth={3}
             dot={{ fill: COLORS.scriptGenerated, r: 4 }}
             activeDot={{ r: 6 }}
           />
-          <Line 
-            type="monotone" 
-            dataKey="publishedCount" 
+          <Line
+            type="monotone"
+            dataKey="publishedCount"
             name="Published"
             stroke={COLORS.published}
             strokeWidth={3}
@@ -236,6 +248,7 @@ const Stats = () => {
           <Tooltip content={<CustomTooltip />} />
           <Legend />
           <Bar dataKey="aiVideosGeneratedCount" name="Videos Generated" fill={COLORS.videoGenerated} radius={[4, 4, 0, 0]} />
+          <Bar dataKey="aiImagesGeneratedCount" name="Images Generated" fill={COLORS.imageGenerated} radius={[4, 4, 0, 0]} />
           <Bar dataKey="scriptGeneratedCount" name="Scripts Generated" fill={COLORS.scriptGenerated} radius={[4, 4, 0, 0]} />
           <Bar dataKey="publishedCount" name="Published" fill={COLORS.published} radius={[4, 4, 0, 0]} />
         </BarChart>
@@ -249,6 +262,10 @@ const Stats = () => {
           <linearGradient id="colorVideoGenerated" x1="0" y1="0" x2="0" y2="1">
             <stop offset="5%" stopColor={COLORS.videoGenerated} stopOpacity={0.3}/>
             <stop offset="95%" stopColor={COLORS.videoGenerated} stopOpacity={0}/>
+          </linearGradient>
+          <linearGradient id="colorImageGenerated" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor={COLORS.imageGenerated} stopOpacity={0.3}/>
+            <stop offset="95%" stopColor={COLORS.imageGenerated} stopOpacity={0}/>
           </linearGradient>
           <linearGradient id="colorScriptGenerated" x1="0" y1="0" x2="0" y2="1">
             <stop offset="5%" stopColor={COLORS.scriptGenerated} stopOpacity={0.3}/>
@@ -272,17 +289,25 @@ const Stats = () => {
           fill="url(#colorVideoGenerated)"
           strokeWidth={2}
         />
-        <Area 
-          type="monotone" 
-          dataKey="scriptGeneratedCount" 
+        <Area
+          type="monotone"
+          dataKey="aiImagesGeneratedCount"
+          name="Images Generated"
+          stroke={COLORS.imageGenerated}
+          fill="url(#colorImageGenerated)"
+          strokeWidth={2}
+        />
+        <Area
+          type="monotone"
+          dataKey="scriptGeneratedCount"
           name="Scripts Generated"
           stroke={COLORS.scriptGenerated}
           fill="url(#colorScriptGenerated)"
           strokeWidth={2}
         />
-        <Area 
-          type="monotone" 
-          dataKey="publishedCount" 
+        <Area
+          type="monotone"
+          dataKey="publishedCount"
           name="Published"
           stroke={COLORS.published}
           fill="url(#colorPublished)"

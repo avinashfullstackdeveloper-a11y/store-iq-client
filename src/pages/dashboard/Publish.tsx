@@ -58,8 +58,11 @@ const Publish = () => {
   }
 
   const [videos, setVideos] = useState<Video[]>([]);
+  const [images, setImages] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [imagesLoading, setImagesLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [imagesError, setImagesError] = useState<string | null>(null);
   const [postingId, setPostingId] = useState<string | null>(null);
   const [toast, setToast] = useState<{
     type: "success" | "error";
@@ -114,6 +117,22 @@ const Publish = () => {
     fetchVideos();
     fetchConnectionStatus();
     fetchInstagramConnectionStatus();
+    // Fetch images
+    const fetchImages = async () => {
+      setImagesLoading(true);
+      setImagesError(null);
+      try {
+        const res = await fetch("/api/images", { credentials: "include" });
+        if (!res.ok) throw new Error("Failed to fetch images");
+        const data = await res.json();
+        setImages(Array.isArray(data) ? data : []);
+      } catch (err) {
+        setImagesError((err as Error)?.message || "Unknown error");
+      } finally {
+        setImagesLoading(false);
+      }
+    };
+    fetchImages();
   }, []);
 
   // Platform selection per video
@@ -365,63 +384,152 @@ const Publish = () => {
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-2xl p-6 mb-8">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-              <div>
-                <h2 className="text-xl font-semibold text-white">
-                  Your Videos
-                </h2>
-                <p className="text-white/60 text-sm mt-1">
-                  Select videos to publish to connected platforms
-                </p>
-              </div>
-            </div>
-
-            {loading ? (
-              <div className="flex justify-center items-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-              </div>
-            ) : error ? (
-              <div className="bg-red-900/20 border border-red-800/50 text-red-200 px-4 py-3 rounded-lg">
-                {error}
-              </div>
-            ) : videos.length === 0 ? (
-              <div className="text-center py-12 border-2 border-dashed border-gray-700 rounded-xl">
-                <svg
-                  className="w-12 h-12 text-gray-600 mx-auto mb-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-                  ></path>
-                </svg>
-                <p className="text-white/60 mb-4">No videos available</p>
-                <Button onClick={() => window.location.href = "/dashboard/create-video"}>
-                  Create Your First Video
-                </Button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {videos.map((video) => (
-                  <VideoPublishCard
-                    key={video.id || video.s3Key}
-                    video={video}
-                    ytConnected={ytConnected}
-                    igConnected={igConnected}
-                    platformSelections={platformSelections}
-                    handlePlatformChange={handlePlatformChange}
-                    handlePost={handlePost}
-                    postingId={postingId}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
+          {/* Split videos and images by file extension */}
+          {(() => {
+            function isVideoFile(url) {
+              return /\.(mp4|mov|webm|avi|mkv)$/i.test(url);
+            }
+            const videoItems = videos.filter((v) => isVideoFile(v.url));
+            return (
+              <>
+                {/* Videos Section */}
+                <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-2xl p-6 mb-8">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                    <div>
+                      <h2 className="text-xl font-semibold text-white">
+                        Your Videos
+                      </h2>
+                      <p className="text-white/60 text-sm mt-1">
+                        Select videos to publish to connected platforms
+                      </p>
+                    </div>
+                  </div>
+                  {loading ? (
+                    <div className="flex justify-center items-center py-12">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                    </div>
+                  ) : error ? (
+                    <div className="bg-red-900/20 border border-red-800/50 text-red-200 px-4 py-3 rounded-lg">
+                      {error}
+                    </div>
+                  ) : videoItems.length === 0 ? (
+                    <div className="text-center py-12 border-2 border-dashed border-gray-700 rounded-xl">
+                      <svg
+                        className="w-12 h-12 text-gray-600 mx-auto mb-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                        ></path>
+                      </svg>
+                      <p className="text-white/60 mb-4">No videos available</p>
+                      <Button onClick={() => window.location.href = "/dashboard/create-video"}>
+                        Create Your First Video
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {videoItems.map((video) => (
+                        <VideoPublishCard
+                          key={video.id || video.s3Key}
+                          video={video}
+                          ytConnected={ytConnected}
+                          igConnected={igConnected}
+                          platformSelections={platformSelections}
+                          handlePlatformChange={handlePlatformChange}
+                          handlePost={handlePost}
+                          postingId={postingId}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {/* Images Section */}
+                <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-2xl p-6 mb-8">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                    <div>
+                      <h2 className="text-xl font-semibold text-white">
+                        Your Images
+                      </h2>
+                      <p className="text-white/60 text-sm mt-1">
+                        Generated images you can post to Instagram
+                      </p>
+                    </div>
+                  </div>
+                  {imagesLoading ? (
+                    <div className="flex justify-center items-center py-12">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                    </div>
+                  ) : imagesError ? (
+                    <div className="bg-red-900/20 border border-red-800/50 text-red-200 px-4 py-3 rounded-lg">
+                      {imagesError}
+                    </div>
+                  ) : images.length === 0 ? (
+                    <div className="text-center py-12 border-2 border-dashed border-gray-700 rounded-xl">
+                      <svg
+                        className="w-12 h-12 text-gray-600 mx-auto mb-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M4 16l4-4-4-4m8 8l4-4-4-4"
+                        ></path>
+                      </svg>
+                      <p className="text-white/60 mb-4">No images available</p>
+                      <Button onClick={() => window.location.href = "/dashboard/create-video"}>
+                        Generate Your First Image
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {images.map((img, idx) => (
+                        <div
+                          key={img.id || img.s3Key || img.url || `image-${idx}`}
+                          className="bg-gray-800/50 rounded-xl overflow-hidden border border-gray-700 transition-all hover:border-purple-500/30 hover:shadow-lg hover:shadow-purple-500/10 flex flex-col"
+                        >
+                          <div className="relative aspect-square bg-black flex items-center justify-center">
+                            <img
+                              src={img.s3Url || img.url}
+                              alt={img.title || "Generated Image"}
+                              className="object-contain w-full h-full"
+                              style={{ maxHeight: 280 }}
+                            />
+                          </div>
+                          <div className="p-4 flex-1 flex flex-col">
+                            <h3 className="text-white font-medium mb-2 truncate">
+                              {img.title || img.s3Key || "Untitled Image"}
+                            </h3>
+                            <div className="flex-1"></div>
+                            <Button
+                              className="w-full mt-2"
+                              onClick={() => handlePost(img)}
+                              disabled={postingId === (img.id || img.s3Key)}
+                              variant={igConnected ? "default" : "outline"}
+                            >
+                              {postingId === (img.id || img.s3Key)
+                                ? "Posting..."
+                                : igConnected
+                                ? "Post to Instagram"
+                                : "Connect Instagram to Post"}
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </>
+            );
+          })()}
 
           {/* ... toast and loader ... */}
         </div>
