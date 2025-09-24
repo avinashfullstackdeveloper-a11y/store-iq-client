@@ -22,6 +22,8 @@ function isErrorWithMessage(err: unknown): err is { message: string } {
   );
 }
 
+import DashboardLayout from "@/components/DashboardLayout";
+
 const PromptGenerator: React.FC = () => {
   const { user } = useAuth();
 
@@ -205,19 +207,20 @@ Each scene should have a different background. Use a modern sans-serif font and 
   };
 
   return (
-    <div className="p-2 sm:p-4 md:p-6 max-w-3xl mx-auto">
-      {/* Header */}
-      <div className="mb-6 md:mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold text-white mb-2 flex items-center gap-3">
-          <Wand2 className="w-8 h-8 text-storiq-purple" />
-          Script Generator
-        </h1>
-        <p className="text-white/60 text-base md:text-lg">
-          Describe your vision and let AI generate a script for your video.
-        </p>
-      </div>
+    <DashboardLayout>
+      <div className="p-2 sm:p-4 md:p-6 max-w-3xl mx-auto">
+        {/* Header */}
+        <div className="mb-6 md:mb-8">
+          <h1 className="text-2xl md:text-3xl font-bold text-white mb-2 flex items-center gap-3">
+            <Wand2 className="w-8 h-8 text-storiq-purple" />
+            Script Generator
+          </h1>
+          <p className="text-white/60 text-base md:text-lg">
+            Describe your vision and let AI generate a script for your video.
+          </p>
+        </div>
 
-      <div className="flex flex-col gap-6 md:gap-8">
+        <div className="flex flex-col gap-6 md:gap-8">
         {/* Prompt Input Card */}
         <div>
           <div className="bg-storiq-card-bg/50 border-storiq-border rounded-2xl shadow-2xl p-6 mb-0">
@@ -430,7 +433,8 @@ Each scene should have a different background. Use a modern sans-serif font and 
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 };
 

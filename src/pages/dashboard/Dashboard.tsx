@@ -62,6 +62,27 @@ const Dashboard = () => {
   // Data for the tools grid, updated with varied, realistic images and corrected text
   const tools = [
     {
+      title: "Video Generator",
+      subtitle: "Turn text into videos with AI",
+      image: "/src/assets/images/ai-video-placeholder.png",
+      buttonText: "Try Now",
+      link: "/dashboard/create-video"
+    },
+    {
+      title: "Image Generator",
+      subtitle: "Create images from your imagination",
+      image: "/src/assets/images/ai-image-placeholder.png",
+      buttonText: "Try Now",
+      link: "/dashboard/create-image"
+    },
+    {
+      title: "Prompt Generator",
+      subtitle: "Generate creative video scripts",
+      image: "/src/assets/images/ai-script-placeholder.png",
+      buttonText: "Try Now",
+      link: "/dashboard/create-prompt"
+    },
+    {
       title: "Ai-Audio Mounting",
       subtitle: "Help to Mount AI Audio to Video",
       image:
