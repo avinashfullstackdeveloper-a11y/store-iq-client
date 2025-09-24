@@ -166,12 +166,14 @@ const ImageGenerator: React.FC = () => {
     <DashboardLayout>
       <div className="p-2 sm:p-4 md:p-6 max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-6 md:mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold text-white mb-2 flex items-center gap-3">
-            <Sparkles className="w-8 h-8 text-storiq-purple animate-pulse" />
-            AI Image Generator
+        <div className="mb-6 md:mb-8 text-center">
+          <h1 className="text-2xl md:text-3xl font-bold text-white mb-2 text-center">
+            <span className="inline-block align-middle mr-3">
+              <Sparkles className="w-8 h-8 text-storiq-purple animate-pulse" />
+            </span>
+            <span className="align-middle">AI Image Generator</span>
           </h1>
-          <p className="text-white/60 text-base md:text-lg">
+          <p className="text-white/60 text-base md:text-lg text-center">
             Transform your imagination into stunning visuals with AI
           </p>
         </div>
