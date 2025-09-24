@@ -30,6 +30,7 @@ const creationItems = [
 
 const inspirationItems = [
   { icon: FileEdit, label: "Scripts", href: "/dashboard/scripts" },
+  { icon: FileEdit, label: "AI-Tools", href: "/dashboard/aitools" },
   { icon: Settings, label: "Account Settings", href: "/dashboard/settings" },
 ];
 

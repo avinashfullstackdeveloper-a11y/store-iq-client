@@ -15,7 +15,7 @@ import {
 
 // Google OAuth config
 // (YouTube OAuth config now handled by useYouTubeConnect)
-const IG_OAUTH_URL = "/api/auth/instagram"; // Placeholder, replace with actual
+const IG_OAUTH_URL = `${import.meta.env.VITE_API_BASE_URL}/api/auth/instagram`; // Placeholder, replace with actual
 
 const Publish = () => {
   // YouTube connection via shared hook
@@ -87,13 +87,13 @@ const Publish = () => {
   // Only Instagram connection status is handled locally now
   const fetchInstagramConnectionStatus = async () => {
     try {
-      const res = await fetch("/api/auth/status", { credentials: "include" });
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/status`, { credentials: "include" });
       if (res.ok) {
         const status = await res.json();
         setIgConnected(!!status.instagram);
       }
     } catch {
-      // Ignore errors, keep as not connected
+      setIgConnected(false);
     }
   };
 
@@ -116,6 +116,7 @@ const Publish = () => {
   React.useEffect(() => {
     fetchVideos();
     fetchConnectionStatus();
+    fetchInstagramConnectionStatus();
     // Fetch images
     const fetchImages = async () => {
       setImagesLoading(true);
@@ -178,7 +179,7 @@ const Publish = () => {
       // Track results for each platform
       let success = false;
       let errorMsg = "";
-
+      
       // Post to YouTube if selected
       if (selection.yt && ytConnected) {
         const res = await fetch("/api/publish/youtube", {

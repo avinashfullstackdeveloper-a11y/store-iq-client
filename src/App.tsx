@@ -25,6 +25,7 @@ import { AuthProvider } from "./context/AuthContext";
 import { LoaderProvider } from "./context/LoaderContext";
 
 import TextToSpeech from "./pages/dashboard/Aitextmounting";
+import AIToolsPage from "./pages/dashboard/AItools";
 
 const queryClient = new QueryClient();
 
@@ -51,6 +52,9 @@ const App = () => (
               <Route path="/dashboard/settings" element={<Settings />} />
               <Route path="/dashboard/create-video" element={<CreateVideo />} />
               <Route path="/dashboard/aitextmounting" element={<TextToSpeech/>} />
+              <Route path="/dashboard/aitools" element={<AIToolsPage/>} />
+
+
               <Route
                 path="/dashboard/search-videos"
                 element={<SearchVideos />}
