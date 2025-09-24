@@ -129,11 +129,8 @@ const Settings = () => {
   // Sidebar navigation items for the settings page
   const sidebarItems = [
     "Your Timezone",
-    "Your affiliate code",
     "Integrations",
     "Channel Manager",
-    "AI Settings",
-    "Api Key",
     "Password Management",
     "Account",
   ];
@@ -197,8 +194,6 @@ const Settings = () => {
     setPasswordLoading(false);
   };
 
-  // Example hashtags for AI Settings
-  const hashtags = ["ai", "tech", "startup", "product"];
 
   return (
     <DashboardLayout>
@@ -285,25 +280,6 @@ const Settings = () => {
               </div>
             )}
 
-            {/* Your Affiliate Code Section */}
-            {activeTab === "Your affiliate code" && (
-              <div>
-                <h3 className="text-white text-lg font-medium mb-3">
-                  Your affiliate code
-                </h3>
-                <Input
-                  defaultValue="your_custom_code"
-                  className="w-96 bg-[#1E1E1E] border-[#2A2A2A] text-white placeholder:text-white/40 h-12"
-                />
-                <p className="text-white/60 text-sm mt-2 max-w-md">
-                  Enter your affiliate code here so we can automatically add it
-                  to the video you share - get it here
-                </p>
-                <Button className="bg-[#6E42E1] hover:bg-[#7d55e6] text-white mt-4 px-6">
-                  Save
-                </Button>
-              </div>
-            )}
 
             {/* Integrations Section */}
             {activeTab === "Integrations" && (
@@ -374,59 +350,6 @@ const Settings = () => {
               </div>
             )}
 
-            {/* AI Settings Section */}
-            {activeTab === "AI Settings" && (
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-white text-lg font-medium mb-3">
-                    AI Settings
-                  </h3>
-                  <p className="text-white/60 text-sm mb-4">
-                    Share 3 to 5 #hashtags you're the most into.
-                  </p>
-                  {/* Combined hashtag input container */}
-                  <div className="flex items-center w-full bg-[#1E1E1E] border border-[#2A2A2A] rounded-lg p-2.5">
-                    <div className="flex flex-wrap gap-2">
-                      {hashtags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="bg-[#6E42E1] text-white px-3 py-1 rounded-md text-sm flex items-center"
-                        >
-                          <span>{tag}</span>
-                          <button className="ml-2 text-white/80 hover:text-white text-xs">
-                            X
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                    <button className="ml-auto pl-2">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5 text-white/60"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <p className="text-white font-medium text-sm mb-3">
-                    Tell us a few words about who you are and what you are into.
-                  </p>
-                  <Textarea
-                    placeholder="Write in natural language so we can better personalize content for you."
-                    className="bg-[#1E1E1E] border-[#2A2A2A] text-white placeholder:text-white/40 min-h-[120px]"
-                  />
-                </div>
-              </div>
-            )}
             {/* Password Management Section */}
             {activeTab === "Password Management" && (
               <div className="space-y-6">
