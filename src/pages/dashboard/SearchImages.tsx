@@ -30,6 +30,8 @@ const UNSPLASH_ACCESS_KEY = import.meta.env.VITE_UNSPLASH_ACCESS_KEY as string;
 const DEFAULT_QUERY = "nature";
 const IMAGES_COUNT = 18;
 
+import DashboardLayout from "@/components/DashboardLayout";
+
 const SearchImages: React.FC = () => {
   const [images, setImages] = useState<UnsplashImage[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -66,7 +68,7 @@ const SearchImages: React.FC = () => {
         setSearchHistory(newHistory);
         localStorage.setItem("unsplashSearchHistory", JSON.stringify(newHistory));
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError("Could not load images. Please try again later.");
     } finally {
       setLoading(false);
@@ -114,14 +116,15 @@ const SearchImages: React.FC = () => {
   const quickSearches = ["landscape", "wallpaper", "abstract", "minimal", "travel", "architecture"];
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Discover HD/4K Images</h1>
-        <p className="text-gray-600">Search millions of high-quality photos from Unsplash</p>
-      </div>
+    <DashboardLayout>
+      <div className="p-6 max-w-7xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-white mb-2">Discover HD/4K Images</h1>
+          <p className="text-gray-300">Search millions of high-quality photos from Unsplash</p>
+        </div>
 
-      {/* Search Section */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
+        {/* Search Section */}
+        <div className="bg-[#1C1C1C] rounded-xl shadow-sm border border-gray-800 p-6 mb-8">
         <form onSubmit={handleSearch} className="mb-4">
           <div className="flex gap-3 flex-col sm:flex-row">
             <div className="flex-1 relative">
@@ -135,7 +138,7 @@ const SearchImages: React.FC = () => {
                 value={query}
                 onChange={e => setQuery(e.target.value)}
                 placeholder="Search for images (e.g. mountains, city, animals)..."
-                className="border border-gray-200 rounded-lg px-4 py-3 pl-10 w-full focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all"
+                className="border border-gray-700 bg-[#232323] text-white rounded-lg px-4 py-3 pl-10 w-full focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all"
                 list="searchHistory"
               />
             </div>
@@ -154,14 +157,14 @@ const SearchImages: React.FC = () => {
         {/* Sort Options */}
         <div className="flex flex-wrap gap-4 items-center justify-between">
           <div className="flex gap-3 items-center">
-            <span className="text-sm font-medium text-gray-700">Sort by:</span>
-            <div className="flex bg-gray-100 rounded-lg p-1">
+            <span className="text-sm font-medium text-gray-300">Sort by:</span>
+            <div className="flex bg-[#232323] rounded-lg p-1">
               <button
                 onClick={() => setSortBy("relevant")}
                 className={`px-3 py-1 text-sm rounded-md transition-all ${
-                  sortBy === "relevant" 
-                    ? "bg-white text-violet-700 shadow-sm" 
-                    : "text-gray-600 hover:text-gray-900"
+                  sortBy === "relevant"
+                    ? "bg-[#18181b] text-violet-400 shadow-sm"
+                    : "text-gray-300 hover:text-white"
                 }`}
               >
                 Most Relevant
@@ -169,9 +172,9 @@ const SearchImages: React.FC = () => {
               <button
                 onClick={() => setSortBy("latest")}
                 className={`px-3 py-1 text-sm rounded-md transition-all ${
-                  sortBy === "latest" 
-                    ? "bg-white text-violet-700 shadow-sm" 
-                    : "text-gray-600 hover:text-gray-900"
+                  sortBy === "latest"
+                    ? "bg-[#18181b] text-violet-400 shadow-sm"
+                    : "text-gray-300 hover:text-white"
                 }`}
               >
                 Latest
@@ -181,20 +184,20 @@ const SearchImages: React.FC = () => {
 
           {searchHistory.length > 0 && (
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">Recent:</span>
+              <span className="text-sm text-gray-400">Recent:</span>
               <div className="flex flex-wrap gap-2">
                 {searchHistory.map((term, index) => (
                   <button
                     key={index}
                     onClick={() => handleQuickSearch(term)}
-                    className="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-1 rounded transition-colors"
+                    className="text-sm bg-[#232323] hover:bg-[#18181b] text-gray-200 px-2 py-1 rounded transition-colors"
                   >
                     {term}
                   </button>
                 ))}
                 <button
                   onClick={clearSearchHistory}
-                  className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                  className="text-sm text-gray-500 hover:text-white transition-colors"
                   title="Clear history"
                 >
                   ×
@@ -207,13 +210,13 @@ const SearchImages: React.FC = () => {
 
       {/* Quick Search Suggestions */}
       <div className="mb-8">
-        <h3 className="text-sm font-medium text-gray-700 mb-3">Popular Searches</h3>
+        <h3 className="text-sm font-medium text-gray-300 mb-3">Popular Searches</h3>
         <div className="flex flex-wrap gap-2">
           {quickSearches.map((term) => (
             <button
               key={term}
               onClick={() => handleQuickSearch(term)}
-              className="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm text-gray-700 hover:border-violet-500 hover:text-violet-700 transition-all duration-200 shadow-sm hover:shadow"
+              className="px-4 py-2 bg-[#232323] border border-gray-700 rounded-full text-sm text-gray-200 hover:border-violet-500 hover:text-violet-400 transition-all duration-200 shadow-sm hover:shadow"
             >
               {term}
             </button>
@@ -233,8 +236,8 @@ const SearchImages: React.FC = () => {
 
       {/* Error State */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-          <div className="flex items-center gap-2 text-red-800">
+        <div className="bg-red-900/20 border border-red-700 rounded-lg p-4 mb-6">
+          <div className="flex items-center gap-2 text-red-400">
             <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
             </svg>
@@ -248,28 +251,28 @@ const SearchImages: React.FC = () => {
       {!loading && !error && (
         <>
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-lg font-semibold text-gray-900">
+            <h2 className="text-lg font-semibold text-white">
               {images.length > 0 ? `Found ${images.length} images` : 'No images found'}
             </h2>
             {images.length > 0 && (
-              <span className="text-sm text-gray-600">Click on any image to preview</span>
+              <span className="text-sm text-gray-400">Click on any image to preview</span>
             )}
           </div>
 
           {images.length === 0 ? (
             <div className="text-center py-12">
-              <svg className="h-16 w-16 text-gray-400 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="h-16 w-16 text-gray-600 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No images found</h3>
-              <p className="text-gray-600">Try adjusting your search terms or browse popular categories</p>
+              <h3 className="text-lg font-medium text-white mb-2">No images found</h3>
+              <p className="text-gray-400">Try adjusting your search terms or browse popular categories</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {images.map((img) => (
                 <div
                   key={img.id}
-                  className="group relative bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden border border-gray-100"
+                  className="group relative bg-[#232323] rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden border border-gray-800"
                   onClick={() => setPreview(img)}
                 >
                   <div className="relative overflow-hidden">
@@ -286,7 +289,7 @@ const SearchImages: React.FC = () => {
                           e.stopPropagation();
                           downloadImage(img.urls.full, img.id);
                         }}
-                        className="bg-white text-gray-700 p-2 rounded-full shadow-lg hover:bg-violet-600 hover:text-white transition-all"
+                        className="bg-[#18181b] text-gray-200 p-2 rounded-full shadow-lg hover:bg-violet-600 hover:text-white transition-all"
                         title="Download HD"
                       >
                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -303,11 +306,11 @@ const SearchImages: React.FC = () => {
                         alt={img.user.name}
                         className="w-6 h-6 rounded-full"
                       />
-                      <span className="text-sm font-medium text-gray-900 truncate">
+                      <span className="text-sm font-medium text-white truncate">
                         {img.user.name}
                       </span>
                     </div>
-                    <div className="flex justify-between items-center text-xs text-gray-500">
+                    <div className="flex justify-between items-center text-xs text-gray-400">
                       <span>{new Date(img.created_at).toLocaleDateString()}</span>
                       <div className="flex items-center gap-1">
                         <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
@@ -328,10 +331,10 @@ const SearchImages: React.FC = () => {
       {/* Preview Modal */}
       {preview && (
         <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+          <div className="bg-[#18181b] rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
             <div className="relative">
               <button
-                className="absolute top-4 right-4 bg-white bg-opacity-90 hover:bg-opacity-100 text-gray-900 rounded-full p-2 z-10 shadow-lg hover:scale-110 transition-transform"
+                className="absolute top-4 right-4 bg-[#232323] bg-opacity-90 hover:bg-opacity-100 text-white rounded-full p-2 z-10 shadow-lg hover:scale-110 transition-transform"
                 onClick={() => setPreview(null)}
                 aria-label="Close"
               >
@@ -356,8 +359,8 @@ const SearchImages: React.FC = () => {
                     className="w-10 h-10 rounded-full"
                   />
                   <div>
-                    <div className="font-semibold text-gray-900">{preview.user.name}</div>
-                    <div className="text-sm text-gray-600">@{preview.user.username}</div>
+                    <div className="font-semibold text-white">{preview.user.name}</div>
+                    <div className="text-sm text-gray-400">@{preview.user.username}</div>
                   </div>
                 </div>
                 
@@ -366,7 +369,7 @@ const SearchImages: React.FC = () => {
                     href={preview.links.html}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:border-gray-400 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 border border-gray-700 rounded-lg text-gray-200 hover:border-violet-500 transition-colors"
                   >
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -386,12 +389,12 @@ const SearchImages: React.FC = () => {
               </div>
               
               {preview.alt_description && (
-                <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                  <p className="text-sm text-gray-700">{preview.alt_description}</p>
+                <div className="mt-4 p-3 bg-[#232323] rounded-lg">
+                  <p className="text-sm text-gray-200">{preview.alt_description}</p>
                 </div>
               )}
               
-              <div className="flex gap-4 mt-4 text-sm text-gray-600">
+              <div className="flex gap-4 mt-4 text-sm text-gray-400">
                 <span>Likes: {preview.likes}</span>
                 <span>Uploaded: {new Date(preview.created_at).toLocaleDateString()}</span>
               </div>
@@ -400,6 +403,7 @@ const SearchImages: React.FC = () => {
         </div>
       )}
     </div>
+    </DashboardLayout>
   );
 };
 
