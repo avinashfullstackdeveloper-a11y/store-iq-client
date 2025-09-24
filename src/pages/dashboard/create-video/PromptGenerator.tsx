@@ -141,6 +141,16 @@ Each scene should have a different background. Use a modern sans-serif font and 
       setScriptStatus("success");
       if (user) {
         const userId = (user && user.id) || (user && user.email);
+        // Optimistically update history
+        setScriptHistory(prev => [
+          {
+            _id: Math.random().toString(36).slice(2), // Temporary ID
+            prompt,
+            script: data.script,
+            createdAt: new Date().toISOString(),
+          },
+          ...prev,
+        ]);
         fetch("/api/scripts/history", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
