@@ -74,7 +74,11 @@ Each scene should have a different background. Use a modern sans-serif font and 
     );
   }, [scriptHistory]);
 
+  // Prevent double-fetch in React 18 StrictMode
+  const hasFetchedHistory = React.useRef(false);
   useEffect(() => {
+    if (hasFetchedHistory.current) return;
+    hasFetchedHistory.current = true;
     if (!user) {
       setHistoryLoading(false);
       return;

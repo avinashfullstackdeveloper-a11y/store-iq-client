@@ -66,29 +66,28 @@ const Dashboard = () => {
       subtitle: "Turn text into videos with AI",
       image: "/src/assets/images/ai-video-placeholder.png",
       buttonText: "Try Now",
-      link: "/dashboard/create-video"
+      link: "/dashboard/create-video",
     },
     {
       title: "Image Generator",
       subtitle: "Create images from your imagination",
       image: "/src/assets/images/ai-image-placeholder.png",
       buttonText: "Try Now",
-      link: "/dashboard/create-image"
+      link: "/dashboard/create-image",
     },
     {
       title: "Script Generator",
       subtitle: "Generate creative video scripts",
       image: "/src/assets/images/ai-script-placeholder.png",
       buttonText: "Try Now",
-      link: "/dashboard/create-prompt"
+      link: "/dashboard/create-prompt",
     },
     {
       title: "Ai-Audio Mounting",
       subtitle: "Help to Mount AI Audio to Video",
-      image:
-        "./ai-voice-mounting.jpeg",
+      image: "./ai-voice-mounting.jpeg",
       buttonText: "Try Now",
-      link: "/dashboard/aitextmounting"
+      link: "/dashboard/aitextmounting",
     },
     {
       title: "New UGC Ad", // Corrected typo from "Vew"
@@ -96,7 +95,7 @@ const Dashboard = () => {
       image:
         "https://images.unsplash.com/photo-1611262588024-d12430b98920?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3",
       buttonText: "Try Now",
-      link: "/dashboard/aitextmounting"
+      link: "/dashboard/aitextmounting",
     },
     {
       title: "New Tool",
@@ -104,7 +103,7 @@ const Dashboard = () => {
       image:
         "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3",
       buttonText: "Try Now",
-      link: "/dashboard/aitextmounting"
+      link: "/dashboard/aitextmounting",
     },
     {
       title: "New Tool",
@@ -112,7 +111,7 @@ const Dashboard = () => {
       image:
         "https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3",
       buttonText: "Try Now",
-      link: "/dashboard/aitextmounting"
+      link: "/dashboard/aitextmounting",
     },
     {
       title: "New Tool",
@@ -120,7 +119,7 @@ const Dashboard = () => {
       image:
         "https://images.unsplash.com/photo-1473448912268-2022ce9509d8?q=80&w=2041&auto=format&fit=crop&ixlib=rb-4.0.3",
       buttonText: "Try Now",
-      link: "/dashboard/aitextmounting"
+      link: "/dashboard/aitextmounting",
     },
     {
       title: "New Tool",
@@ -128,7 +127,7 @@ const Dashboard = () => {
       image:
         "https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3",
       buttonText: "Try Now",
-      link: "/dashboard/aitextmounting"
+      link: "/dashboard/aitextmounting",
     },
   ];
 
@@ -175,7 +174,7 @@ const Dashboard = () => {
                   role="button"
                   tabIndex={0}
                   onClick={() => navigate("/dashboard/search-images")}
-                  onKeyDown={e => {
+                  onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
                       navigate("/dashboard/search-images");
                     }
@@ -271,7 +270,7 @@ const Dashboard = () => {
                   variant="outline"
                   className="w-auto px-5 py-2 bg-transparent border border-gray-700 text-white text-sm font-semibold rounded-lg hover:bg-violet-700 hover:border-violet-700 transition-colors"
                   onClick={() => navigate(tool.link)}
- // Add onClick handler
+                  // Add onClick handler
                 >
                   {tool.buttonText}
                 </Button>
