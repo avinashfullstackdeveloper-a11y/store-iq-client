@@ -26,6 +26,7 @@ import { LoaderProvider } from "./context/LoaderContext";
 
 import TextToSpeech from "./pages/dashboard/Aitextmounting";
 import AIToolsPage from "./pages/dashboard/AItools";
+import MobImageTool from "./pages/dashboard/ai-tools/Mobimagetool";
 
 const queryClient = new QueryClient();
 
@@ -53,7 +54,7 @@ const App = () => (
               <Route path="/dashboard/create-video" element={<CreateVideo />} />
               <Route path="/dashboard/aitextmounting" element={<TextToSpeech/>} />
               <Route path="/dashboard/aitools" element={<AIToolsPage/>} />
-
+              <Route path="/dashboard/aitools/Mobimage" element={<MobImageTool/>} />
 
               <Route
                 path="/dashboard/search-videos"
@@ -63,7 +64,7 @@ const App = () => (
               {/* The path is "/Home" */}
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="/dashboard/video-editor/*" element={<VideoEditor />} />
-              <Route path="*" element={<NotFound />} />
+              <Route path="*" element={<Index />} />
             </Routes>
           </AuthProvider>
         </BrowserRouter>

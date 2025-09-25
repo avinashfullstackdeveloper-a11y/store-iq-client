@@ -49,8 +49,16 @@ const AIToolsPage: React.FC = () => {
       image: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=2070&auto=format&fit=crop",
       buttonText: "Try Now",
       link: "/dashboard/scripts",
-      icon: PencilLineIcon, // Assign an icon
+      icon: PencilLineIcon, 
     },
+    {
+      title: "Image mobing tool",
+      subtitle: "Add object to other background scene",
+      image: "https://store-iq-bucket.s3.ap-south-1.amazonaws.com/dashboard-images-static/WhatsApp+Image+2025-09-24+at+15.54.32.jpeg",
+      buttonText: "Try Now",
+      link: "/dashboard/aitools/Mobimage",
+      icon: RocketIcon, 
+    }
   ];
 
   return (
