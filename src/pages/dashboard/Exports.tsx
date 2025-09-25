@@ -150,34 +150,35 @@ const Exports = () => {
 
   // Remove export functionality (unchanged)
   const handleDeleteExport = async (exportId: string) => {
-    // ... (existing delete logic remains the same)
     const allExports = JSON.parse(localStorage.getItem("exports") || "[]");
     const exportItem = allExports.find(
       (item: any) => item.export_id === exportId && item.userId === userId
     );
-    const s3Url = exportItem?.downloadUrl || exportItem?.url || "";
-    let s3Key = "";
-    
-    try {
-      if (s3Url) {
-        const urlObj = new URL(s3Url);
-        s3Key = urlObj.pathname.startsWith("/") ? urlObj.pathname.slice(1) : urlObj.pathname;
-      }
-    } catch (e) {
-      s3Key = "";
+    // Only delete the exported/edited file, never the original
+    // Only delete if s3Key is present (like Videos page)
+    const s3Key = exportItem?.s3Key;
+    if (!s3Key) {
+      // No exported file to delete, just remove from history
+      setExportHistory((prev) => {
+        const updated = prev.filter((item) => item.export_id !== exportId);
+        const filteredAll = allExports.filter(
+          (item: any) => !(item.export_id === exportId && item.userId === userId)
+        );
+        localStorage.setItem("exports", JSON.stringify(filteredAll));
+        return updated;
+      });
+      return;
     }
 
-    if (s3Key) {
-      try {
-        await fetch("/api/delete-video", {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ s3Key }),
-          credentials: "include",
-        });
-      } catch (e) {
-        // Error handling
-      }
+    try {
+      await fetch("/api/delete-video", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ s3Key }),
+        credentials: "include",
+      });
+    } catch (e) {
+      // Error handling
     }
 
     setExportHistory((prev) => {
@@ -220,7 +221,7 @@ const Exports = () => {
     const updateExportEntryByJobId = (jobId: string, data: any) => {
       setExportHistory((prev) => {
         const updated = prev.map((item) =>
-          item.job_id === jobId ? { ...item, ...data } : item
+          (item.job_id === jobId || item.jobId === jobId) ? { ...item, ...data } : item
         );
         localStorage.setItem("exports", JSON.stringify(updated));
         return updated;
@@ -253,7 +254,9 @@ const Exports = () => {
           if (data.status && (data.status.toLowerCase() === "completed" || data.status.toLowerCase() === "failed")) {
             updateExportEntryByJobId(item.job_id, {
               status: data.status.charAt(0).toUpperCase() + data.status.slice(1),
-              downloadUrl: data.downloadUrl || data.url || null,
+              ...(data.downloadUrl ? { downloadUrl: data.downloadUrl } : {}),
+              ...(data.key ? { s3Key: data.key } : {}),
+              ...(data.s3Key ? { s3Key: data.s3Key } : {}),
             });
           } else if (data.status && data.progress !== undefined) {
             updateExportEntryByJobId(item.job_id, {
