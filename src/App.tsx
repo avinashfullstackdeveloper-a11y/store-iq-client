@@ -17,8 +17,12 @@ import Videos from "./pages/dashboard/Videos";
 import Exports from "./pages/dashboard/Exports";
 import Scripts from "./pages/dashboard/Scripts";
 import Settings from "./pages/dashboard/Settings";
-import CreateVideo from "./pages/dashboard/CreateVideo";
+import VideoGenerator from "./pages/dashboard/create-video/VideoGenerator";
+import ImageGenerator from "./pages/dashboard/create-video/ImageGenerator";
+import PromptGenerator from "./pages/dashboard/create-video/PromptGenerator";
+// import CreateVideo from "./pages/dashboard/CreateVideo";
 import SearchVideos from "./pages/dashboard/SearchVideos";
+import SearchImages from "./pages/dashboard/SearchImages";
 import VideoEditor from "./pages/dashboard/VideoEditor";
 
 import { AuthProvider } from "./context/AuthContext";
@@ -50,14 +54,21 @@ const App = () => (
               <Route path="/dashboard/exports" element={<Exports />} />
               <Route path="/dashboard/scripts" element={<Scripts />} />
               <Route path="/dashboard/settings" element={<Settings />} />
-              <Route path="/dashboard/create-video" element={<CreateVideo />} />
+              {/* <Route path="/dashboard/create-video" element={<CreateVideo />} /> */}
+              <Route path="/dashboard/create-video" element={<VideoGenerator />} />
+              <Route path="/dashboard/create-image" element={<ImageGenerator />} />
+              <Route path="/dashboard/create-prompt" element={<PromptGenerator />} />
               <Route path="/dashboard/aitextmounting" element={<TextToSpeech/>} />
               <Route path="/dashboard/aitools" element={<AIToolsPage/>} />
 
-
+              
               <Route
                 path="/dashboard/search-videos"
                 element={<SearchVideos />}
+              />
+              <Route
+                path="/dashboard/search-images"
+                element={<SearchImages />}
               />
               <Route path="/Home" element={<Home />} />{" "}
               {/* The path is "/Home" */}
