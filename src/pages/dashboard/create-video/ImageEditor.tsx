@@ -126,7 +126,41 @@ const ImageEditor: React.FC = () => {
           </p>
         </div>
 
-        {(editedImageUrl && !loading) ? (
+        {/* Main image area: loader > error > edited image > prompt placeholder */}
+        {(loading) ? (
+          <div className="bg-storiq-card-bg/50 border-storiq-border rounded-2xl shadow-2xl p-6 flex flex-col items-center mx-auto backdrop-blur-sm mb-8">
+            <div className="flex flex-col items-center justify-center py-12 space-y-4 animate-fade-in w-full">
+              <div className="w-full max-w-md mx-auto flex justify-center">
+                <Loader message="Editing your image..." size="small" overlay={false} />
+              </div>
+              <p className="text-gray-400 text-sm animate-pulse">
+                This may take a few moments...
+              </p>
+            </div>
+          </div>
+        ) : error ? (
+          <div className="bg-storiq-card-bg/50 border-storiq-border rounded-2xl shadow-2xl p-6 flex flex-col items-center mx-auto backdrop-blur-sm mb-8">
+            <div className="flex flex-col items-center justify-center py-8 space-y-4 animate-fade-in w-full">
+              <div className="p-3 bg-red-500/10 rounded-full animate-bounce">
+                <div className="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center">
+                  <span className="text-white text-sm font-bold">!</span>
+                </div>
+              </div>
+              <div className="text-red-400 text-center font-medium">
+                {error}
+              </div>
+              <Button
+                onClick={handleSubmit}
+                variant="outline"
+                className="border-red-500/50 text-red-400 hover:bg-red-500/10 transition-all duration-200"
+                disabled={loading}
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Try Again
+              </Button>
+            </div>
+          </div>
+        ) : (editedImageUrl) ? (
           <div className="bg-storiq-card-bg/50 border-storiq-border rounded-2xl shadow-2xl p-6 flex flex-col items-center mx-auto backdrop-blur-sm mb-8">
             <div className="space-y-6 animate-fade-in w-full">
               <div className="flex flex-col md:flex-row gap-8 items-center justify-center">
@@ -171,9 +205,7 @@ const ImageEditor: React.FC = () => {
               </div>
             </div>
           </div>
-        ) : null}
-
-        {(!editedImageUrl && !loading && !error) && (
+        ) : (
           <div className="bg-storiq-card-bg/50 border-storiq-border rounded-2xl shadow-2xl p-6 flex flex-col items-center mx-auto backdrop-blur-sm mb-8">
             <div className="flex flex-col items-center justify-center py-12 text-center space-y-6">
               <img
@@ -276,42 +308,6 @@ const ImageEditor: React.FC = () => {
           </Button>
         </form>
 
-        <div className="bg-storiq-card-bg/50 border-storiq-border rounded-2xl shadow-2xl p-6 flex flex-col items-center mx-auto backdrop-blur-sm">
-          {loading && (
-            <div className="flex flex-col items-center justify-center py-12 space-y-4 animate-fade-in">
-              <div className="w-full max-w-md mx-auto flex justify-center">
-                <Loader message="Editing your image..." size="small" overlay={false} />
-              </div>
-              <p className="text-gray-400 text-sm animate-pulse">
-                This may take a few moments...
-              </p>
-            </div>
-          )}
-
-          {error && (
-            <div className="flex flex-col items-center justify-center py-8 space-y-4 animate-fade-in">
-              <div className="p-3 bg-red-500/10 rounded-full animate-bounce">
-                <div className="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center">
-                  <span className="text-white text-sm font-bold">!</span>
-                </div>
-              </div>
-              <div className="text-red-400 text-center font-medium">
-                {error}
-              </div>
-              <Button
-                onClick={handleSubmit}
-                variant="outline"
-                className="border-red-500/50 text-red-400 hover:bg-red-500/10 transition-all duration-200"
-                disabled={loading}
-              >
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Try Again
-              </Button>
-            </div>
-          )}
-
-
-        </div>
       </div>
     </DashboardLayout>
   );
