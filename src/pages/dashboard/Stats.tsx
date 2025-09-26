@@ -1,9 +1,22 @@
+"use client";
+
 import DashboardLayout from "@/components/DashboardLayout";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   AreaChart,
@@ -50,7 +63,7 @@ const COLORS = {
   background: {
     card: "bg-storiq-card-bg",
     chart: "#1c1c24",
-  }
+  },
 };
 
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -60,7 +73,10 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         <p className="text-white font-semibold mb-2">{label}</p>
         {payload.map((entry: any, index: number) => (
           <p key={index} className="text-sm flex items-center gap-2">
-            <span className="inline-block w-3 h-3 rounded-full mr-2" style={{ backgroundColor: entry.color }} />
+            <span
+              className="inline-block w-3 h-3 rounded-full mr-2"
+              style={{ backgroundColor: entry.color }}
+            />
             <span className="text-white">{entry.name}:</span>
             <span className="font-semibold text-white ml-2">{entry.value}</span>
           </p>
@@ -74,7 +90,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 const Stats = () => {
   const [dateRange, setDateRange] = useState("last-30-days");
   const [chartType, setChartType] = useState("area");
-  
+
   type Stat = {
     title: string;
     value: string | number;
@@ -83,7 +99,7 @@ const Stats = () => {
     comparison: string;
     icon?: string;
   };
-  
+
   type TimeseriesPoint = {
     label: string;
     aiVideosGeneratedCount?: number;
@@ -149,7 +165,7 @@ const Stats = () => {
 
         const [summaryRes, timeseriesRes] = await Promise.all([
           fetch(`/api/stats/summary${query}`),
-          fetch(`/api/stats/timeseries${query}`)
+          fetch(`/api/stats/timeseries${query}`),
         ]);
 
         if (!summaryRes.ok || !timeseriesRes.ok) {
@@ -158,7 +174,7 @@ const Stats = () => {
 
         const [summaryData, timeseriesData] = await Promise.all([
           summaryRes.json(),
-          timeseriesRes.json()
+          timeseriesRes.json(),
         ]);
 
         if (!ignore) {
@@ -166,34 +182,59 @@ const Stats = () => {
           setTimeseries(timeseriesData.data || []);
         }
       } catch (e) {
-        if (!ignore) setError(e instanceof Error ? e.message : "Error loading stats");
+        if (!ignore)
+          setError(e instanceof Error ? e.message : "Error loading stats");
       } finally {
         if (!ignore) setLoading(false);
       }
     }
     fetchData();
-    return () => { ignore = true; };
+    return () => {
+      ignore = true;
+    };
   }, [dateRange]);
 
   // Calculate total metrics for pie chart
-  const totalMetrics = timeseries.reduce((acc, point) => ({
-    videoGenerated: acc.videoGenerated + (point.aiVideosGeneratedCount || 0),
-    imageGenerated: acc.imageGenerated + (point.aiImagesGeneratedCount || 0),
-    scriptGenerated: acc.scriptGenerated + point.scriptGeneratedCount,
-    published: acc.published + point.publishedCount,
-  }), { videoGenerated: 0, imageGenerated: 0, scriptGenerated: 0, published: 0 });
+  const totalMetrics = timeseries.reduce(
+    (acc, point) => ({
+      videoGenerated: acc.videoGenerated + (point.aiVideosGeneratedCount || 0),
+      imageGenerated: acc.imageGenerated + (point.aiImagesGeneratedCount || 0),
+      scriptGenerated: acc.scriptGenerated + point.scriptGeneratedCount,
+      published: acc.published + point.publishedCount,
+    }),
+    { videoGenerated: 0, imageGenerated: 0, scriptGenerated: 0, published: 0 }
+  );
 
   const pieData = [
-    { name: "Videos Generated", value: totalMetrics.videoGenerated, color: COLORS.videoGenerated },
-    { name: "Images Generated", value: totalMetrics.imageGenerated, color: COLORS.imageGenerated },
-    { name: "Scripts Generated", value: totalMetrics.scriptGenerated, color: COLORS.scriptGenerated },
-    { name: "Published", value: totalMetrics.published, color: COLORS.published },
-  ].filter(item => item.value > 0);
+    {
+      name: "Videos Generated",
+      value: totalMetrics.videoGenerated,
+      color: COLORS.videoGenerated,
+    },
+    {
+      name: "Images Generated",
+      value: totalMetrics.imageGenerated,
+      color: COLORS.imageGenerated,
+    },
+    {
+      name: "Scripts Generated",
+      value: totalMetrics.scriptGenerated,
+      color: COLORS.scriptGenerated,
+    },
+    {
+      name: "Published",
+      value: totalMetrics.published,
+      color: COLORS.published,
+    },
+  ].filter((item) => item.value > 0);
 
   const renderChart = () => {
     if (chartType === "line") {
       return (
-        <LineChart data={timeseries} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+        <LineChart
+          data={timeseries}
+          margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+        >
           <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
           <XAxis dataKey="label" tick={{ fill: "#9CA3AF" }} axisLine={false} />
           <YAxis tick={{ fill: "#9CA3AF" }} axisLine={false} />
@@ -241,39 +282,89 @@ const Stats = () => {
 
     if (chartType === "bar") {
       return (
-        <BarChart data={timeseries} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+        <BarChart
+          data={timeseries}
+          margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+        >
           <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
           <XAxis dataKey="label" tick={{ fill: "#9CA3AF" }} axisLine={false} />
           <YAxis tick={{ fill: "#9CA3AF" }} axisLine={false} />
           <Tooltip content={<CustomTooltip />} />
           <Legend />
-          <Bar dataKey="aiVideosGeneratedCount" name="Videos Generated" fill={COLORS.videoGenerated} radius={[4, 4, 0, 0]} />
-          <Bar dataKey="aiImagesGeneratedCount" name="Images Generated" fill={COLORS.imageGenerated} radius={[4, 4, 0, 0]} />
-          <Bar dataKey="scriptGeneratedCount" name="Scripts Generated" fill={COLORS.scriptGenerated} radius={[4, 4, 0, 0]} />
-          <Bar dataKey="publishedCount" name="Published" fill={COLORS.published} radius={[4, 4, 0, 0]} />
+          <Bar
+            dataKey="aiVideosGeneratedCount"
+            name="Videos Generated"
+            fill={COLORS.videoGenerated}
+            radius={[4, 4, 0, 0]}
+          />
+          <Bar
+            dataKey="aiImagesGeneratedCount"
+            name="Images Generated"
+            fill={COLORS.imageGenerated}
+            radius={[4, 4, 0, 0]}
+          />
+          <Bar
+            dataKey="scriptGeneratedCount"
+            name="Scripts Generated"
+            fill={COLORS.scriptGenerated}
+            radius={[4, 4, 0, 0]}
+          />
+          <Bar
+            dataKey="publishedCount"
+            name="Published"
+            fill={COLORS.published}
+            radius={[4, 4, 0, 0]}
+          />
         </BarChart>
       );
     }
 
     // Default area chart
     return (
-      <AreaChart data={timeseries} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+      <AreaChart
+        data={timeseries}
+        margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+      >
         <defs>
           <linearGradient id="colorVideoGenerated" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor={COLORS.videoGenerated} stopOpacity={0.3}/>
-            <stop offset="95%" stopColor={COLORS.videoGenerated} stopOpacity={0}/>
+            <stop
+              offset="5%"
+              stopColor={COLORS.videoGenerated}
+              stopOpacity={0.3}
+            />
+            <stop
+              offset="95%"
+              stopColor={COLORS.videoGenerated}
+              stopOpacity={0}
+            />
           </linearGradient>
           <linearGradient id="colorImageGenerated" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor={COLORS.imageGenerated} stopOpacity={0.3}/>
-            <stop offset="95%" stopColor={COLORS.imageGenerated} stopOpacity={0}/>
+            <stop
+              offset="5%"
+              stopColor={COLORS.imageGenerated}
+              stopOpacity={0.3}
+            />
+            <stop
+              offset="95%"
+              stopColor={COLORS.imageGenerated}
+              stopOpacity={0}
+            />
           </linearGradient>
           <linearGradient id="colorScriptGenerated" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor={COLORS.scriptGenerated} stopOpacity={0.3}/>
-            <stop offset="95%" stopColor={COLORS.scriptGenerated} stopOpacity={0}/>
+            <stop
+              offset="5%"
+              stopColor={COLORS.scriptGenerated}
+              stopOpacity={0.3}
+            />
+            <stop
+              offset="95%"
+              stopColor={COLORS.scriptGenerated}
+              stopOpacity={0}
+            />
           </linearGradient>
           <linearGradient id="colorPublished" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor={COLORS.published} stopOpacity={0.3}/>
-            <stop offset="95%" stopColor={COLORS.published} stopOpacity={0}/>
+            <stop offset="5%" stopColor={COLORS.published} stopOpacity={0.3} />
+            <stop offset="95%" stopColor={COLORS.published} stopOpacity={0} />
           </linearGradient>
         </defs>
         <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
@@ -323,17 +414,24 @@ const Stats = () => {
         {/* Header */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Performance Analytics</h1>
-            <p className="text-white/60">Track and analyze your content performance metrics</p>
+            <h1 className="text-3xl font-bold text-white mb-2">
+              Performance Analytics
+            </h1>
+            <p className="text-white/60">
+              Track and analyze your content performance metrics
+            </p>
           </div>
-          
+
           {/* Quick Actions */}
           <div className="flex flex-wrap gap-2">
             <Badge variant="secondary" className="bg-blue-500/20 text-blue-300">
               Real-time Data
             </Badge>
-            <Badge variant="secondary" className="bg-green-500/20 text-green-300">
-              {dateRange.replace('last-', '').replace('-', ' ')}
+            <Badge
+              variant="secondary"
+              className="bg-green-500/20 text-green-300"
+            >
+              {dateRange.replace("last-", "").replace("-", " ")}
             </Badge>
           </div>
         </div>
@@ -350,7 +448,11 @@ const Stats = () => {
                   </SelectTrigger>
                   <SelectContent className="bg-storiq-card-bg border-storiq-border">
                     {DATE_RANGE_OPTIONS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value} className="text-white">
+                      <SelectItem
+                        key={opt.value}
+                        value={opt.value}
+                        className="text-white"
+                      >
                         {opt.label}
                       </SelectItem>
                     ))}
@@ -362,9 +464,9 @@ const Stats = () => {
         </Card>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           {loading ? (
-            Array.from({ length: 4 }).map((_, i) => (
+            Array.from({ length: 5 }).map((_, i) => (
               <Card key={i} className="bg-storiq-card-bg border-storiq-border">
                 <CardContent className="p-6">
                   <Skeleton className="h-4 w-1/3 bg-white/10 mb-2" />
@@ -374,36 +476,273 @@ const Stats = () => {
               </Card>
             ))
           ) : error ? (
-            <Card className="col-span-4 bg-storiq-card-bg border-storiq-border">
+            <Card className="col-span-5 bg-storiq-card-bg border-storiq-border">
               <CardContent className="p-6 text-center">
                 <span className="text-red-400">Error: {error}</span>
               </CardContent>
             </Card>
           ) : stats.length === 0 ? (
-            <Card className="col-span-4 bg-storiq-card-bg border-storiq-border">
+            <Card className="col-span-5 bg-storiq-card-bg border-storiq-border">
               <CardContent className="p-6 text-center">
-                <span className="text-white/60">No statistics available for the selected filters.</span>
+                <span className="text-white/60">
+                  No statistics available for the selected filters.
+                </span>
               </CardContent>
             </Card>
           ) : (
-            stats.map((stat, index) => (
-              <Card key={index} className="bg-storiq-card-bg border-storiq-border hover:border-storiq-purple/50 transition-colors">
-                <CardContent className="p-6">
-                  <div className="flex justify-between items-start mb-2">
-                    <CardDescription className="text-white/60 text-sm">
-                      {stat.title === "Videos Published to YouTube" ? "Published Videos" : stat.title}
-                    </CardDescription>
-                    <Badge variant={stat.changeType === 'positive' ? 'default' : 'destructive'} className="text-xs">
-                      {stat.change}
-                    </Badge>
-                  </div>
-                  <CardTitle className="text-3xl font-bold text-white mb-2">
-                    {stat.value}
-                  </CardTitle>
-                  <p className="text-white/50 text-sm">{stat.comparison}</p>
-                </CardContent>
-              </Card>
-            ))
+            <>
+              {stats.slice(0, 4).map((stat, index) => (
+                <Card
+                  key={index}
+                  className="group relative bg-gradient-to-br from-storiq-card-bg to-storiq-card-bg/80 border border-storiq-border/50 hover:border-storiq-purple/40 transition-all duration-300 hover:shadow-lg hover:shadow-storiq-purple/10 overflow-hidden"
+                >
+                  {/* Subtle gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-storiq-purple/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                  <CardContent className="relative p-5">
+                    {/* Header with icon placeholder and badge */}
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex items-center gap-2">
+                        {/* Icon based on stat type */}
+                        <div
+                          className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold ${
+                            stat.title.includes("Video")
+                              ? "bg-red-500/20 text-red-400"
+                              : stat.title.includes("Image")
+                              ? "bg-orange-500/20 text-orange-400"
+                              : stat.title.includes("Script")
+                              ? "bg-green-500/20 text-green-400"
+                              : "bg-blue-500/20 text-blue-400"
+                          }`}
+                        >
+                          {stat.title.includes("Video") ? (
+                            // Play Button SVG
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              className="w-6 h-6"
+                            >
+                              <circle
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                fill="none"
+                              />
+                              <polygon
+                                points="10,8 16,12 10,16"
+                                fill="currentColor"
+                              />
+                            </svg>
+                          ) : stat.title.includes("Image") ? (
+                            // Landscape/Photo SVG
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              className="w-6 h-6"
+                            >
+                              <rect
+                                x="4"
+                                y="4"
+                                width="16"
+                                height="16"
+                                rx="3"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                fill="none"
+                              />
+                              <circle
+                                cx="8.5"
+                                cy="9"
+                                r="1.5"
+                                fill="currentColor"
+                              />
+                              <path
+                                d="M4 17l4.5-6 4.5 6 4-5 3 5"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                fill="none"
+                              />
+                            </svg>
+                          ) : stat.title.includes("Script") ? (
+                            // Document/Text SVG
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              className="w-6 h-6"
+                            >
+                              <rect
+                                x="5"
+                                y="4"
+                                width="14"
+                                height="16"
+                                rx="2"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                fill="none"
+                              />
+                              <line
+                                x1="8"
+                                y1="8"
+                                x2="16"
+                                y2="8"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                              />
+                              <line
+                                x1="8"
+                                y1="12"
+                                x2="16"
+                                y2="12"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                              />
+                              <line
+                                x1="8"
+                                y1="16"
+                                x2="13"
+                                y2="16"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                              />
+                            </svg>
+                          ) : (
+                            // Chart/Bar SVG
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              className="w-6 h-6"
+                            >
+                              <rect
+                                x="4"
+                                y="13"
+                                width="3"
+                                height="7"
+                                rx="1"
+                                fill="currentColor"
+                              />
+                              <rect
+                                x="9"
+                                y="9"
+                                width="3"
+                                height="11"
+                                rx="1"
+                                fill="currentColor"
+                              />
+                              <rect
+                                x="14"
+                                y="6"
+                                width="3"
+                                height="14"
+                                rx="1"
+                                fill="currentColor"
+                              />
+                              <rect
+                                x="19"
+                                y="3"
+                                width="3"
+                                height="17"
+                                rx="1"
+                                fill="currentColor"
+                              />
+                            </svg>
+                          )}
+                        </div>
+                        <CardDescription className="text-white/70 text-xs font-medium">
+                          {stat.title === "Videos Published to YouTube"
+                            ? "Published Videos"
+                            : stat.title}
+                        </CardDescription>
+                      </div>
+                      <Badge
+                        variant={
+                          stat.changeType === "positive"
+                            ? "default"
+                            : "destructive"
+                        }
+                        className={`text-xs px-2 py-1 ${
+                          stat.changeType === "positive"
+                            ? "bg-green-500/20 text-green-400 border-green-500/30"
+                            : "bg-red-500/20 text-red-400 border-red-500/30"
+                        }`}
+                      >
+                        {stat.change}
+                      </Badge>
+                    </div>
+
+                    {/* Main value */}
+                    <CardTitle className="text-2xl font-bold text-white mb-2 group-hover:text-storiq-purple/90 transition-colors">
+                      {stat.value}
+                    </CardTitle>
+
+                    {/* Comparison text */}
+                    {/* Comparison text removed */}
+
+                    {/* Bottom accent line */}
+                    <div
+                      className={`absolute bottom-0 left-0 right-0 h-0.5 ${
+                        stat.title.includes("Video")
+                          ? "bg-red-500/30"
+                          : stat.title.includes("Image")
+                          ? "bg-orange-500/30"
+                          : stat.title.includes("Script")
+                          ? "bg-green-500/30"
+                          : "bg-blue-500/30"
+                      } group-hover:h-1 transition-all duration-300`}
+                    />
+                  </CardContent>
+                </Card>
+              ))}
+
+              {/* Fifth card with special styling if it exists */}
+              {stats.length > 4 && (
+                <Card className="group relative bg-gradient-to-br from-storiq-purple/10 to-storiq-card-bg border border-storiq-purple/30 hover:border-storiq-purple/50 transition-all duration-300 hover:shadow-lg hover:shadow-storiq-purple/20 overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-storiq-purple/5 via-transparent to-transparent opacity-50" />
+
+                  <CardContent className="relative p-5">
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-storiq-purple/20 text-storiq-purple flex items-center justify-center text-sm font-bold">
+                          ⭐
+                        </div>
+                        <CardDescription className="text-white/70 text-xs font-medium">
+                          {stats[4].title === "Videos Published to YouTube"
+                            ? "Published Videos"
+                            : stats[4].title}
+                        </CardDescription>
+                      </div>
+                      <Badge
+                        variant={
+                          stats[4].changeType === "positive"
+                            ? "default"
+                            : "destructive"
+                        }
+                        className={`text-xs px-2 py-1 ${
+                          stats[4].changeType === "positive"
+                            ? "bg-green-500/20 text-green-400 border-green-500/30"
+                            : "bg-red-500/20 text-red-400 border-red-500/30"
+                        }`}
+                      >
+                        {stats[4].change}
+                      </Badge>
+                    </div>
+
+                    <CardTitle className="text-2xl font-bold text-white mb-2 group-hover:text-storiq-purple transition-colors">
+                      {stats[4].value}
+                    </CardTitle>
+
+                    {/* Comparison text removed */}
+
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-storiq-purple/40 group-hover:h-1 transition-all duration-300" />
+                  </CardContent>
+                </Card>
+              )}
+            </>
           )}
         </div>
 
@@ -424,7 +763,11 @@ const Stats = () => {
                 </SelectTrigger>
                 <SelectContent className="bg-storiq-card-bg border-storiq-border">
                   {CHART_TYPES.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value} className="text-white">
+                    <SelectItem
+                      key={opt.value}
+                      value={opt.value}
+                      className="text-white"
+                    >
                       {opt.label}
                     </SelectItem>
                   ))}
@@ -443,7 +786,9 @@ const Stats = () => {
                   </div>
                 ) : timeseries.length === 0 ? (
                   <div className="w-full h-full flex items-center justify-center">
-                    <span className="text-white/60">No chart data available</span>
+                    <span className="text-white/60">
+                      No chart data available
+                    </span>
                   </div>
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
@@ -470,7 +815,9 @@ const Stats = () => {
                   </div>
                 ) : pieData.length === 0 ? (
                   <div className="w-full h-full flex items-center justify-center">
-                    <span className="text-white/60">No data for distribution</span>
+                    <span className="text-white/60">
+                      No data for distribution
+                    </span>
                   </div>
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
@@ -483,7 +830,7 @@ const Stats = () => {
                         outerRadius={80}
                         fill="#8884d8"
                         dataKey="value"
-                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                        label={({ name }) => name}
                       >
                         {pieData.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.color} />
@@ -494,19 +841,26 @@ const Stats = () => {
                   </ResponsiveContainer>
                 )}
               </div>
-              
+
               {/* Summary Stats */}
               <div className="space-y-3 mt-4 overflow-x-auto">
                 {pieData.map((item, index) => (
-                  <div key={index} className="flex items-center justify-between min-w-0 flex-wrap">
+                  <div
+                    key={index}
+                    className="flex items-center justify-between min-w-0 flex-wrap"
+                  >
                     <div className="flex items-center space-x-2 min-w-0">
                       <div
                         className="w-3 h-3 rounded-full flex-shrink-0"
                         style={{ backgroundColor: item.color }}
                       />
-                      <span className="text-white/70 text-sm truncate">{item.name}</span>
+                      <span className="text-white/70 text-sm truncate">
+                        {item.name}
+                      </span>
                     </div>
-                    <span className="text-white font-semibold break-words">{item.value}</span>
+                    <span className="text-white font-semibold break-words">
+                      {item.value}
+                    </span>
                   </div>
                 ))}
               </div>
