@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "react-hot-toast";
 import { Slider } from "@/components/ui/slider";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { useAuth } from "@/context/AuthContext";
@@ -45,7 +45,6 @@ const VideoEditor: React.FC = () => {
   const params = useParams();
   const location = useLocation();
   const { user } = useAuth();
-  const { toast } = useToast();
   console.log('user', user);
   const userId = user && user.id ? user.id : null;
   const wildcard = params['*']; // full path after /dashboard/video-editor/
@@ -331,10 +330,7 @@ const VideoEditor: React.FC = () => {
               existing.push(exportEntry);
               localStorage.setItem("exports", JSON.stringify(existing));
               // Show toast instead of changing button state
-              toast({
-                description: "added to export job go to export",
-                duration: 4000,
-              });
+              toast.success("added to export job go to export", { duration: 4000 });
               setExportDisabled(true);
             } catch (err) {
               alert("Export failed. Please try again.");

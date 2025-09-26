@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "react-hot-toast";
 
 const Signup = () => {
   const [username, setUsername] = useState("");
@@ -38,42 +38,27 @@ const Signup = () => {
 
     // Empty field check
     if (isAnyFieldEmpty()) {
-      toast({
-        title: "Missing Fields",
-        description: "Please fill in all fields.",
-        variant: "destructive",
-      });
+      toast.error("Please fill in all fields.");
       return;
     }
 
     // Email format validation
     if (!isValidEmail(emailOrPhone)) {
-      toast({
-        title: "Invalid Email",
-        description: "Please enter a valid email address.",
-        variant: "destructive",
-      });
+      toast.error("Please enter a valid email address.");
       return;
     }
 
     // Password strength check
     if (!isStrongPassword(password)) {
-      toast({
-        title: "Weak Password",
-        description:
-          "Password must be at least 8 characters and include uppercase, lowercase, number, and special character.",
-        variant: "destructive",
-      });
+      toast.error(
+        "Password must be at least 8 characters and include uppercase, lowercase, number, and special character."
+      );
       return;
     }
 
     // Passwords match check
     if (!doPasswordsMatch()) {
-      toast({
-        title: "Password Mismatch",
-        description: "Passwords do not match.",
-        variant: "destructive",
-      });
+      toast.error("Passwords do not match.");
       return;
     }
 
@@ -90,27 +75,15 @@ const Signup = () => {
       });
       const data = await res.json();
       if (!res.ok) {
-        toast({
-          title: "Registration Failed",
-          description: data.message || "Registration failed.",
-          variant: "destructive",
-        });
+        toast.error(data.message || "Registration failed.");
       } else {
         // Auto-login after signup
         login(data.token, data.user);
-        toast({
-          title: "Signed up successfully",
-          description: "Welcome! You have been signed up and logged in.",
-          variant: "default",
-        });
+        toast.success("Welcome! You have been signed up and logged in.");
         navigate("/dashboard");
       }
     } catch (err) {
-      toast({
-        title: "Network Error",
-        description: "Network error. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("Network error. Please try again.");
     } finally {
       setLoading(false);
     }

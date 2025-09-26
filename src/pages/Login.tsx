@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "react-hot-toast";
 
 // Helper: Check if string is a valid email
 function isEmail(value: string): boolean {
@@ -38,26 +38,17 @@ const Login = () => {
 
     // Validation
     if (!username) {
-      toast({
-        title: "Missing Username",
-        description: "Please enter your username.",
-      });
+      toast.error("Missing Username: Please enter your username.");
       return;
     }
     if (!password) {
-      toast({
-        title: "Missing Password",
-        description: "Please enter your password.",
-      });
+      toast.error("Missing Password: Please enter your password.");
       return;
     }
     // If username looks like an email, validate format
     if (username.includes("@")) {
       if (!isEmail(username)) {
-        toast({
-          title: "Invalid Email",
-          description: "Please enter a valid email address.",
-        });
+        toast.error("Invalid Email: Please enter a valid email address.");
         return;
       }
     }
@@ -82,25 +73,19 @@ const Login = () => {
           /invalid|incorrect|wrong/i.test(data.message)
         ) {
           setError("Email or password is incorrect");
-          toast({
-            title: "Login Failed",
-            description: "Email or password is incorrect",
-          });
+          toast.error("Login Failed: Email or password is incorrect");
         } else {
           setError(data.message || "Login failed.");
-          toast({
-            title: "Login Failed",
-            description: data.message || "Login failed.",
-          });
+          toast.error(`Login Failed: ${data.message || "Login failed."}`);
         }
       } else {
         login(data.token, data.user);
         navigate("/dashboard");
-        toast({ title: "Logged in successfully" });
+        toast.success("Logged in successfully");
       }
     } catch (err) {
       setError("Network error. Please try again.");
-      toast({ title: "Network Error", description: "Please try again." });
+      toast.error("Network Error: Please try again.");
     } finally {
       setLoading(false);
     }
