@@ -76,6 +76,13 @@ const Dashboard = () => {
       link: "/dashboard/create-image",
     },
     {
+      title: "Image Editor",
+      subtitle: "Edit images with AI",
+      image: "/src/assets/images/ai-image-placeholder.png",
+      buttonText: "Try Now",
+      link: "/dashboard/edit-image",
+    },
+    {
       title: "Script Generator",
       subtitle: "Generate creative video scripts",
       image: "/src/assets/images/ai-script-placeholder.png",

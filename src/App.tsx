@@ -21,6 +21,7 @@ import Settings from "./pages/dashboard/Settings";
 import VideoGenerator from "./pages/dashboard/create-video/VideoGenerator";
 import ImageGenerator from "./pages/dashboard/create-video/ImageGenerator";
 import PromptGenerator from "./pages/dashboard/create-video/PromptGenerator";
+import ImageEditor from "./pages/dashboard/create-video/ImageEditor";
 // import CreateVideo from "./pages/dashboard/CreateVideo";
 import SearchVideos from "./pages/dashboard/SearchVideos";
 import SearchImages from "./pages/dashboard/SearchImages";
@@ -75,6 +76,7 @@ const App = () => (
               <Route path="/Home" element={<Home />} />{" "}
               {/* The path is "/Home" */}
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="/dashboard/edit-image" element={<ImageEditor />} />
               <Route path="/dashboard/video-editor/*" element={<VideoEditor />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
