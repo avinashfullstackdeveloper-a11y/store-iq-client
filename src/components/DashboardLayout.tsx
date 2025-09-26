@@ -169,7 +169,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         )}
 
         {/* Main Content */}
-        <main className="flex-1 overflow-auto md:ml-64">
+        <main className="flex-1 overflow-auto">
           {children}
         </main>
       </div>
