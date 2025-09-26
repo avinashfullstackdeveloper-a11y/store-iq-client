@@ -20,6 +20,30 @@ const AIToolsPage: React.FC = () => {
 
   const tools: Tool[] = [
     {
+      title: "Video Generator",
+      subtitle: "Turn text into videos with AI",
+      image: "/src/assets/images/ai-video-placeholder.png",
+      buttonText: "Try Now",
+      link: "/dashboard/create-video",
+      icon: HeadphonesIcon,
+    },
+    {
+      title: "Image Generator",
+      subtitle: "Create images from your imagination",
+      image: "/src/assets/images/ai-image-placeholder.png",
+      buttonText: "Try Now",
+      link: "/dashboard/create-image",
+      icon: RocketIcon,
+    },
+    {
+      title: "Script Generator",
+      subtitle: "Generate creative video scripts",
+      image: "/src/assets/images/ai-script-placeholder.png",
+      buttonText: "Try Now",
+      link: "/dashboard/create-prompt",
+      icon: PencilLineIcon,
+    },
+    {
       title: "AI Audio Mounting",
       subtitle: "Attach AI audio to video",
       image: "https://store-iq-bucket.s3.ap-south-1.amazonaws.com/dashboard-images-static/ai-voice-mounting.jpeg",
@@ -28,29 +52,29 @@ const AIToolsPage: React.FC = () => {
       icon: HeadphonesIcon, // Assign an icon
     },
     {
-      title: "UGC Ad Generator",
-      subtitle: "Generate ads automatically",
-      image: "https://images.unsplash.com/photo-1611262588024-d12430b98920?q=80&w=1974&auto=format&fit=crop",
+      title: "Script to Live Analyzer",
+      subtitle: "Generate audio automatically",
+      image: "https://store-iq-bucket.s3.ap-south-1.amazonaws.com/dashboard-images-static/Screenshot+2025-09-26+110713.png",
       buttonText: "Try Now",
-      link: "/dashboard/aitextmounting",
+      link: "/dashboard/aitools/tts",
       icon: MegaphoneIcon, // Assign an icon
     },
-    {
-      title: "Video Podcast Generator",
-      subtitle: "Generate podcasts from videos",
-      image: "https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?q=80&w=2070&auto=format&fit=crop",
-      buttonText: "Try Now",
-      link: "/dashboard/aitextmounting",
-      icon: RocketIcon, // Assign an icon
-    },
-    {
-      title: "AI Script Writer",
-      subtitle: "Generate video scripts quickly",
-      image: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=2070&auto=format&fit=crop",
-      buttonText: "Try Now",
-      link: "/dashboard/scripts",
-      icon: PencilLineIcon, 
-    },
+    // {
+    //   title: "Video Podcast Generator",
+    //   subtitle: "Generate podcasts from videos",
+    //   image: "https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?q=80&w=2070&auto=format&fit=crop",
+    //   buttonText: "Try Now",
+    //   link: "/dashboard/aitextmounting",
+    //   icon: RocketIcon, // Assign an icon
+    // },
+    // {
+    //   title: "AI Script Writer",
+    //   subtitle: "Generate video scripts quickly",
+    //   image: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=2070&auto=format&fit=crop",
+    //   buttonText: "Try Now",
+    //   link: "/dashboard/scripts",
+    //   icon: PencilLineIcon, 
+    // },
     {
       title: "Image mobing tool",
       subtitle: "Add object to other background scene",
