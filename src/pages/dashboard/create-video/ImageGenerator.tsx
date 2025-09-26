@@ -15,7 +15,6 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-
 import DashboardLayout from "@/components/DashboardLayout";
 
 const ImageGenerator: React.FC = () => {
@@ -26,22 +25,22 @@ const ImageGenerator: React.FC = () => {
   const [generationCount, setGenerationCount] = useState(0);
   const [imageLoaded, setImageLoaded] = useState(false);
 
-  // Default images for shuffle with descriptions
+  // Default images
   const defaultImages = [
     {
       src: henryPrompt,
       description:
-        "Close-up hyper-realistic portrait of Henry Cavill de **terno azul** Background: frozen battleground, falling snow, cold mist. Lighting: cool blue rim light, cinematic contrast, shallow depth of field, ultra-sharp details.",
+        "Close-up hyper-realistic portrait of Henry Cavill in a blue suit, frozen battleground, falling snow, cinematic lighting.",
     },
     {
       src: bearPrompt,
       description:
-        "A majestic bear standing on its hind legs in a dense forest, with rays of sunlight filtering through the trees, creating a mystical atmosphere. The bear's fur is detailed and textured, showcasing the power and beauty of wildlife.",
+        "A majestic bear standing in a dense forest, sun rays filtering through the trees, mystical and powerful vibe.",
     },
     {
       src: spritePrompt,
       description:
-        "A highly creative and dynamic digital artwork of a Sprite soda can, sliced into floating segments, with realistic ice cubes, realistic lime and lemon fruit slices and splashes bursting out. The background is a smooth gradient of vibrant green, giving an energetic and refreshing feel.",
+        "Dynamic digital artwork of a Sprite can split into floating segments with ice cubes, lime & lemon splashes on vibrant green background.",
     },
   ];
 
@@ -50,7 +49,6 @@ const ImageGenerator: React.FC = () => {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const imageContainerRef = useRef<HTMLDivElement>(null);
 
-  // Example prompt suggestions
   const promptSuggestions = [
     "A mystical forest with glowing mushrooms and fireflies",
     "Cyberpunk cityscape at night with neon lights",
@@ -72,14 +70,12 @@ const ImageGenerator: React.FC = () => {
       }, 500);
     };
 
-    const interval = setInterval(transitionImages, 4000);
+    const interval = setInterval(transitionImages, 5000);
     return () => clearInterval(interval);
   }, [imageUrl, loading, error, nextImageIdx]);
 
-  // Manual navigation for default images
   const navigateImage = (direction: "prev" | "next") => {
     if (imageUrl || loading || error) return;
-
     setIsTransitioning(true);
     setTimeout(() => {
       if (direction === "next") {
@@ -110,9 +106,7 @@ const ImageGenerator: React.FC = () => {
     try {
       const res = await authFetch("/api/ai/generate-image", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt }),
       });
 
@@ -130,16 +124,14 @@ const ImageGenerator: React.FC = () => {
       } else {
         setError("No image returned from server.");
       }
-    } catch (err) {
+    } catch {
       setError("Network error. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSuggestionClick = (suggestion: string) => {
-    setPrompt(suggestion);
-  };
+  const handleSuggestionClick = (suggestion: string) => setPrompt(suggestion);
 
   const handleRegenerate = () => {
     if (prompt.trim()) {
@@ -158,35 +150,33 @@ const ImageGenerator: React.FC = () => {
     }
   };
 
-  const handleImageLoad = () => {
-    setImageLoaded(true);
-  };
+  const handleImageLoad = () => setImageLoaded(true);
 
   return (
     <DashboardLayout>
-      <div className="p-2 sm:p-4 md:p-6 max-w-7xl mx-auto">
+      <div className="p-4 md:p-6 max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-6 md:mb-8 text-center">
-          <h1 className="text-2xl md:text-3xl font-bold text-white mb-2 text-center">
-            <span className="inline-block align-middle mr-3">
+        <div className="mb-8 text-center">
+          <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+            <span className="inline-flex items-center gap-2">
               <Sparkles className="w-8 h-8 text-storiq-purple animate-pulse" />
+              AI Image Generator
             </span>
-            <span className="align-middle">AI Image Generator</span>
           </h1>
-          <p className="text-white/60 text-base md:text-lg text-center">
+          <p className="text-white/60 text-lg">
             Transform your imagination into stunning visuals with AI
           </p>
         </div>
-    
-        <div className="flex flex-col lg:flex-row gap-6 md:gap-8">
-          {/* Left Column - Prompt Input */}
-          <div className="flex flex-col gap-6 md:gap-8 h-full w-full lg:w-[40%] max-lg:mb-4 overflow-y-auto lg:max-h-[calc(100vh-120px)] pr-0 lg:pr-2">
-            <div className="bg-storiq-card-bg/50 border-storiq-border rounded-2xl shadow-2xl p-6 mb-0 backdrop-blur-sm">
+
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Left Column */}
+          <div className="w-full lg:w-[40%] space-y-6">
+            <div className="bg-storiq-card-bg/60 border border-storiq-border rounded-2xl shadow-lg p-6 backdrop-blur-lg">
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-3">
                   <label
-                    className="text-white font-medium flex items-center gap-2"
                     htmlFor="prompt"
+                    className="text-white font-medium flex items-center gap-2"
                   >
                     <Wand2 className="w-4 h-4 text-storiq-purple" />
                     Describe your vision
@@ -194,40 +184,40 @@ const ImageGenerator: React.FC = () => {
                   <Input
                     id="prompt"
                     type="text"
-                    placeholder="A beautiful landscape with mountains and lakes at sunset..."
+                    placeholder="A beautiful landscape with mountains at sunset..."
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
                     disabled={loading}
                     autoFocus
-                    className="bg-storiq-card-bg border-storiq-border text-white placeholder:text-white/40 h-12 text-base transition-all duration-200 focus:ring-2 focus:ring-storiq-purple/50 focus:border-storiq-purple"
+                    className="bg-black/40 border border-gray-700 text-white placeholder:text-white/40 h-12 text-base rounded-xl focus:ring-2 focus:ring-storiq-purple/50 focus:border-storiq-purple transition"
                   />
                 </div>
-    
-                {/* Prompt Suggestions */}
+
+                {/* Suggestions */}
                 <div className="space-y-3">
                   <p className="text-sm text-gray-400 flex items-center gap-2">
                     <Sparkles className="w-3 h-3" />
                     Try these ideas:
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    {promptSuggestions.map((suggestion, index) => (
+                    {promptSuggestions.map((suggestion, i) => (
                       <button
-                        key={index}
+                        key={i}
                         type="button"
                         onClick={() => handleSuggestionClick(suggestion)}
                         disabled={loading}
-                        className="px-3 py-2 text-sm bg-gray-800/50 hover:bg-gray-700/70 text-gray-300 rounded-lg border border-gray-700 transition-all duration-200 hover:border-storiq-purple/50 hover:scale-105 disabled:opacity-50 hover:shadow-lg hover:shadow-storiq-purple/10"
+                        className="px-3 py-2 text-sm bg-gray-900/60 border border-gray-700 text-gray-300 rounded-lg hover:bg-gray-800 hover:border-storiq-purple/40 hover:scale-105 transition disabled:opacity-50"
                       >
                         {suggestion}
                       </button>
                     ))}
                   </div>
                 </div>
-    
+
                 <Button
                   type="submit"
                   disabled={loading || !prompt.trim()}
-                  className="w-full bg-gradient-to-r from-storiq-purple to-storiq-purple/80 hover:from-storiq-purple/90 hover:to-storiq-purple/70 text-white font-semibold h-12 text-base transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-storiq-purple/20"
+                  className="w-full bg-gradient-to-r from-storiq-purple to-storiq-purple/80 hover:from-storiq-purple/90 hover:to-storiq-purple/70 text-white font-semibold h-12 text-base rounded-xl transition-transform transform hover:scale-[1.02] active:scale-[0.98] shadow-lg"
                 >
                   {loading ? (
                     <span className="flex items-center gap-2">
@@ -244,23 +234,23 @@ const ImageGenerator: React.FC = () => {
               </form>
             </div>
           </div>
-    
-          {/* Right Column - Results */}
-          <div className="w-full lg:w-[60%] flex-shrink-0">
-            <div className="bg-storiq-card-bg/50 border-storiq-border rounded-2xl shadow-2xl p-6 h-full flex flex-col mx-auto backdrop-blur-sm">
+
+          {/* Right Column */}
+          <div className="w-full lg:w-[60%]">
+            <div className="bg-storiq-card-bg/60 border border-storiq-border rounded-2xl shadow-lg p-6 h-full backdrop-blur-lg">
+              {/* Loading */}
               {loading && (
-                <div className="flex flex-col items-center justify-center py-12 space-y-4 animate-fade-in">
-                  <div className="w-full max-w-md mx-auto flex justify-center">
-                    <Loader message="Painting your vision..." size="small" overlay={false} />
-                  </div>
+                <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                  <Loader message="Painting your vision..." size="small" />
                   <p className="text-gray-400 text-sm animate-pulse">
                     This may take a few moments...
                   </p>
                 </div>
               )}
-    
+
+              {/* Error */}
               {error && (
-                <div className="flex flex-col items-center justify-center py-8 space-y-4 animate-fade-in">
+                <div className="flex flex-col items-center justify-center py-8 space-y-4">
                   <div className="p-3 bg-red-500/10 rounded-full animate-bounce">
                     <div className="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center">
                       <span className="text-white text-sm font-bold">!</span>
@@ -272,19 +262,19 @@ const ImageGenerator: React.FC = () => {
                   <Button
                     onClick={handleRegenerate}
                     variant="outline"
-                    className="border-red-500/50 text-red-400 hover:bg-red-500/10 transition-all duration-200"
+                    className="border-red-500/50 text-red-400 hover:bg-red-500/10 transition"
                   >
                     <RefreshCw className="w-4 h-4 mr-2" />
                     Try Again
                   </Button>
                 </div>
               )}
-    
+
+              {/* Generated Image */}
               {imageUrl && !loading && (
-                <div className="space-y-6 animate-fade-in">
-                  {/* Image Preview */}
+                <div className="space-y-6">
                   <div className="relative group">
-                    <div className="rounded-xl overflow-hidden border-2 border-gray-700 bg-gradient-to-br from-gray-900 to-black relative">
+                    <div className="rounded-xl overflow-hidden border border-gray-700 bg-black/40">
                       <img
                         src={imageUrl}
                         alt={`Generated: ${prompt}`}
@@ -301,152 +291,140 @@ const ImageGenerator: React.FC = () => {
                         </div>
                       )}
                     </div>
-    
-                    {/* Floating Action Buttons */}
-                    <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+
+                    {/* Floating Actions */}
+                    <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition">
                       <Button
                         onClick={handleDownload}
                         size="sm"
-                        className="bg-black/80 hover:bg-black text-white backdrop-blur-sm border border-gray-600 transition-transform duration-200 hover:scale-110"
-                        title="Download image"
+                        className="bg-black/70 hover:bg-black text-white border border-gray-600 hover:scale-110 transition"
+                        title="Download"
                       >
                         <Download className="w-4 h-4" />
                       </Button>
                       <Button
                         onClick={handleRegenerate}
                         size="sm"
-                        className="bg-black/80 hover:bg-black text-white backdrop-blur-sm border border-gray-600 transition-transform duration-200 hover:scale-110"
-                        title="Regenerate image"
+                        className="bg-black/70 hover:bg-black text-white border border-gray-600 hover:scale-110 transition"
+                        title="Regenerate"
                       >
                         <RefreshCw className="w-4 h-4" />
                       </Button>
                     </div>
                   </div>
-    
-                  {/* Image Info and Actions */}
+
+                  {/* Info */}
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="flex items-center gap-4 text-sm text-gray-400">
-                      <span className="bg-gray-800/50 px-3 py-1 rounded-full">
+                      <span className="bg-gray-800/60 px-3 py-1 rounded-full">
                         Generation #{generationCount}
                       </span>
                       <a
                         href={imageUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-storiq-purple hover:text-storiq-purple/80 underline transition-colors flex items-center gap-1"
+                        className="text-storiq-purple hover:text-storiq-purple/80 underline"
                       >
                         View full resolution
                       </a>
                     </div>
-    
                     <Button
                       onClick={handleRegenerate}
                       variant="outline"
-                      className="border-storiq-purple/50 text-storiq-purple hover:bg-storiq-purple/10 transition-all duration-200"
+                      className="border-storiq-purple/50 text-storiq-purple hover:bg-storiq-purple/10 transition"
                     >
                       <RefreshCw className="w-4 h-4 mr-2" />
                       Generate Another
                     </Button>
                   </div>
-    
-                  {/* Prompt Used */}
-                  <div className="bg-gray-900/30 rounded-lg p-4 border border-gray-800 transition-all duration-200 hover:border-gray-700">
+
+                  {/* Prompt */}
+                  <div className="bg-gray-900/40 rounded-lg p-4 border border-gray-800 hover:border-gray-700 transition">
                     <p className="text-xs text-gray-400 mb-2 flex items-center gap-1">
                       <Wand2 className="w-3 h-3" />
                       Prompt used:
                     </p>
-                    <p className="text-sm text-gray-300 font-medium leading-relaxed">
+                    <p className="text-sm text-gray-300 font-medium">
                       {prompt}
                     </p>
                   </div>
                 </div>
               )}
-    
+
+              {/* Default Carousel */}
               {!imageUrl && !loading && !error && (
                 <div className="flex flex-col items-center justify-center py-8 text-center space-y-6">
                   <div className="relative w-full max-w-md">
-                    {/* Navigation Arrows */}
                     <button
                       onClick={() => navigateImage("prev")}
                       disabled={isTransitioning}
-                      className="absolute left-2 top-1/2 transform -translate-y-1/2 z-20 bg-black/50 hover:bg-black/70 backdrop-blur-sm rounded-full p-2 transition-all duration-200 disabled:opacity-50 border border-gray-600"
+                      className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 rounded-full p-2 border border-gray-600 disabled:opacity-50"
                     >
                       <ChevronLeft className="w-5 h-5 text-white" />
                     </button>
-    
+
                     <button
                       onClick={() => navigateImage("next")}
                       disabled={isTransitioning}
-                      className="absolute right-2 top-1/2 transform -translate-y-1/2 z-20 bg-black/50 hover:bg-black/70 backdrop-blur-sm rounded-full p-2 transition-all duration-200 disabled:opacity-50 border border-gray-600"
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 rounded-full p-2 border border-gray-600 disabled:opacity-50"
                     >
                       <ChevronRight className="w-5 h-5 text-white" />
                     </button>
-    
-                    {/* Image Container with Transition */}
+
                     <div
                       ref={imageContainerRef}
-                      className="relative bg-gradient-to-br from-storiq-purple/10 to-blue-500/10 rounded-2xl p-6 transition-all duration-500"
+                      className="relative bg-gradient-to-br from-storiq-purple/10 to-blue-500/10 rounded-2xl p-6 transition-all"
                     >
                       <div className="relative h-64 sm:h-80">
-                        {/* Current Image */}
                         <img
                           src={defaultImages[currentImageIdx].src}
                           alt="Prompt example"
-                          className={`absolute inset-0 w-full h-full object-contain rounded-xl transition-all duration-500 ease-in-out ${
+                          className={`absolute inset-0 w-full h-full object-contain rounded-xl transition-all duration-500 ${
                             isTransitioning
                               ? "opacity-0 scale-95"
                               : "opacity-100 scale-100"
                           }`}
-                          style={{
-                            boxShadow: "0 8px 40px 0 rgba(80,80,120,0.15)",
-                          }}
                         />
-    
-                        {/* Next Image */}
                         <img
                           src={defaultImages[nextImageIdx].src}
                           alt="Next prompt example"
-                          className={`absolute inset-0 w-full h-full object-contain rounded-xl transition-all duration-500 ease-in-out ${
+                          className={`absolute inset-0 w-full h-full object-contain rounded-xl transition-all duration-500 ${
                             isTransitioning
                               ? "opacity-100 scale-100"
                               : "opacity-0 scale-105"
                           }`}
-                          style={{
-                            boxShadow: "0 8px 40px 0 rgba(80,80,120,0.15)",
-                          }}
                         />
                       </div>
-    
                       <div className="mt-6 px-2">
-                        <h4 className="text-white/60 text-base font-semibold mb-3 text-center flex items-center justify-center gap-2">
+                        <h4 className="text-white/70 text-base font-semibold mb-3 flex items-center justify-center gap-2">
                           <Sparkles className="w-4 h-4 text-storiq-purple" />
                           Example Prompt
                         </h4>
-                        <p className="text-xs sm:text-sm text-gray-300 font-medium text-center leading-relaxed transition-opacity duration-300">
+                        <p className="text-sm text-gray-300 leading-relaxed">
                           {defaultImages[currentImageIdx].description}
                         </p>
                       </div>
                     </div>
-    
-                    {/* Dots Indicator */}
+
                     <div className="flex justify-center mt-4 space-x-2">
-                      {defaultImages.map((_, index) => (
+                      {defaultImages.map((_, i) => (
                         <button
-                          key={index}
+                          key={i}
                           onClick={() => {
-                            if (index !== currentImageIdx) {
+                            if (i !== currentImageIdx) {
                               setIsTransitioning(true);
                               setTimeout(() => {
-                                setCurrentImageIdx(index);
-                                setNextImageIdx(
-                                  (index + 1) % defaultImages.length
+                                setCurrentImageIdx(i);
+                                setNextImageIdx((i + 1) % defaultImages.length);
+                                setTimeout(
+                                  () => setIsTransitioning(false),
+                                  100
                                 );
-                                setTimeout(() => setIsTransitioning(false), 100);
                               }, 500);
                             }
                           }}
-                          className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                            index === currentImageIdx
+                          className={`w-2 h-2 rounded-full transition ${
+                            i === currentImageIdx
                               ? "bg-storiq-purple w-6"
                               : "bg-gray-600 hover:bg-gray-500"
                           }`}
@@ -454,7 +432,6 @@ const ImageGenerator: React.FC = () => {
                       ))}
                     </div>
                   </div>
-    
                   <p className="text-gray-500 text-sm animate-pulse">
                     ✨ Enter your prompt above to create amazing images
                   </p>
@@ -463,10 +440,9 @@ const ImageGenerator: React.FC = () => {
             </div>
           </div>
         </div>
-    
-        {/* Footer Stats */}
+
         {(imageUrl || loading) && (
-          <div className="text-center mt-6 animate-fade-in">
+          <div className="text-center mt-6">
             <p className="text-xs text-gray-500 flex items-center justify-center gap-2">
               <Sparkles className="w-3 h-3" />
               Powered by AI • Images are generated on-demand

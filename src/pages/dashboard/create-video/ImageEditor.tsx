@@ -7,6 +7,8 @@ import { authFetch } from "@/lib/authFetch";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Download, RefreshCw, Image as ImageIcon, Wand2, UploadCloud } from "lucide-react";
 
+import imageEditorPrompt from "@/assets/images/image-editor-prompt.png";
+
 const ImageEditor: React.FC = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [maskFile, setMaskFile] = useState<File | null>(null);
@@ -173,10 +175,23 @@ const ImageEditor: React.FC = () => {
 
         {(!editedImageUrl && !loading && !error) && (
           <div className="bg-storiq-card-bg/50 border-storiq-border rounded-2xl shadow-2xl p-6 flex flex-col items-center mx-auto backdrop-blur-sm mb-8">
-            <div className="flex flex-col items-center justify-center py-8 text-center space-y-6">
-              <ImageIcon className="w-16 h-16 text-storiq-purple/70 mb-2" />
+            <div className="flex flex-col items-center justify-center py-12 text-center space-y-6">
+              <img
+                src={imageEditorPrompt}
+                alt="Prompt placeholder"
+                className="w-full max-w-xs sm:max-w-sm md:max-w-md mx-auto rounded-xl shadow-lg border border-gray-700 bg-black/30"
+                draggable={false}
+              />
+              <div className="w-full flex flex-col items-center mt-2">
+                <h4 className="text-white/60 text-base font-semibold mb-1">
+                  Prompt
+                </h4>
+                <pre className="text-white/70 text-base font-medium whitespace-pre-line text-center">
+                     Ultra-realistic split-panel image. Left side: A man standing on a quiet park pathway. Right side: The same man, now with another person standing next to him. In between, add a bold arrow pointing from left to right. Rich natural details, soft shadows, and lifelike textures.
+                </pre>
+              </div>
               <p className="text-gray-500 text-sm animate-pulse">
-                Upload an image, optionally a mask, enter your prompt, and click <span className="font-semibold text-storiq-purple">Edit Image</span> to get started!
+                ✨ Upload an image, optionally a mask, and enter your prompt to get started
               </p>
             </div>
           </div>
