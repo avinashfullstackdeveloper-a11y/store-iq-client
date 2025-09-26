@@ -90,45 +90,22 @@ const Dashboard = () => {
       link: "/dashboard/aitextmounting",
     },
     {
-      title: "New UGC Ad", // Corrected typo from "Vew"
-      subtitle: "New UGC Ad Generator",
-      image:
-        "https://images.unsplash.com/photo-1611262588024-d12430b98920?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3",
+      title: "Image mobing tool",
+      subtitle: "Add object to other background scene",
+      image: "https://store-iq-bucket.s3.ap-south-1.amazonaws.com/dashboard-images-static/WhatsApp+Image+2025-09-24+at+15.54.32.jpeg",
       buttonText: "Try Now",
-      link: "/dashboard/aitextmounting",
+      link: "/dashboard/aitools/Mobimage",
+      
     },
-    {
-      title: "New Tool",
-      subtitle: "Video Podcast Generator",
-      image:
-        "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3",
+   {
+      title: "Script to Live Analyzer",
+      subtitle: "Generate audio automatically",
+      image: "https://store-iq-bucket.s3.ap-south-1.amazonaws.com/dashboard-images-static/Screenshot+2025-09-26+110713.png",
       buttonText: "Try Now",
-      link: "/dashboard/aitextmounting",
+      link: "/dashboard/aitools/tts",
+     
     },
-    {
-      title: "New Tool",
-      subtitle: "Video Podcast Generator",
-      image:
-        "https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3",
-      buttonText: "Try Now",
-      link: "/dashboard/aitextmounting",
-    },
-    {
-      title: "New Tool",
-      subtitle: "Video Podcast Generator",
-      image:
-        "https://images.unsplash.com/photo-1473448912268-2022ce9509d8?q=80&w=2041&auto=format&fit=crop&ixlib=rb-4.0.3",
-      buttonText: "Try Now",
-      link: "/dashboard/aitextmounting",
-    },
-    {
-      title: "New Tool",
-      subtitle: "Video Podcast Generator",
-      image:
-        "https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3",
-      buttonText: "Try Now",
-      link: "/dashboard/aitextmounting",
-    },
+    
   ];
 
   const tabs = ["Home", "Creation", "Inspiration"];

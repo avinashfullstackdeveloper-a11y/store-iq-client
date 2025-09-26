@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
 import { motion, cubicBezier } from 'framer-motion'; // Import motion and cubicBezier
 import Header from "@/components/Header";
-
+import { useNavigate } from "react-router-dom";
 const Tools = () => {
   const [hoveredTool, setHoveredTool] = useState(null);
   const [selectedTool, setSelectedTool] = useState(null);
+const navigate = useNavigate();
 
+  const handleClick = () => {
+    navigate("/login"); 
+  };
   const tools = [
     { number: "01", name: "AI Script Generator", description: "Instantly generate compelling scripts for your videos." },
     { number: "02", name: "AI Hook Generator", description: "Create attention-grabbing intro hooks to captivate your audience." },
@@ -104,9 +108,12 @@ const Tools = () => {
                       </div>
                       <p className="text-white/60 mb-6 flex-grow">{tool.description}</p>
                       <div className="flex justify-between items-center mt-auto">
-                        <button className="text-white border border-white/30 rounded-full py-2 px-6 hover:bg-white hover:text-black transition-colors">
-                          Try it out
-                        </button>
+                        <button
+      onClick={handleClick}
+      className="text-white border border-white/30 rounded-full py-2 px-6 hover:bg-white hover:text-black transition-colors"
+    >
+      Try it out
+    </button>
                         <svg width="24" height="24" viewBox="0 0 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-white">
                           <path d="M7 17L17 7M17 7H7M17 7V17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>

@@ -220,7 +220,7 @@ const Exports = () => {
     const updateExportEntryByJobId = (jobId: string, data: any) => {
       setExportHistory((prev) => {
         const updated = prev.map((item) =>
-          item.job_id === jobId ? { ...item, ...data } : item
+          item.jobId === jobId ? { ...item, ...data } : item
         );
         localStorage.setItem("exports", JSON.stringify(updated));
         return updated;
@@ -233,7 +233,7 @@ const Exports = () => {
           item.status === "processing" ||
           item.status === "Pending" ||
           item.status === "Processing") &&
-        item.job_id
+        item.jobId
     );
 
     if (pollingEntries.length === 0) return;
@@ -243,7 +243,7 @@ const Exports = () => {
     pollingEntries.forEach((item) => {
       const poll = async () => {
         try {
-          const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/video/crop/${item.job_id}`, {
+          const res = await fetch(`/api/video/crop/${item.jobId}`, {
             method: "GET",
             credentials: "include"
           });
@@ -251,18 +251,18 @@ const Exports = () => {
           const data = await res.json();
           
           if (data.status && (data.status.toLowerCase() === "completed" || data.status.toLowerCase() === "failed")) {
-            updateExportEntryByJobId(item.job_id, {
+            updateExportEntryByJobId(item.jobId, {
               status: data.status.charAt(0).toUpperCase() + data.status.slice(1),
               downloadUrl: data.downloadUrl || data.url || null,
             });
           } else if (data.status && data.progress !== undefined) {
-            updateExportEntryByJobId(item.job_id, {
+            updateExportEntryByJobId(item.jobId, {
               status: data.status.charAt(0).toUpperCase() + data.status.slice(1),
               progress: data.progress,
             });
           }
         } catch (e) {
-          // Ignore errors
+          // Ignore errors_id
         }
       };
       poll();

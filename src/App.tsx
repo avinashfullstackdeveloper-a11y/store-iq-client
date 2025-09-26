@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+
 import Index from "./pages/Index";
 import About from "./pages/About";
 import Tools from "./pages/Tools";
@@ -10,6 +11,8 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Home from "./components/HeroSection";
 import NotFound from "./pages/NotFound";
+
+// Dashboard pages
 import Dashboard from "./pages/dashboard/Dashboard";
 import Stats from "./pages/dashboard/Stats";
 import Publish from "./pages/dashboard/Publish";
@@ -20,16 +23,17 @@ import Settings from "./pages/dashboard/Settings";
 import VideoGenerator from "./pages/dashboard/create-video/VideoGenerator";
 import ImageGenerator from "./pages/dashboard/create-video/ImageGenerator";
 import PromptGenerator from "./pages/dashboard/create-video/PromptGenerator";
-// import CreateVideo from "./pages/dashboard/CreateVideo";
 import SearchVideos from "./pages/dashboard/SearchVideos";
 import SearchImages from "./pages/dashboard/SearchImages";
 import VideoEditor from "./pages/dashboard/VideoEditor";
+import TextToSpeech from "./pages/dashboard/Aitextmounting";
+import AIToolsPage from "./pages/dashboard/AItools";
+import AIObjectBlendTool from "./pages/dashboard/ai-tools/Mobimagetool";
+import TTSPlayer from "./pages/dashboard/ai-tools/Ttscharachter";
 
 import { AuthProvider } from "./context/AuthContext";
 import { LoaderProvider } from "./context/LoaderContext";
-
-import TextToSpeech from "./pages/dashboard/Aitextmounting";
-import AIToolsPage from "./pages/dashboard/AItools";
+import ProtectedRoute from "./context/Protected";
 
 const queryClient = new QueryClient();
 
@@ -42,38 +46,153 @@ const App = () => (
         <BrowserRouter>
           <AuthProvider>
             <Routes>
+              {/* Public Routes */}
               <Route path="/" element={<Index />} />
               <Route path="/about" element={<About />} />
               <Route path="/tools" element={<Tools />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/dashboard/stats" element={<Stats />} />
-              <Route path="/dashboard/publish" element={<Publish />} />
-              <Route path="/dashboard/videos" element={<Videos />} />
-              <Route path="/dashboard/exports" element={<Exports />} />
-              <Route path="/dashboard/scripts" element={<Scripts />} />
-              <Route path="/dashboard/settings" element={<Settings />} />
-              {/* <Route path="/dashboard/create-video" element={<CreateVideo />} /> */}
-              <Route path="/dashboard/create-video" element={<VideoGenerator />} />
-              <Route path="/dashboard/create-image" element={<ImageGenerator />} />
-              <Route path="/dashboard/create-prompt" element={<PromptGenerator />} />
-              <Route path="/dashboard/aitextmounting" element={<TextToSpeech/>} />
-              <Route path="/dashboard/aitools" element={<AIToolsPage/>} />
+              <Route path="/Home" element={<Home />} />
 
-              
+              {/* Protected Routes (everything else) */}
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/stats"
+                element={
+                  <ProtectedRoute>
+                    <Stats />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/publish"
+                element={
+                  <ProtectedRoute>
+                    <Publish />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/videos"
+                element={
+                  <ProtectedRoute>
+                    <Videos />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/exports"
+                element={
+                  <ProtectedRoute>
+                    <Exports />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/scripts"
+                element={
+                  <ProtectedRoute>
+                    <Scripts />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/settings"
+                element={
+                  <ProtectedRoute>
+                    <Settings />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/create-video"
+                element={
+                  <ProtectedRoute>
+                    <VideoGenerator />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/create-image"
+                element={
+                  <ProtectedRoute>
+                    <ImageGenerator />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/create-prompt"
+                element={
+                  <ProtectedRoute>
+                    <PromptGenerator />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/aitextmounting"
+                element={
+                  <ProtectedRoute>
+                    <TextToSpeech />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/aitools"
+                element={
+                  <ProtectedRoute>
+                    <AIToolsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/aitools/Mobimage"
+                element={
+                  <ProtectedRoute>
+                    <AIObjectBlendTool />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/aitools/tts"
+                element={
+                  <ProtectedRoute>
+                    <TTSPlayer />
+                  </ProtectedRoute>
+                }
+              />
               <Route
                 path="/dashboard/search-videos"
-                element={<SearchVideos />}
+                element={
+                  <ProtectedRoute>
+                    <SearchVideos />
+                  </ProtectedRoute>
+                }
               />
               <Route
                 path="/dashboard/search-images"
-                element={<SearchImages />}
+                element={
+                  <ProtectedRoute>
+                    <SearchImages />
+                  </ProtectedRoute>
+                }
               />
-              <Route path="/Home" element={<Home />} />{" "}
-              {/* The path is "/Home" */}
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="/dashboard/video-editor/*" element={<VideoEditor />} />
+              <Route
+                path="/dashboard/video-editor/*"
+                element={
+                  <ProtectedRoute>
+                    <VideoEditor />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Catch-all */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AuthProvider>
