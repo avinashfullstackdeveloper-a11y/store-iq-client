@@ -124,6 +124,64 @@ const ImageEditor: React.FC = () => {
           </p>
         </div>
 
+        {(editedImageUrl && !loading) ? (
+          <div className="bg-storiq-card-bg/50 border-storiq-border rounded-2xl shadow-2xl p-6 flex flex-col items-center mx-auto backdrop-blur-sm mb-8">
+            <div className="space-y-6 animate-fade-in w-full">
+              <div className="flex flex-col md:flex-row gap-8 items-center justify-center">
+                <div className="flex flex-col items-center">
+                  <img
+                    src={originalPreview || ""}
+                    alt="Original"
+                    className="rounded-lg max-h-64 border border-gray-700 mb-2"
+                  />
+                  <span className="text-xs text-gray-400">Original</span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <img
+                    ref={editedImageRef}
+                    src={editedImageUrl}
+                    alt="Edited"
+                    className={`rounded-lg max-h-64 border border-storiq-purple/70 mb-2 transition-all duration-700 ${
+                      editedImageLoaded ? "opacity-100 scale-100" : "opacity-0 scale-105"
+                    }`}
+                    onLoad={() => setEditedImageLoaded(true)}
+                  />
+                  <span className="text-xs text-storiq-purple">Edited</span>
+                  <Button
+                    onClick={handleDownload}
+                    size="sm"
+                    className="mt-2 bg-black/80 hover:bg-black text-white backdrop-blur-sm border border-gray-600 transition-transform duration-200 hover:scale-110"
+                    title="Download edited image"
+                  >
+                    <Download className="w-4 h-4" />
+                    Download
+                  </Button>
+                </div>
+              </div>
+              <div className="bg-gray-900/30 rounded-lg p-4 border border-gray-800 transition-all duration-200 hover:border-gray-700 mt-4">
+                <p className="text-xs text-gray-400 mb-2 flex items-center gap-1">
+                  <Wand2 className="w-3 h-3" />
+                  Prompt used:
+                </p>
+                <p className="text-sm text-gray-300 font-medium leading-relaxed">
+                  {prompt}
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {(!editedImageUrl && !loading && !error) && (
+          <div className="bg-storiq-card-bg/50 border-storiq-border rounded-2xl shadow-2xl p-6 flex flex-col items-center mx-auto backdrop-blur-sm mb-8">
+            <div className="flex flex-col items-center justify-center py-8 text-center space-y-6">
+              <ImageIcon className="w-16 h-16 text-storiq-purple/70 mb-2" />
+              <p className="text-gray-500 text-sm animate-pulse">
+                Upload an image, optionally a mask, enter your prompt, and click <span className="font-semibold text-storiq-purple">Edit Image</span> to get started!
+              </p>
+            </div>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-6 bg-storiq-card-bg/50 border-storiq-border rounded-2xl shadow-2xl p-6 mb-8 backdrop-blur-sm">
           <div className="flex flex-col md:flex-row gap-6">
             <div className="flex-1 space-y-4">
@@ -237,59 +295,7 @@ const ImageEditor: React.FC = () => {
             </div>
           )}
 
-          {editedImageUrl && !loading && (
-            <div className="space-y-6 animate-fade-in w-full">
-              <div className="flex flex-col md:flex-row gap-8 items-center justify-center">
-                <div className="flex flex-col items-center">
-                  <img
-                    src={originalPreview || ""}
-                    alt="Original"
-                    className="rounded-lg max-h-64 border border-gray-700 mb-2"
-                  />
-                  <span className="text-xs text-gray-400">Original</span>
-                </div>
-                <div className="flex flex-col items-center">
-                  <img
-                    ref={editedImageRef}
-                    src={editedImageUrl}
-                    alt="Edited"
-                    className={`rounded-lg max-h-64 border border-storiq-purple/70 mb-2 transition-all duration-700 ${
-                      editedImageLoaded ? "opacity-100 scale-100" : "opacity-0 scale-105"
-                    }`}
-                    onLoad={() => setEditedImageLoaded(true)}
-                  />
-                  <span className="text-xs text-storiq-purple">Edited</span>
-                  <Button
-                    onClick={handleDownload}
-                    size="sm"
-                    className="mt-2 bg-black/80 hover:bg-black text-white backdrop-blur-sm border border-gray-600 transition-transform duration-200 hover:scale-110"
-                    title="Download edited image"
-                  >
-                    <Download className="w-4 h-4" />
-                    Download
-                  </Button>
-                </div>
-              </div>
-              <div className="bg-gray-900/30 rounded-lg p-4 border border-gray-800 transition-all duration-200 hover:border-gray-700 mt-4">
-                <p className="text-xs text-gray-400 mb-2 flex items-center gap-1">
-                  <Wand2 className="w-3 h-3" />
-                  Prompt used:
-                </p>
-                <p className="text-sm text-gray-300 font-medium leading-relaxed">
-                  {prompt}
-                </p>
-              </div>
-            </div>
-          )}
 
-          {!editedImageUrl && !loading && !error && (
-            <div className="flex flex-col items-center justify-center py-8 text-center space-y-6">
-              <ImageIcon className="w-16 h-16 text-storiq-purple/70 mb-2" />
-              <p className="text-gray-500 text-sm animate-pulse">
-                Upload an image, optionally a mask, enter your prompt, and click <span className="font-semibold text-storiq-purple">Edit Image</span> to get started!
-              </p>
-            </div>
-          )}
         </div>
       </div>
     </DashboardLayout>

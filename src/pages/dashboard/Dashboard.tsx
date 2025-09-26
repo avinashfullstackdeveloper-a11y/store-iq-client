@@ -78,7 +78,7 @@ const Dashboard = () => {
     {
       title: "Image Editor",
       subtitle: "Edit images with AI",
-      image: "/src/assets/images/ai-image-placeholder.png",
+      image: "/src/assets/images/ai-imageeditor-placeholder.png",
       buttonText: "Try Now",
       link: "/dashboard/edit-image",
     },
