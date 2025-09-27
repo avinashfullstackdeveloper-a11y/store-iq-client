@@ -1,6 +1,7 @@
 // ImageEditor.tsx
 import React, { useState, useRef } from "react";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import Loader from "@/components/ui/Loader";
 import { authFetch } from "@/lib/authFetch";
@@ -44,7 +45,7 @@ const ImageEditor: React.FC = () => {
     }
   };
 
-  const handlePromptChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePromptChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setPrompt(e.target.value);
   };
 
@@ -278,15 +279,14 @@ const ImageEditor: React.FC = () => {
               <Wand2 className="w-4 h-4 text-storiq-purple" />
               Describe your edit
             </label>
-            <Input
+            <Textarea
               id="prompt"
-              type="text"
               placeholder="e.g. Make the sky sunset orange, add birds..."
               value={prompt}
               onChange={handlePromptChange}
               disabled={loading}
-              className="bg-storiq-card-bg border-storiq-border text-white placeholder:text-white/40 h-12 text-base transition-all duration-200 focus:ring-2 focus:ring-storiq-purple/50 focus:border-storiq-purple"
               required
+              className="bg-storiq-card-bg border-storiq-border text-white placeholder:text-white/40 min-h-[96px] py-3 text-base resize-y transition-all duration-200 focus:ring-2 focus:ring-storiq-purple/50 focus:border-storiq-purple"
             />
           </div>
           <Button
