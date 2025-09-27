@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "react-hot-toast";
 import { Slider } from "@/components/ui/slider";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useAuth } from "@/context/AuthContext";
 import Loader from "@/components/ui/Loader";
 
@@ -53,6 +54,18 @@ const VideoEditor: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [exportDisabled, setExportDisabled] = useState(false);
+
+  // Aspect ratio state
+  const [aspectRatio, setAspectRatio] = useState("16:9");
+
+  // Map aspect ratio string to numeric value
+  const aspectRatioMap: Record<string, number> = {
+    "1:1": 1,
+    "4:3": 4 / 3,
+    "16:9": 16 / 9,
+    "3:2": 3 / 2,
+  };
+  const numericAspectRatio = aspectRatioMap[aspectRatio] || 16 / 9;
 
   // Cropping state
   const [start, setStart] = useState(0);
@@ -190,7 +203,75 @@ const VideoEditor: React.FC = () => {
         <h1 className="text-2xl font-bold text-white mb-4">
           Video Editor: {video.title || "Untitled"}
         </h1>
-        <AspectRatio ratio={16 / 9} className="bg-black rounded-lg overflow-hidden mb-6">
+        <div className="mb-4">
+          <label className="block text-white mb-2 font-medium" id="aspect-ratio-label">
+            Aspect Ratio
+          </label>
+          <RadioGroup
+            className="flex flex-wrap gap-4"
+            value={aspectRatio}
+            onValueChange={setAspectRatio}
+            aria-labelledby="aspect-ratio-label"
+            role="radiogroup"
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem
+                value="1:1"
+                id="aspect-1-1"
+                aria-label="Square (1 by 1)"
+                aria-describedby="desc-1-1"
+              />
+              <label htmlFor="aspect-1-1" className="text-white cursor-pointer">
+                1:1
+              </label>
+              <span id="desc-1-1" className="sr-only">Square</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem
+                value="4:3"
+                id="aspect-4-3"
+                aria-label="Standard (4 by 3)"
+                aria-describedby="desc-4-3"
+              />
+              <label htmlFor="aspect-4-3" className="text-white cursor-pointer">
+                4:3
+              </label>
+              <span id="desc-4-3" className="sr-only">Standard</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem
+                value="16:9"
+                id="aspect-16-9"
+                aria-label="Widescreen (16 by 9)"
+                aria-describedby="desc-16-9"
+              />
+              <label htmlFor="aspect-16-9" className="text-white cursor-pointer">
+                16:9
+              </label>
+              <span id="desc-16-9" className="sr-only">Widescreen</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem
+                value="3:2"
+                id="aspect-3-2"
+                aria-label="Classic (3 by 2)"
+                aria-describedby="desc-3-2"
+              />
+              <label htmlFor="aspect-3-2" className="text-white cursor-pointer">
+                3:2
+              </label>
+              <span id="desc-3-2" className="sr-only">Classic</span>
+            </div>
+          </RadioGroup>
+        <p className="text-xs text-white/60 mt-1 mb-2" id="aspect-ratio-helper">
+          Choose how the video preview is framed. This does not alter the original video.
+        </p>
+        </div>
+        <AspectRatio
+          ratio={numericAspectRatio}
+          className="bg-black rounded-lg overflow-hidden mb-6"
+          aria-describedby="aspect-ratio-helper"
+        >
           <video
             ref={videoRef}
             src={video.url}
