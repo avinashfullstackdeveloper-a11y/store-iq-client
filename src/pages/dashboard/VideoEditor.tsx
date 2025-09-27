@@ -390,6 +390,7 @@ const VideoEditor: React.FC = () => {
                   start: Number(start),
                   end: Number(end),
                   userId: userId, // Always include userId for export creation
+                  aspectRatio: aspectRatio, // Include selected aspect ratio
                 }),
                 credentials: "include",
               });
