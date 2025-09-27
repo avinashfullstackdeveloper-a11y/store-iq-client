@@ -1,4 +1,3 @@
-import { Toaster as LocalToaster } from "@/components/ui/toaster";
 import { Toaster } from "react-hot-toast";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -19,7 +18,7 @@ import Stats from "./pages/dashboard/Stats";
 import Publish from "./pages/dashboard/Publish";
 import Videos from "./pages/dashboard/Videos";
 import Exports from "./pages/dashboard/Exports";
-import Scripts from "./pages/dashboard/Scripts";
+// import Scripts from "./pages/dashboard/Scripts";
 import Settings from "./pages/dashboard/Settings";
 import VideoGenerator from "./pages/dashboard/create-video/VideoGenerator";
 import ImageGenerator from "./pages/dashboard/create-video/ImageGenerator";
@@ -44,7 +43,6 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
-      <LocalToaster />
       <Sonner />
       <LoaderProvider>
         <BrowserRouter>
@@ -99,14 +97,14 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
-              <Route
+              {/* <Route
                 path="/dashboard/scripts"
                 element={
                   <ProtectedRoute>
                     <Scripts />
                   </ProtectedRoute>
                 }
-              />
+              /> */}
               <Route
                 path="/dashboard/settings"
                 element={

@@ -16,6 +16,7 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { DateTime, Info } from "luxon";
 import useYouTubeConnect from "@/hooks/useYouTubeConnect";
+import { toast } from "react-hot-toast";
 
 // Cookie helpers
 function setCookie(name: string, value: string, days = 365) {
@@ -325,6 +326,23 @@ const Settings = () => {
   const [timezone, setTimezone] = useState(
     user?.timezone || DateTime.local().zoneName
   );
+
+  // Track previous ytConnected value for toast notifications
+  const prevYtConnected = useRef(ytConnected);
+
+  useEffect(() => {
+    if (prevYtConnected.current !== ytConnected) {
+      if (ytConnected) {
+        if (sessionStorage.getItem("ytConnectInitiated")) {
+          toast.success("Successfully connected to YouTube!");
+          sessionStorage.removeItem("ytConnectInitiated");
+        }
+      } else {
+        toast("YouTube disconnected.", { icon: "🔌" });
+      }
+      prevYtConnected.current = ytConnected;
+    }
+  }, [ytConnected]);
   const [updatingTimezone, setUpdatingTimezone] = useState(false);
   const [currentTime, setCurrentTime] = useState(
     DateTime.now().setZone(timezone)
@@ -693,7 +711,10 @@ const Settings = () => {
                     ) : (
                       <Button
                         className="bg-red-600 hover:bg-red-700 text-white font-bold hover:scale-105 transition-transform"
-                        onClick={handleYouTubeOAuth}
+                        onClick={() => {
+                          sessionStorage.setItem("ytConnectInitiated", "1");
+                          handleYouTubeOAuth();
+                        }}
                         disabled={ytLoading}
                       >
                         {ytLoading ? "Connecting..." : "Connect YouTube"}
