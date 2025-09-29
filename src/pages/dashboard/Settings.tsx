@@ -343,7 +343,7 @@ const Settings = () => {
     if (prevYtConnected.current !== ytConnected) {
       if (ytConnected) {
         if (sessionStorage.getItem("ytConnectInitiated")) {
-          toast.success("Successfully connected to YouTube!");
+          toast.success("Successfully connected to YouTube!", { icon: "✅" });
           sessionStorage.removeItem("ytConnectInitiated");
         }
       } else {
