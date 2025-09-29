@@ -81,7 +81,7 @@ const Login = () => {
       } else {
         login(data.token, data.user);
         navigate("/dashboard");
-        toast.success("Logged in successfully");
+        toast.success("Logged in successfully", { icon: "✅" });
       }
     } catch (err) {
       setError("Network error. Please try again.");

@@ -118,12 +118,12 @@ useEffect(() => {
     const params = new URLSearchParams(location.search);
     let toastShown = false;
     if (params.get("logged_in") === "1") {
-      toast("Logged in successfully");
+      toast("Logged in successfully", { icon: "✅" });
       params.delete("logged_in");
       toastShown = true;
     }
     if (params.get("signed_up") === "1") {
-      toast("Signed up successfully");
+      toast("Signed up successfully", { icon: "✅" });
       params.delete("signed_up");
       toastShown = true;
     }
