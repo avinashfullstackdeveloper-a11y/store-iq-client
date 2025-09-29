@@ -476,8 +476,8 @@ const Publish = () => {
                       <span>{error}</span>
                     </div>
                   ) : videoItems.length === 0 ? (
-                    <div className="text-left py-20 border-2 border-dashed border-slate-600/50 rounded-2xl bg-slate-800/20">
-                      <div className="w-20 h-20 mb-6 rounded-2xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
+                    <div className="flex flex-col items-center justify-center text-center py-20 border-2 border-dashed border-slate-600/50 rounded-2xl bg-slate-800/20">
+                      <div className="w-20 h-20 mb-6 rounded-2xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center mx-auto">
                         <svg className="w-10 h-10 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path
                             strokeLinecap="round"
@@ -492,7 +492,7 @@ const Publish = () => {
                         Create your first video to start publishing across social platforms
                       </p>
                       <Button
-                        className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium px-8 py-3 shadow-lg hover:shadow-xl transition-all duration-300"
+                        className="bg-storiq-purple hover:bg-storiq-purple/80 text-white font-medium px-8 py-3 shadow-lg hover:shadow-xl transition-all duration-300"
                         onClick={() => (window.location.href = "/dashboard/create-video")}
                       >
                         <span className="flex items-center gap-2">
@@ -566,8 +566,8 @@ const Publish = () => {
                       <span>{imagesError}</span>
                     </div>
                   ) : images.length === 0 ? (
-                    <div className="text-left py-20 border-2 border-dashed border-slate-600/50 rounded-2xl bg-slate-800/20">
-                      <div className="w-20 h-20 mb-6 rounded-2xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
+                    <div className="flex flex-col items-center justify-center text-center py-20 border-2 border-dashed border-slate-600/50 rounded-2xl bg-slate-800/20">
+                      <div className="w-20 h-20 mb-6 rounded-2xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center mx-auto">
                         <svg className="w-10 h-10 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path
                             strokeLinecap="round"
@@ -582,7 +582,7 @@ const Publish = () => {
                         Generate your first image to start sharing on Instagram
                       </p>
                       <Button
-                        className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-medium px-8 py-3 shadow-lg hover:shadow-xl transition-all duration-300"
+                        className="bg-storiq-purple hover:bg-storiq-purple/80 text-white font-medium px-8 py-3 shadow-lg hover:shadow-xl transition-all duration-300"
                         onClick={() => (window.location.href = "/dashboard/create-video")}
                       >
                         <span className="flex items-center gap-2">
