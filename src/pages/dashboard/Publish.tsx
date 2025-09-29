@@ -4,6 +4,7 @@
 import DashboardLayout from "@/components/DashboardLayout"
 import { Button } from "@/components/ui/button"
 import React, { useState } from "react"
+import { useNavigate } from "react-router-dom"
 import { toast } from "react-hot-toast"
 import useYouTubeConnect from "@/hooks/useYouTubeConnect"
 import { Dialog, DialogTrigger, DialogContent, DialogTitle } from "@/components/ui/dialog"
@@ -13,6 +14,7 @@ import { Dialog, DialogTrigger, DialogContent, DialogTitle } from "@/components/
 const IG_OAUTH_URL = `${import.meta.env.VITE_API_BASE_URL}/api/auth/instagram` // Placeholder, replace with actual
 
 const Publish = () => {
+  const navigate = useNavigate()
   // YouTube connection via shared hook
   const { ytConnected, loading: ytLoading, handleYouTubeOAuth, fetchConnectionStatus } = useYouTubeConnect()
   const [igConnected, setIgConnected] = useState(false)
@@ -493,7 +495,7 @@ const Publish = () => {
                       </p>
                       <Button
                         className="bg-storiq-purple hover:bg-storiq-purple/80 text-white font-medium px-8 py-3 shadow-lg hover:shadow-xl transition-all duration-300"
-                        onClick={() => (window.location.href = "/dashboard/create-video")}
+                        onClick={() => navigate("/dashboard/create-video")}
                       >
                         <span className="flex items-center gap-2">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -583,7 +585,7 @@ const Publish = () => {
                       </p>
                       <Button
                         className="bg-storiq-purple hover:bg-storiq-purple/80 text-white font-medium px-8 py-3 shadow-lg hover:shadow-xl transition-all duration-300"
-                        onClick={() => (window.location.href = "/dashboard/create-video")}
+                        onClick={() => navigate("/dashboard/create-image")}
                       >
                         <span className="flex items-center gap-2">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
