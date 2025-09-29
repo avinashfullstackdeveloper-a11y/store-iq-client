@@ -260,9 +260,7 @@ const TTSPlayer = () => {
           <Button
             onClick={handlePlay}
             disabled={disableControls || !script.trim() || !character1Voice || !character2Voice}
-            variant="gradient"
-            size="lg"
-            className="px-6 py-3"
+            className="px-6 py-3 bg-gradient-to-r from-storiq-purple to-storiq-purple/80 text-white font-semibold rounded-xl shadow-lg hover:from-storiq-purple/90 hover:to-storiq-purple/70 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Play className="h-5 w-5 mr-2" />
             {status === 'playing' ? 'Playing...' : 'Play Conversation'}
@@ -271,9 +269,7 @@ const TTSPlayer = () => {
           <Button
             onClick={handleStop}
             disabled={status !== 'playing'}
-            variant="destructive"
-            size="lg"
-            className="px-6 py-3"
+            className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Square className="h-5 w-5 mr-2" /> Stop
           </Button>
