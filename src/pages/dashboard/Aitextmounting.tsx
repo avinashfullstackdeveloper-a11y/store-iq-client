@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import DashboardLayout from "@/components/DashboardLayout";
 import AdvancedVideoPlayer from "@/components/AdvancedVideoPlayer";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
@@ -246,20 +247,19 @@ export default function TextToSpeech() {
   return (
     <DashboardLayout>
       <div
-        className="min-h-screen"
-        style={{ backgroundColor: "hsl(var(--storiq-dark))" }}
+        className="min-h-screen bg-storiq-dark"
       >
-        <div className="p-4 sm:p-6 max-w-7xl mx-auto">
+        <div className="p-4 md:p-6 max-w-7xl mx-auto">
           <div className="text-center mb-8 sm:mb-12">
             <div className="inline-flex items-center gap-3 mb-4">
-              <div className="p-3 rounded-full bg-gradient-to-r from-purple-600 to-blue-600 shadow-lg">
+              <div className="p-3 rounded-full bg-storiq-purple/20 shadow-lg">
                 <Sparkles className="w-6 h-6 text-white" />
               </div>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-storiq-purple to-storiq-blue bg-clip-text text-transparent">
                 AI Voice Studio
               </h1>
             </div>
-            <p className="text-gray-400 max-w-2xl mx-auto text-sm sm:text-base leading-relaxed">
+            <p className="text-white/60 max-w-2xl mx-auto text-base leading-relaxed">
               Transform your text into professional voiceovers and seamlessly
               mount them to your videos with AI-powered voice synthesis
             </p>
@@ -267,9 +267,9 @@ export default function TextToSpeech() {
 
           <div className="mb-8 sm:mb-12">
             <div className="flex justify-between items-center relative px-4 sm:px-0">
-              <div className="absolute top-5 left-4 sm:left-0 right-4 sm:right-0 h-0.5 bg-gray-700"></div>
+              <div className="absolute top-5 left-4 sm:left-0 right-4 sm:right-0 h-0.5 bg-storiq-border"></div>
               <div
-                className="absolute top-5 left-4 sm:left-0 h-0.5 bg-gradient-to-r from-purple-500 to-blue-500 transition-all duration-700 ease-out"
+                className="absolute top-5 left-4 sm:left-0 h-0.5 bg-gradient-to-r from-storiq-purple to-storiq-blue transition-all duration-700 ease-out"
                 style={{
                   width: `calc(${((currentStep - 1) / 4) * 100}% - ${
                     currentStep === 5 ? "0px" : "16px"
@@ -293,12 +293,12 @@ export default function TextToSpeech() {
                     w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300 shadow-lg
                     ${
                       getStepStatus(num) === "completed"
-                        ? "bg-gradient-to-r from-purple-500 to-blue-500 border-purple-500 text-white shadow-purple-500/25"
+                        ? "bg-gradient-to-r from-storiq-purple to-storiq-blue border-storiq-purple text-white shadow-storiq-purple/25"
                         : getStepStatus(num) === "current"
-                        ? "bg-gradient-to-r from-purple-600 to-blue-600 border-purple-600 text-white shadow-purple-600/25 scale-110"
-                        : "bg-gray-800 border-gray-600 text-gray-400"
+                        ? "bg-gradient-to-r from-storiq-purple to-storiq-blue border-storiq-purple text-white shadow-storiq-purple/25 scale-110"
+                        : "bg-storiq-card-bg/60 border-storiq-border text-white/40"
                     }
-                  `}
+                    `}
                   >
                     {getStepStatus(num) === "completed" ? (
                       <Check className="w-5 h-5" />
@@ -329,11 +329,7 @@ export default function TextToSpeech() {
             <div className="space-y-6">
               {/* Text Input Card */}
               <div
-                className="border rounded-xl p-6 shadow-xl hover:shadow-2xl transition-shadow duration-300"
-                style={{
-                  backgroundColor: "hsl(var(--storiq-card-bg))",
-                  borderColor: "hsl(var(--storiq-border))",
-                }}
+                className="bg-storiq-card-bg/60 border border-storiq-border rounded-2xl shadow-lg p-6 backdrop-blur-lg"
               >
                 <div className="flex items-center gap-3 mb-4">
                   <div className="p-2 rounded-lg bg-purple-600/20">
@@ -353,12 +349,9 @@ export default function TextToSpeech() {
                 </div>
 
                 <div className="relative">
-                  <textarea
-                    className="w-full h-32 border text-white rounded-lg p-4 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 resize-none placeholder-gray-400"
-                    style={{
-                      backgroundColor: "hsl(var(--storiq-dark))",
-                      borderColor: "hsl(var(--storiq-border))",
-                    }}
+                  {/* Use normalized Textarea component */}
+                  <Textarea
+                    className="bg-black/40 border border-gray-700 text-white placeholder:text-white/40 min-h-[120px] text-base rounded-xl focus:ring-2 focus:ring-storiq-purple/50 focus:border-storiq-purple transition resize-none px-4 py-3"
                     placeholder="Enter your script here... This text will be converted to speech using AI voice synthesis."
                     value={text}
                     onChange={(e) => setText(e.target.value)}
@@ -383,11 +376,7 @@ export default function TextToSpeech() {
 
               {/* Voice Selection Card */}
               <div
-                className="border rounded-xl p-6 shadow-xl hover:shadow-2xl transition-shadow duration-300 relative"
-                style={{
-                  backgroundColor: "hsl(var(--storiq-card-bg))",
-                  borderColor: "hsl(var(--storiq-border))",
-                }}
+                className="bg-storiq-card-bg/60 border border-storiq-border rounded-2xl shadow-lg p-6 backdrop-blur-lg relative"
               >
                 <div className="flex items-center gap-3 mb-4">
                   <div className="p-2 rounded-lg bg-blue-600/20">
@@ -434,11 +423,7 @@ export default function TextToSpeech() {
                   <div className="relative">
                     <button
                       onClick={() => setShowVoiceDropdown(!showVoiceDropdown)}
-                      className="w-full border text-white rounded-lg p-4 flex items-center justify-between hover:border-purple-500 transition-all duration-200"
-                      style={{
-                        backgroundColor: "hsl(var(--storiq-dark))",
-                        borderColor: "hsl(var(--storiq-border))",
-                      }}
+                      className="w-full bg-black/40 border border-gray-700 text-white rounded-xl p-4 flex items-center justify-between hover:border-storiq-purple transition-all duration-200"
                     >
                       <span className="truncate">{selectedVoiceName}</span>
                       <ChevronDown
@@ -487,7 +472,7 @@ export default function TextToSpeech() {
                     !selectedVoice ||
                     loadingVoices
                   }
-                  className="w-full max-w-xs h-14 bg-purple-600 hover:bg-purple-700 text-white font-semibold text-lg rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl hover:scale-105"
+                  className="w-full max-w-xs h-14 bg-gradient-to-r from-storiq-purple to-storiq-purple/80 hover:from-storiq-purple/90 hover:to-storiq-purple/70 text-white font-semibold text-lg rounded-xl transition-transform transform hover:scale-[1.02] active:scale-[0.98] shadow-lg"
                 >
                   {loadingAudio ? (
                     <>
@@ -509,11 +494,7 @@ export default function TextToSpeech() {
               {/* Audio Preview Card */}
               {audioUrl && (
                 <div
-                  className="border rounded-xl p-6 shadow-xl hover:shadow-2xl transition-shadow duration-300"
-                  style={{
-                    backgroundColor: "hsl(var(--storiq-card-bg))",
-                    borderColor: "hsl(var(--storiq-border))",
-                  }}
+                  className="bg-storiq-card-bg/60 border border-storiq-border rounded-2xl shadow-lg p-6 backdrop-blur-lg"
                 >
                   <div className="flex items-center gap-3 mb-4">
                     <div className="p-2 rounded-lg bg-green-600/20">
@@ -531,11 +512,7 @@ export default function TextToSpeech() {
                   </div>
 
                   <div
-                    className="rounded-lg p-4 border"
-                    style={{
-                      backgroundColor: "hsl(var(--storiq-dark))",
-                      borderColor: "hsl(var(--storiq-border))",
-                    }}
+                    className="rounded-xl p-4 border bg-black/40 border-gray-700"
                   >
                     <audio
                       controls
@@ -555,7 +532,7 @@ export default function TextToSpeech() {
                         a.download = "generated-audio.mp3";
                         a.click();
                       }}
-                      className="flex-1 bg-purple-600 hover:bg-purple-700 text-white hover:scale-105 transition-transform duration-200"
+                      className="flex-1 bg-gradient-to-r from-storiq-purple to-storiq-purple/80 hover:from-storiq-purple/90 hover:to-storiq-purple/70 text-white font-semibold rounded-xl transition-transform transform hover:scale-[1.02] active:scale-[0.98] shadow-lg"
                     >
                       <Download className="w-4 h-4 mr-2" />
                       Download
@@ -569,7 +546,7 @@ export default function TextToSpeech() {
                 <Button
                   onClick={resetWorkflow}
                   variant="outline"
-                  className="w-full border-gray-600 text-gray-300 hover:bg-gray-800 hover:scale-105 transition-all duration-200 bg-transparent"
+                  className="w-full border-storiq-border text-white/80 hover:bg-storiq-card-bg hover:text-white transition"
                 >
                   <RefreshCw className="w-4 h-4 mr-2" />
                   Start Over
@@ -577,18 +554,18 @@ export default function TextToSpeech() {
               )}
 
               {currentStep === 1 && (
-                <div className="bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-purple-500/20 rounded-xl p-6">
+                <div className="bg-storiq-card-bg/60 border border-storiq-border rounded-2xl shadow-lg p-6 backdrop-blur-lg">
                   <h4 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-purple-400" />
+                    <Sparkles className="w-5 h-5 text-storiq-purple" />
                     Pro Tips
                   </h4>
-                  <ul className="space-y-2 text-sm text-gray-300">
+                  <ul className="space-y-2 text-sm text-white/70">
                     <li className="flex items-start gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-purple-400 mt-2 flex-shrink-0"></div>
+                      <div className="w-1.5 h-1.5 rounded-full bg-storiq-purple mt-2 flex-shrink-0"></div>
                       Write clear, natural sentences for best results
                     </li>
                     <li className="flex items-start gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-2 flex-shrink-0"></div>
+                      <div className="w-1.5 h-1.5 rounded-full bg-storiq-blue mt-2 flex-shrink-0"></div>
                       Try different voices to find the perfect match
                     </li>
                     <li className="flex items-start gap-2">
@@ -604,11 +581,7 @@ export default function TextToSpeech() {
           {audioUrl && (
             <div className="mt-8">
               <div
-                className="border rounded-xl p-6 shadow-xl"
-                style={{
-                  backgroundColor: "hsl(var(--storiq-card-bg))",
-                  borderColor: "hsl(var(--storiq-border))",
-                }}
+                className="bg-storiq-card-bg/60 border border-storiq-border rounded-2xl shadow-lg p-6 backdrop-blur-lg"
               >
                 <div className="flex items-center gap-3 mb-6">
                   <div className="p-2 rounded-lg bg-orange-600/20">
@@ -688,7 +661,7 @@ export default function TextToSpeech() {
                     <Button
                       onClick={mountVideoWithAudio}
                       disabled={!selectedVideo || !audioUrl || loadingMount}
-                      className="w-full h-14 bg-purple-600 hover:bg-purple-700 text-white font-semibold text-lg rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl hover:scale-105"
+                      className="w-full h-14 bg-gradient-to-r from-storiq-purple to-storiq-purple/80 hover:from-storiq-purple/90 hover:to-storiq-purple/70 text-white font-semibold text-lg rounded-xl transition-transform transform hover:scale-[1.02] active:scale-[0.98] shadow-lg"
                     >
                       {loadingMount ? (
                         <>
@@ -710,16 +683,16 @@ export default function TextToSpeech() {
 
           {mountedVideo && (
             <div className="mt-8">
-              <div className="bg-gradient-to-r from-green-900/20 to-blue-900/20 border border-green-500/30 rounded-xl p-6 shadow-xl">
+              <div className="bg-storiq-card-bg/60 border border-storiq-border rounded-2xl shadow-lg p-6 backdrop-blur-lg">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="p-3 rounded-full bg-gradient-to-r from-green-500 to-blue-500 shadow-lg">
+                  <div className="p-3 rounded-full bg-storiq-purple/20 shadow-lg">
                     <Check className="w-6 h-6 text-white" />
                   </div>
                   <div>
                     <h3 className="text-2xl font-bold text-white">
                       Video Successfully Created! 🎉
                     </h3>
-                    <p className="text-green-400">
+                    <p className="text-white/60">
                       Your AI-generated audio has been mounted to the video
                     </p>
                   </div>
@@ -738,7 +711,7 @@ export default function TextToSpeech() {
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Button
                     onClick={() => window.open(mountedVideo.url, "_blank")}
-                    className="flex-1 bg-purple-600 hover:bg-purple-700 hover:scale-105 transition-all duration-200"
+                    className="flex-1 bg-gradient-to-r from-storiq-purple to-storiq-purple/80 hover:from-storiq-purple/90 hover:to-storiq-purple/70 text-white font-semibold rounded-xl transition-transform transform hover:scale-[1.02] active:scale-[0.98] shadow-lg"
                   >
                     <Download className="w-4 h-4 mr-2" />
                     Download Final Video
@@ -746,7 +719,7 @@ export default function TextToSpeech() {
                   <Button
                     onClick={resetWorkflow}
                     variant="outline"
-                    className="border-gray-600 text-gray-300 hover:bg-gray-800 hover:scale-105 transition-all duration-200 bg-transparent"
+                    className="border-storiq-border text-white/80 hover:bg-storiq-card-bg hover:text-white transition"
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Create Another
