@@ -2,7 +2,18 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
-import { SparklesIcon, HeadphonesIcon, MegaphoneIcon, RocketIcon, PencilLineIcon } from "lucide-react"; // Import some new icons
+import {
+  SparklesIcon,
+  HeadphonesIcon,
+  MegaphoneIcon,
+  RocketIcon,
+  PencilLineIcon,
+} from "lucide-react"; // Import some new icons
+
+// Import images from assets
+import aiVideoPlaceholder from "@/assets/images/ai-video-placeholder.png";
+import aiImagePlaceholder from "@/assets/images/ai-image-placeholder.png";
+import aiScriptPlaceholder from "@/assets/images/ai-script-placeholder.png";
 
 // --- Tool type ---
 interface Tool {
@@ -22,7 +33,7 @@ const AIToolsPage: React.FC = () => {
     {
       title: "Video Generator",
       subtitle: "Turn text into videos with AI",
-      image: "/src/assets/images/ai-video-placeholder.png",
+      image: aiVideoPlaceholder,
       buttonText: "Try Now",
       link: "/dashboard/create-video",
       icon: HeadphonesIcon,
@@ -30,7 +41,7 @@ const AIToolsPage: React.FC = () => {
     {
       title: "Image Generator",
       subtitle: "Create images from your imagination",
-      image: "/src/assets/images/ai-image-placeholder.png",
+      image: aiImagePlaceholder,
       buttonText: "Try Now",
       link: "/dashboard/create-image",
       icon: RocketIcon,
@@ -38,7 +49,7 @@ const AIToolsPage: React.FC = () => {
     {
       title: "Script Generator",
       subtitle: "Generate creative video scripts",
-      image: "/src/assets/images/ai-script-placeholder.png",
+      image: aiScriptPlaceholder,
       buttonText: "Try Now",
       link: "/dashboard/create-prompt",
       icon: PencilLineIcon,
@@ -46,7 +57,8 @@ const AIToolsPage: React.FC = () => {
     {
       title: "AI Audio Mounting",
       subtitle: "Attach AI audio to video",
-      image: "https://store-iq-bucket.s3.ap-south-1.amazonaws.com/dashboard-images-static/ai-voice-mounting.jpeg",
+      image:
+        "https://store-iq-bucket.s3.ap-south-1.amazonaws.com/dashboard-images-static/ai-voice-mounting.jpeg",
       buttonText: "Try Now",
       link: "/dashboard/aitextmounting",
       icon: HeadphonesIcon, // Assign an icon
@@ -54,7 +66,8 @@ const AIToolsPage: React.FC = () => {
     {
       title: "Script to Live Analyzer",
       subtitle: "Generate audio automatically",
-      image: "https://store-iq-bucket.s3.ap-south-1.amazonaws.com/dashboard-images-static/Screenshot+2025-09-26+110713.png",
+      image:
+        "https://store-iq-bucket.s3.ap-south-1.amazonaws.com/dashboard-images-static/Screenshot+2025-09-26+110713.png",
       buttonText: "Try Now",
       link: "/dashboard/aitools/tts",
       icon: MegaphoneIcon, // Assign an icon
@@ -73,16 +86,17 @@ const AIToolsPage: React.FC = () => {
     //   image: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=2070&auto=format&fit=crop",
     //   buttonText: "Try Now",
     //   link: "/dashboard/scripts",
-    //   icon: PencilLineIcon, 
+    //   icon: PencilLineIcon,
     // },
     {
       title: "Image mobing tool",
       subtitle: "Add object to other background scene",
-      image: "https://store-iq-bucket.s3.ap-south-1.amazonaws.com/dashboard-images-static/WhatsApp+Image+2025-09-24+at+15.54.32.jpeg",
+      image:
+        "https://store-iq-bucket.s3.ap-south-1.amazonaws.com/dashboard-images-static/WhatsApp+Image+2025-09-24+at+15.54.32.jpeg",
       buttonText: "Try Now",
       link: "/dashboard/aitools/Mobimage",
-      icon: RocketIcon, 
-    }
+      icon: RocketIcon,
+    },
   ];
 
   return (
@@ -95,7 +109,8 @@ const AIToolsPage: React.FC = () => {
             Supercharge Your Workflow with AI
           </h1>
           <p className="text-gray-300 text-lg max-w-2xl mx-auto">
-            Discover a suite of powerful AI tools designed to streamline your content creation and boost productivity.
+            Discover a suite of powerful AI tools designed to streamline your
+            content creation and boost productivity.
           </p>
         </div>
 
@@ -119,12 +134,14 @@ const AIToolsPage: React.FC = () => {
                   <tool.icon className="w-6 h-6 text-white" />
                 </div>
               </div>
-              
+
               <div className="p-6 flex flex-col flex-grow">
                 <h3 className="text-white text-xl font-bold mb-2 group-hover:text-violet-400 transition-colors">
                   {tool.title}
                 </h3>
-                <p className="text-gray-400 text-sm mb-4 flex-grow">{tool.subtitle}</p>
+                <p className="text-gray-400 text-sm mb-4 flex-grow">
+                  {tool.subtitle}
+                </p>
                 <Button
                   variant="outline"
                   className="mt-auto w-full px-6 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 
