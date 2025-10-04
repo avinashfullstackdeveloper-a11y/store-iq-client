@@ -5,6 +5,12 @@ import DashboardLayout from "@/components/DashboardLayout"
 import { Button } from "@/components/ui/button"
 import { Play, Sparkles, Zap } from "lucide-react"
 
+// Import images from assets
+import aiVideoPlaceholder from "@/assets/images/ai-video-placeholder.png";
+import aiImagePlaceholder from "@/assets/images/ai-image-placeholder.png";
+import aiImageEditorPlaceholder from "@/assets/images/ai-imageeditor-placeholder.png";
+import aiScriptPlaceholder from "@/assets/images/ai-script-placeholder.png";
+
 const Dashboard = () => {
   const [data, setData] = useState<unknown[] | null>(null)
   const [loading, setLoading] = useState(true)
@@ -62,28 +68,28 @@ const tools = [
     {
       title: "Video Generator",
       subtitle: "Turn text into videos with AI",
-      image: "/src/assets/images/ai-video-placeholder.png",
+      image: aiVideoPlaceholder,
       buttonText: "Try Now",
       link: "/dashboard/create-video",
     },
     {
       title: "Image Generator",
       subtitle: "Create images from your imagination",
-      image: "/src/assets/images/ai-image-placeholder.png",
+      image: aiImagePlaceholder,
       buttonText: "Try Now",
       link: "/dashboard/create-image",
     },
     {
       title: "Image Editor",
       subtitle: "Edit images with AI",
-      image: "/src/assets/images/ai-imageeditor-placeholder.png",
+      image: aiImageEditorPlaceholder,
       buttonText: "Try Now",
       link: "/dashboard/edit-image",
     },
     {
       title: "Script Generator",
       subtitle: "Generate creative video scripts",
-      image: "/src/assets/images/ai-script-placeholder.png",
+      image: aiScriptPlaceholder,
       buttonText: "Try Now",
       link: "/dashboard/create-prompt",
     },
