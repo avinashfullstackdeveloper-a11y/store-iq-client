@@ -39,7 +39,7 @@ const Publish = () => {
     } else {
       // Disconnect flow
       try {
-        const res = await fetch("/api/auth/disconnect-youtube", {
+        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/disconnect-youtube`, {
           method: "POST",
           credentials: "include",
         })

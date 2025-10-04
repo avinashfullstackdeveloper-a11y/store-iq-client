@@ -16,7 +16,10 @@ const Signup = () => {
 
   // Helper: Check if any field is empty
   const isAnyFieldEmpty = () =>
-    !username.trim() || !emailOrPhone.trim() || !password.trim() || !confirmPassword.trim();
+    !username.trim() ||
+    !emailOrPhone.trim() ||
+    !password.trim() ||
+    !confirmPassword.trim();
 
   // Helper: Email regex validation
   const isValidEmail = (email: string) => {
@@ -64,7 +67,7 @@ const Signup = () => {
 
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/register", {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -91,16 +94,22 @@ const Signup = () => {
 
   // 🔹 Google Auth handler
   const handleGoogleAuth = () => {
-    window.location.href = `${import.meta.env.VITE_API_BASE_URL}/auth/google/register`; // backend OAuth route
+    window.location.href = `${
+      import.meta.env.VITE_API_BASE_URL
+    }/auth/google/register`; // backend OAuth route
   };
 
   // (Later you can do the same for Facebook/GitHub if needed)
   const handleFacebookAuth = () => {
-    window.location.href = `${import.meta.env.VITE_API_BASE_URL}/auth/facebook/register`;
+    window.location.href = `${
+      import.meta.env.VITE_API_BASE_URL
+    }/auth/facebook/register`;
   };
 
   const handleGithubAuth = () => {
-    window.location.href =  `${import.meta.env.VITE_API_BASE_URL}/auth/github/register`;
+    window.location.href = `${
+      import.meta.env.VITE_API_BASE_URL
+    }/auth/github/register`;
   };
 
   return (
@@ -137,7 +146,9 @@ const Signup = () => {
             </h1>
 
             <div className="border border-white/20 rounded-lg px-6 py-3 inline-block">
-              <span className="text-white/70 italic text-lg">Skip the lag ?</span>
+              <span className="text-white/70 italic text-lg">
+                Skip the lag ?
+              </span>
               <div className="border-t border-dashed border-white/30 mt-3"></div>
             </div>
           </div>
@@ -168,7 +179,11 @@ const Signup = () => {
               <Input
                 type="text"
                 placeholder="Email Address"
-                className={`w-full ${emailOrPhone && !isValidEmail(emailOrPhone) ? "border-2 border-red-500" : ""}`}
+                className={`w-full ${
+                  emailOrPhone && !isValidEmail(emailOrPhone)
+                    ? "border-2 border-red-500"
+                    : ""
+                }`}
                 value={emailOrPhone}
                 onChange={(e) => setEmailOrPhone(e.target.value)}
                 onBlur={(e) => {
@@ -212,7 +227,9 @@ const Signup = () => {
                   <div className="w-full border-t border-storiq-border"></div>
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="bg-storiq-card-bg px-4 text-white/60">Or</span>
+                  <span className="bg-storiq-card-bg px-4 text-white/60">
+                    Or
+                  </span>
                 </div>
               </div>
 
@@ -249,9 +266,11 @@ const Signup = () => {
                     fill="currentColor"
                     viewBox="0 0 24 24"
                   >
-                    <path d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 
+                    <path
+                      d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 
                       1.115-1.333h2.885v-5h-3.808c-3.596 
-                      0-5.192 1.583-5.192 4.615v2.385z"></path>
+                      0-5.192 1.583-5.192 4.615v2.385z"
+                    ></path>
                   </svg>
                 </button>
 
@@ -266,7 +285,8 @@ const Signup = () => {
                     fill="currentColor"
                     viewBox="0 0 24 24"
                   >
-                    <path d="M12 0c-6.626 0-12 5.373-12 12 
+                    <path
+                      d="M12 0c-6.626 0-12 5.373-12 12 
                       0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234
                       c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756
                       -1.089-.745.083-.729.083-.729 1.205.084 1.839

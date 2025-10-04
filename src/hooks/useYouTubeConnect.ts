@@ -28,7 +28,7 @@ function useYouTubeConnect() {
   // Fetch connection status
   const fetchConnectionStatus = useCallback(async () => {
     try {
-      const res = await fetch("/api/auth/status", { credentials: "include" });
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/status`, { credentials: "include" });
       if (res.ok) {
         const status = await res.json();
         setYtConnected(!!status.youtube);
@@ -90,7 +90,7 @@ function useYouTubeConnect() {
             return;
           }
           try {
-            const res = await fetch("/api/auth/link-youtube", {
+            const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/link-youtube`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               credentials: "include",
@@ -127,7 +127,7 @@ function useYouTubeConnect() {
   const disconnectYouTube = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/disconnect-youtube", {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/disconnect-youtube`, {
         method: "POST",
         credentials: "include",
       });

@@ -93,13 +93,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try {
         if (storedToken) {
           setToken(storedToken);
-          const res = await fetch("/api/auth/me", {
+          const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/me`, {
             headers: { Authorization: `Bearer ${storedToken}` },
             credentials: "include",
           });
           await handleAuthMeResponse(res);
         } else {
-          const res = await fetch("/api/auth/me", { credentials: "include" });
+          const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/me`, { credentials: "include" });
           await handleAuthMeResponse(res);
         }
       } catch {
@@ -153,7 +153,7 @@ useEffect(() => {
   const updateTimezone = async (timezone: string) => {
     if (!user) return;
     try {
-      const res = await fetch("/api/auth/me", {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/me`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -164,7 +164,7 @@ useEffect(() => {
       });
       if (!res.ok) throw new Error("Failed to update timezone");
 
-      const userRes = await fetch("/api/auth/me", {
+      const userRes = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/me`, {
         headers: {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
