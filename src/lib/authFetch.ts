@@ -1,5 +1,11 @@
 // Centralized API utility to prefix relative backend paths with VITE_API_BASE_URL
 // Usage: authFetch("/api/route", { method: "GET" })
+
+/**
+ * Centralized API utility to prefix relative backend paths with VITE_API_BASE_URL
+ * Usage: authFetch("/api/route", { method: "GET" })
+ * This version attaches JWT from localStorage (if present) as Bearer token.
+ */
 export async function authFetch(input: RequestInfo, init?: RequestInit) {
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   let url: RequestInfo;
@@ -16,5 +22,12 @@ export async function authFetch(input: RequestInfo, init?: RequestInit) {
     url = input;
   }
 
-  return fetch(url, { ...init, credentials: "include" });
+  // Attach JWT from localStorage if present
+  let headers: HeadersInit = (init && init.headers) ? { ...init.headers } : {};
+  const token = localStorage.getItem("token");
+  if (token) {
+    headers = { ...headers, Authorization: `Bearer ${token}` };
+  }
+
+  return fetch(url, { ...init, headers, credentials: "include" });
 }
