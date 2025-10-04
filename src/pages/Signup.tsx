@@ -168,9 +168,14 @@ const Signup = () => {
               <Input
                 type="text"
                 placeholder="Email Address"
-                className="w-full"
+                className={`w-full ${emailOrPhone && !isValidEmail(emailOrPhone) ? "border-2 border-red-500" : ""}`}
                 value={emailOrPhone}
                 onChange={(e) => setEmailOrPhone(e.target.value)}
+                onBlur={(e) => {
+                  if (e.target.value && !isValidEmail(e.target.value)) {
+                    toast.error("Invalid email format");
+                  }
+                }}
                 required
               />
               <Input

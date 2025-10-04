@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import promptPlaceVideo from "@/assets/videos/prompt-place.mp4";
+const promptPlaceVideo = "https://store-iq-video-bucket.s3.ap-south-1.amazonaws.com/prompt-place.mp4";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";

@@ -4,10 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 // 1. Updated imports to match your new video files
-import editingVideo from "@/assets/videos/lightning-editing.mp4";
-import aiVideo from "@/assets/videos/ai-gets-you.mp4";
-import creativityVideo from "@/assets/videos/effortless-creativity.mp4";
-import growthVideo from "@/assets/videos/built-for-growth.mp4";
+const editingVideo = "https://store-iq-video-bucket.s3.ap-south-1.amazonaws.com/lightning-editing.mp4";
+const aiVideo = "https://store-iq-video-bucket.s3.ap-south-1.amazonaws.com/ai-gets-you.mp4";
+const creativityVideo = "https://store-iq-video-bucket.s3.ap-south-1.amazonaws.com/effortless-creativity.mp4";
+const growthVideo = "https://store-iq-video-bucket.s3.ap-south-1.amazonaws.com/built-for-growth.mp4";
 
 const About = () => {
   const [hoveredFeature, setHoveredFeature] = useState<number | null>(null);

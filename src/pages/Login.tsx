@@ -165,9 +165,14 @@ const Login = () => {
                 <Input
                   type="text"
                   placeholder="Email Address"
-                  className="w-full"
+                  className={`w-full ${email && !isEmail(email) ? "border-2 border-red-500" : ""}`}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  onBlur={(e) => {
+                    if (e.target.value && !isEmail(e.target.value)) {
+                      toast.error("Invalid email format");
+                    }
+                  }}
                   required
                 />
               </div>
