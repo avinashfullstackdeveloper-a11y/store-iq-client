@@ -539,7 +539,8 @@ const VideoEditor: React.FC = () => {
                         setIsExporting(false);
                         return;
                       }
-                      const response = await fetch("/api/video/crop", {
+                      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+                      const response = await fetch(`${API_BASE_URL}/api/video/crop`, {
                         method: "POST",
                         headers: {
                           "Content-Type": "application/json",
@@ -569,7 +570,7 @@ const VideoEditor: React.FC = () => {
                       const existing = JSON.parse(localStorage.getItem("exports") || "[]");
                       existing.push(exportEntry);
                       localStorage.setItem("exports", JSON.stringify(existing));
-                      toast.success("Video added to export queue!", { 
+                      toast.success("Video added to export queue!", {
                         duration: 4000,
                         icon: '✅'
                       });

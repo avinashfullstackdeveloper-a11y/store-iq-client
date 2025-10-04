@@ -163,9 +163,10 @@ const Stats = () => {
         if (endDate) params.push(`endDate=${endDate}`);
         const query = params.length ? `?${params.join("&")}` : "";
 
+        const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
         const [summaryRes, timeseriesRes] = await Promise.all([
-          fetch(`/api/stats/summary${query}`),
-          fetch(`/api/stats/timeseries${query}`),
+          fetch(`${API_BASE_URL}/api/stats/summary${query}`),
+          fetch(`${API_BASE_URL}/api/stats/timeseries${query}`),
         ]);
 
         if (!summaryRes.ok || !timeseriesRes.ok) {
