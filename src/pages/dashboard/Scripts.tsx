@@ -47,7 +47,8 @@
 
 //     try {
 //       const prompt = `Style: ${selectedStyle}. Target duration: ${targetDuration} seconds. ${userInput}`;
-//       const response = await fetch("/api/generate-script", {
+//       const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+//       const response = await fetch(`${API_BASE_URL}/api/generate-script`, {
 //         method: "POST",
 //         headers: { "Content-Type": "application/json" },
 //         body: JSON.stringify({ prompt }),

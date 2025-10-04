@@ -105,7 +105,8 @@ const Publish = () => {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch("/api/videos", { credentials: "include" })
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+      const res = await fetch(`${API_BASE_URL}/api/videos`, { credentials: "include" })
       if (!res.ok) throw new Error("Failed to fetch videos")
       const data = await res.json()
       setVideos(Array.isArray(data) ? data : [])
@@ -125,7 +126,8 @@ const Publish = () => {
       setImagesLoading(true)
       setImagesError(null)
       try {
-        const res = await fetch("/api/images", { credentials: "include" })
+        const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+        const res = await fetch(`${API_BASE_URL}/api/images`, { credentials: "include" })
         if (!res.ok) throw new Error("Failed to fetch images")
         const data = await res.json()
         setImages(Array.isArray(data) ? data : [])
@@ -178,7 +180,8 @@ const Publish = () => {
 
       // Post to YouTube if selected
       if (selection.yt && ytConnected) {
-        const res = await fetch("/api/publish/youtube", {
+        const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+        const res = await fetch(`${API_BASE_URL}/api/publish/youtube`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
@@ -194,7 +197,8 @@ const Publish = () => {
 
       // Post to Instagram if selected
       if (selection.ig && igConnected) {
-        const res = await fetch("/api/publish/instagram", {
+        const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+        const res = await fetch(`${API_BASE_URL}/api/publish/instagram`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
