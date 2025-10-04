@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState } from "react";
+import { authFetch } from "@/lib/authFetch";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   AreaChart,
@@ -163,10 +164,9 @@ const Stats = () => {
         if (endDate) params.push(`endDate=${endDate}`);
         const query = params.length ? `?${params.join("&")}` : "";
 
-        const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
         const [summaryRes, timeseriesRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/api/stats/summary${query}`),
-          fetch(`${API_BASE_URL}/api/stats/timeseries${query}`),
+          authFetch(`/api/stats/summary${query}`),
+          authFetch(`/api/stats/timeseries${query}`),
         ]);
 
         if (!summaryRes.ok || !timeseriesRes.ok) {
