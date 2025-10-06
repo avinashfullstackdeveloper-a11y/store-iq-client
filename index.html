@@ -65,6 +65,10 @@
         margin: 32px auto 0 auto;
         text-align: center;
         letter-spacing: 1px;
+        max-width: 100%;
+        box-sizing: border-box;
+        overflow-x: auto;
+        word-break: break-word;
       }
       .sponsor-btn:hover, .sponsor-btn:focus {
         background: linear-gradient(90deg, #ff5722 0%, #ff9800 100%);
@@ -76,12 +80,16 @@
         display: flex;
         justify-content: center;
         align-items: flex-start;
-        width: 100vw;
+        max-width: 100%;
+        width: 100%;
         margin-bottom: 0;
         min-height: 1px;
+        box-sizing: border-box;
+        overflow-x: auto;
       }
       body {
         margin-bottom: 0 !important;
+        background: #111 !important;
       }
     </style>
     <div class="sponsor-btn-center">
