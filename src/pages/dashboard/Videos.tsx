@@ -48,6 +48,7 @@ interface Video {
   s3Key?: string;
   publishCount?: number;
   publishedToYouTube?: boolean;
+  isEdited?: boolean;
 }
 
 const Videos = () => {
@@ -600,16 +601,17 @@ const Videos = () => {
         {deleteVideoId && (
           <ConfirmDialog
             open={deleteConfirmOpen}
-            onOpenChange={(open) => {
-              setDeleteConfirmOpen(open);
-              if (!open) setDeleteVideoId(null);
-            }}
             title="Delete Video"
             description="Are you sure you want to delete this video? This action cannot be undone."
-            confirmText="Delete"
-            cancelText="Cancel"
+            confirmLabel="Delete"
+            cancelLabel="Cancel"
             onConfirm={handleDelete}
-            variant="destructive"
+            onCancel={() => {
+              setDeleteConfirmOpen(false);
+              setDeleteVideoId(null);
+            }}
+            loading={loading}
+            disableConfirm={loading}
           />
         )}
 
@@ -966,16 +968,17 @@ const Videos = () => {
       {deleteImageId && (
         <ConfirmDialog
           open={deleteImageConfirmOpen}
-          onOpenChange={(open) => {
-            setDeleteImageConfirmOpen(open);
-            if (!open) setDeleteImageId(null);
-          }}
           title="Delete Image"
           description="Are you sure you want to delete this image? This action cannot be undone."
-          confirmText="Delete"
-          cancelText="Cancel"
+          confirmLabel="Delete"
+          cancelLabel="Cancel"
           onConfirm={handleDeleteImage}
-          variant="destructive"
+          onCancel={() => {
+            setDeleteImageConfirmOpen(false);
+            setDeleteImageId(null);
+          }}
+          loading={loading}
+          disableConfirm={loading}
         />
       )}
     </DashboardLayout>
