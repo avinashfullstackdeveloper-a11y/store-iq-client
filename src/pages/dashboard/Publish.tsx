@@ -59,8 +59,14 @@ const Publish = () => {
     
     return videoItems.filter(v => {
       if (activeTab === 'scheduled') {
-        return !v.publishedToYouTube || (v.scheduledTime && v.scheduledStatus !== 'completed');
+        // Show videos that are:
+        // 1. Not yet published AND
+        // 2. Either unscheduled OR scheduled but not completed
+        return !v.publishedToYouTube && (!v.scheduledTime || (v.scheduledTime && v.scheduledStatus !== 'completed'));
       } else {
+        // Show videos that are:
+        // 1. Published to YouTube OR
+        // 2. Have completed scheduled publishing
         return v.publishedToYouTube || (v.scheduledTime && v.scheduledStatus === 'completed');
       }
     });
@@ -355,10 +361,14 @@ const Publish = () => {
               const allVideoItems = videos.filter((v) => isVideoFile(v.url));
               const currentVideoItems = allVideoItems.filter(v => {
                 if (activeTab === 'scheduled') {
-                  // Show videos that are pending or scheduled
-                  return !v.publishedToYouTube || (v.scheduledTime && v.scheduledStatus !== 'completed');
+                  // Show videos that are:
+                  // 1. Not yet published AND
+                  // 2. Either unscheduled OR scheduled but not completed
+                  return !v.publishedToYouTube && (!v.scheduledTime || (v.scheduledTime && v.scheduledStatus !== 'completed'));
                 } else {
-                  // Show completed or published videos
+                  // Show videos that are:
+                  // 1. Published to YouTube OR
+                  // 2. Have completed scheduled publishing
                   return v.publishedToYouTube || (v.scheduledTime && v.scheduledStatus === 'completed');
                 }
               });
