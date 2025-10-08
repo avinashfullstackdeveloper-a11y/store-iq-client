@@ -388,14 +388,20 @@ const Stats = () => {
             </SelectContent>
           </Select>
 
-          <Select defaultValue="last-30-days">
+          <Select value={dateRange} onValueChange={setDateRange}>
             <SelectTrigger className="w-48 bg-storiq-card-bg border-storiq-border text-white">
-              <SelectValue placeholder="Last 30 days" />
+              <SelectValue placeholder="Select days" />
             </SelectTrigger>
             <SelectContent className="bg-storiq-card-bg border-storiq-border">
-              <SelectItem value="last-30-days" className="text-white hover:bg-storiq-purple/20">Last 30 days</SelectItem>
-              <SelectItem value="last-7-days" className="text-white hover:bg-storiq-purple/20">Last 7 days</SelectItem>
-              <SelectItem value="last-90-days" className="text-white hover:bg-storiq-purple/20">Last 90 days</SelectItem>
+              {DATE_RANGE_OPTIONS.map((option) => (
+                <SelectItem
+                  key={option.value}
+                  value={option.value}
+                  className="text-white hover:bg-storiq-purple/20"
+                >
+                  {option.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
