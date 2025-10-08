@@ -46,6 +46,7 @@ const Publish = () => {
     loading: ytLoading,
     handleYouTubeOAuth,
     fetchConnectionStatus,
+    disconnectYouTube,
   } = useYouTubeConnect();
   const [igConnected, setIgConnected] = useState(false);
 
@@ -95,8 +96,16 @@ const Publish = () => {
 
   // Handle posting per video
   const handlePost = async (video: Video, scheduledTime?: DateTime) => {
+    if (!ytConnected) {
+      toast.error("YouTube connection required. Please connect your account.");
+      return;
+    }
+
     setSchedulingLoading(true);
+    setPostingId(video.id || video.s3Key || "");
+    
     try {
+      // Get platform selection
       const selection = platformSelections[video.id || video.s3Key || ""] || {
         yt: false,
         ig: false,
@@ -112,13 +121,21 @@ const Publish = () => {
         return;
       }
 
-      setPostingId(video.id || video.s3Key || "");
 
       // Prepare payload
       const payload = {
-        s3Key: video.s3Key,
-        scheduledTime: scheduledTime ? scheduledTime.toISO() : undefined
+        s3Key: video.s3Key, // Using s3Key as expected by the server
+        metadata: {
+          title: video.title || 'Untitled Video',
+          description: video.description || ''
+        }
       };
+
+      console.log('Publishing payload:', {
+        s3Key: video.s3Key,
+        metadata: payload.metadata,
+        isConnected: ytConnected
+      });
 
       // Track results for each platform
       let ytSuccess = false;
@@ -134,7 +151,7 @@ const Publish = () => {
 
         // Prepare the payload based on whether it's a scheduled post or immediate publish
         const requestPayload = scheduledTime ? {
-          videoS3Key: video.s3Key,
+          s3Key: video.s3Key, // Using s3Key as expected by the server
           scheduledTime: scheduledTime.toISO(),
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
           metadata: {
@@ -143,9 +160,19 @@ const Publish = () => {
           }
         } : payload;
 
-        console.log('Scheduling video with metadata:', requestPayload); // Debug log
+        const requestInfo = {
+          url: endpoint,
+          method: 'POST',
+          payload: requestPayload,
+          hasYouTubeConnection: ytConnected,
+          includesCredentials: true
+        };
+        console.log('Publishing request:', requestInfo);
         
         try {
+          if (!ytConnected) {
+            throw new Error('YouTube connection required. Please connect your account.');
+          }
           const res = await fetch(endpoint, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -158,10 +185,25 @@ const Publish = () => {
           if (!res.ok) {
             if (res.status === 404) {
               toast.error("Video not found. Please try again.");
+            } else if (res.status === 403 || res.status === 401) {
+              const errorMessage = data.error || "";
+              console.error('Authorization error:', {
+                status: res.status,
+                message: errorMessage,
+                isAuthError: errorMessage.includes('authentication') || errorMessage.includes('authorization')
+              });
+              
+              if (errorMessage.includes('authentication') || errorMessage.includes('authorization')) {
+                await disconnectYouTube(); // Clear connection state
+                toast.error("YouTube authorization expired. Please reconnect your account.");
+                await fetchConnectionStatus(); // Refresh UI state
+              } else {
+                toast.error(`Permission error: ${errorMessage}`);
+              }
             } else if (res.status === 400) {
               // Handle validation errors
               const errorMessage = data.error || "Invalid request";
-              toast.error(`Scheduling failed: ${errorMessage}`);
+              toast.error(`Publishing failed: ${errorMessage}`);
             } else {
               // Handle other errors
               const errorMessage = data.error || "Failed to post";
@@ -169,10 +211,16 @@ const Publish = () => {
               toast.error(errorMsg);
             }
             setSchedulingLoading(false);
+            setPostingId(null);
             return;
           }
           
-          ytSuccess = true;
+          // Check if the response indicates success
+          if (data.success || data.status === 'success') {
+            ytSuccess = true;
+          } else {
+            throw new Error(data.error || 'Failed to publish video');
+          }
           if (scheduledTime) {
             toast.success(`Video "${video.title || 'Untitled Video'}" scheduled successfully!`);
             await fetchVideos(); // Refresh videos to show scheduled status
@@ -181,9 +229,11 @@ const Publish = () => {
             return;
           }
         } catch (err) {
-          console.error('API Error:', err);
-          toast.error("Failed to connect to server. Please try again.");
+          console.error('Publishing Error:', err);
+          const errorMessage = err instanceof Error ? err.message : "Unknown error occurred";
+          toast.error(`Publishing failed: ${errorMessage}`);
           setSchedulingLoading(false);
+          setPostingId(null);
           return;
         }
       }
@@ -196,16 +246,20 @@ const Publish = () => {
           ...prev,
           [video.id || video.s3Key || ""]: { yt: false, ig: false },
         }));
-        await fetchVideos();
+        await Promise.all([
+          fetchVideos(),
+          fetchConnectionStatus() // Ensure connection status is current
+        ]);
         setActiveTab('past'); // Switch to past publications tab after successful publish
       } else if (!scheduledTime) {
         // Only show generic error for immediate publishing
         toast.error(errorMsg.trim() || "Failed to post video.");
       }
     } catch (err) {
+      console.error('Unexpected error:', err);
       setPostingId(null);
       setSchedulingLoading(false);
-      toast.error((err as Error)?.message || "Failed to post video.");
+      toast.error((err as Error)?.message || "An unexpected error occurred. Please try again.");
     }
   };
 
@@ -261,15 +315,9 @@ const Publish = () => {
     }
   };
 
-  React.useEffect(() => {
-    fetchVideos();
-    fetchImages();
-    fetchConnectionStatus();
-    fetchInstagramConnectionStatus();
-  }, []);
-
   // Fetch videos from backend
   const fetchVideos = async () => {
+    console.log('Fetching videos...');
     setLoading(true);
     setError(null);
     try {
@@ -286,6 +334,24 @@ const Publish = () => {
       setLoading(false);
     }
   };
+  
+  // Load data on mount and when YouTube connection changes
+  React.useEffect(() => {
+    const loadData = async () => {
+      try {
+        await Promise.all([
+          fetchVideos(),
+          fetchImages(),
+          fetchConnectionStatus(),
+          fetchInstagramConnectionStatus()
+        ]);
+      } catch (error) {
+        console.error('Error loading data:', error);
+        toast.error('Failed to load content. Please refresh the page.');
+      }
+    };
+    loadData();
+  }, [ytConnected]); // Refresh when YouTube connection changes
 
   return (
     <DashboardLayout>
