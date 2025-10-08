@@ -2,6 +2,7 @@
 
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
+import { authFetch } from "@/lib/authFetch";
 import { DateTime } from "luxon";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
@@ -36,7 +37,7 @@ interface Video {
   publishCount?: number;
   publishedToYouTube?: boolean;
   scheduledTime?: string;
-  scheduledStatus?: 'pending' | 'completed' | 'failed';
+  scheduledStatus?: "pending" | "completed" | "failed";
 }
 
 const Publish = () => {
@@ -50,29 +51,38 @@ const Publish = () => {
   } = useYouTubeConnect();
   const [igConnected, setIgConnected] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<'scheduled' | 'past'>('scheduled');
+  const [activeTab, setActiveTab] = useState<"scheduled" | "past">("scheduled");
   const [videos, setVideos] = useState<Video[]>([]);
 
   // Filter videos based on active tab and file type
   const filteredVideos = React.useMemo(() => {
     const isVideoFile = (url: string) => /\.(mp4|mov|webm|avi|mkv)$/i.test(url);
-    const videoItems = videos.filter(v => isVideoFile(v.url));
-    
-    return videoItems.filter(v => {
-      if (activeTab === 'scheduled') {
+    const videoItems = videos.filter((v) => isVideoFile(v.url));
+
+    return videoItems.filter((v) => {
+      if (activeTab === "scheduled") {
         // Show videos that are:
         // 1. Not yet published AND
         // 2. Either unscheduled OR scheduled but not completed
-        return !v.publishedToYouTube && (!v.scheduledTime || (v.scheduledTime && v.scheduledStatus !== 'completed'));
+        return (
+          !v.publishedToYouTube &&
+          (!v.scheduledTime ||
+            (v.scheduledTime && v.scheduledStatus !== "completed"))
+        );
       } else {
         // Show videos that are:
         // 1. Published to YouTube OR
         // 2. Have completed scheduled publishing
-        return v.publishedToYouTube || (v.scheduledTime && v.scheduledStatus === 'completed');
+        return (
+          v.publishedToYouTube ||
+          (v.scheduledTime && v.scheduledStatus === "completed")
+        );
       }
     });
   }, [videos, activeTab]);
-  const [images, setImages] = useState<{ id?: string; url: string; s3Key?: string; title?: string }[]>([]);
+  const [images, setImages] = useState<
+    { id?: string; url: string; s3Key?: string; title?: string }[]
+  >([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [imagesLoading, setImagesLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -82,9 +92,13 @@ const Publish = () => {
 
   // Platform selection per video
   type PlatformSelections = { [videoId: string]: { yt: boolean; ig: boolean } };
-  const [platformSelections, setPlatformSelections] = useState<PlatformSelections>({});
+  const [platformSelections, setPlatformSelections] =
+    useState<PlatformSelections>({});
 
-  const handlePlatformChange = (videoId: string, platform: "youtube" | "instagram") => {
+  const handlePlatformChange = (
+    videoId: string,
+    platform: "youtube" | "instagram"
+  ) => {
     setPlatformSelections((prev) => ({
       ...prev,
       [videoId]: {
@@ -94,275 +108,253 @@ const Publish = () => {
     }));
   };
 
+  // Fetch videos from backend
+
   // Handle posting per video
-  const handlePost = async (video: Video, scheduledTime?: DateTime) => {
-    if (!ytConnected) {
-      toast.error("YouTube connection required. Please connect your account.");
-      return;
-    }
-
-    setSchedulingLoading(true);
-    setPostingId(video.id || video.s3Key || "");
-    
-    try {
-      // Get platform selection
-      const selection = platformSelections[video.id || video.s3Key || ""] || {
-        yt: false,
-        ig: false,
-      };
-
-      // Validation checks
-      if (!selection.yt && !selection.ig) {
-        toast.error("Please select at least one platform for publishing");
-        return;
-      }
-      if (!ytConnected && selection.yt) {
-        toast.error("YouTube connection required to publish. Please connect your account.");
-        return;
-      }
-
-
-      // Prepare payload
-      const payload = {
-        s3Key: video.s3Key, // Using s3Key as expected by the server
-        metadata: {
-          title: video.title || 'Untitled Video',
-          description: video.description || ''
-        }
-      };
-
-      console.log('Publishing payload:', {
-        s3Key: video.s3Key,
-        metadata: payload.metadata,
-        isConnected: ytConnected
-      });
-
-      // Track results for each platform
-      let ytSuccess = false;
-      const igSuccess = false;
-      let errorMsg = "";
-
-      // Post to YouTube if selected
-      if (selection.yt && ytConnected) {
-        const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-        const endpoint = scheduledTime ?
-          `${API_BASE_URL}/api/schedule/video` :
-          `${API_BASE_URL}/api/publish/youtube`;
-
-        // Prepare the payload based on whether it's a scheduled post or immediate publish
-        const requestPayload = scheduledTime ? {
-          s3Key: video.s3Key, // Using s3Key as expected by the server
-          scheduledTime: scheduledTime.toISO(),
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-          metadata: {
-            title: video.title || 'Untitled Video',
-            description: video.description || ''
-          }
-        } : payload;
-
-        const requestInfo = {
-          url: endpoint,
-          method: 'POST',
-          payload: requestPayload,
-          hasYouTubeConnection: ytConnected,
-          includesCredentials: true
-        };
-        console.log('Publishing request:', requestInfo);
-        
-        try {
-          if (!ytConnected) {
-            throw new Error('YouTube connection required. Please connect your account.');
-          }
-          const res = await fetch(endpoint, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify(requestPayload),
-          });
-          
-          const data = await res.json();
-          
-          if (!res.ok) {
-            if (res.status === 404) {
-              toast.error("Video not found. Please try again.");
-            } else if (res.status === 403 || res.status === 401) {
-              const errorMessage = data.error || "";
-              console.error('Authorization error:', {
-                status: res.status,
-                message: errorMessage,
-                isAuthError: errorMessage.includes('authentication') || errorMessage.includes('authorization')
-              });
-              
-              if (errorMessage.includes('authentication') || errorMessage.includes('authorization')) {
-                await disconnectYouTube(); // Clear connection state
-                toast.error("YouTube authorization expired. Please reconnect your account.");
-                await fetchConnectionStatus(); // Refresh UI state
-              } else {
-                toast.error(`Permission error: ${errorMessage}`);
-              }
-            } else if (res.status === 400) {
-              // Handle validation errors
-              const errorMessage = data.error || "Invalid request";
-              toast.error(`Publishing failed: ${errorMessage}`);
-            } else {
-              // Handle other errors
-              const errorMessage = data.error || "Failed to post";
-              errorMsg += `YouTube Error: ${errorMessage}. Please try again or check your connection.`;
-              toast.error(errorMsg);
-            }
-            setSchedulingLoading(false);
-            setPostingId(null);
-            return;
-          }
-          
-          // Check if the response indicates success
-          if (data.success || data.status === 'success') {
-            ytSuccess = true;
-          } else {
-            throw new Error(data.error || 'Failed to publish video');
-          }
-          if (scheduledTime) {
-            toast.success(`Video "${video.title || 'Untitled Video'}" scheduled successfully!`);
-            await fetchVideos(); // Refresh videos to show scheduled status
-            setActiveTab('scheduled'); // Switch to scheduled tab
-            setSchedulingLoading(false);
-            return;
-          }
-        } catch (err) {
-          console.error('Publishing Error:', err);
-          const errorMessage = err instanceof Error ? err.message : "Unknown error occurred";
-          toast.error(`Publishing failed: ${errorMessage}`);
-          setSchedulingLoading(false);
-          setPostingId(null);
-          return;
-        }
-      }
-
-      setPostingId(null);
-
-      if (ytSuccess) {
-        toast.success(`"${video.title || 'Untitled Video'}" published successfully!`);
-        setPlatformSelections((prev) => ({
-          ...prev,
-          [video.id || video.s3Key || ""]: { yt: false, ig: false },
-        }));
-        await Promise.all([
-          fetchVideos(),
-          fetchConnectionStatus() // Ensure connection status is current
-        ]);
-        setActiveTab('past'); // Switch to past publications tab after successful publish
-      } else if (!scheduledTime) {
-        // Only show generic error for immediate publishing
-        toast.error(errorMsg.trim() || "Failed to post video.");
-      }
-    } catch (err) {
-      console.error('Unexpected error:', err);
-      setPostingId(null);
-      setSchedulingLoading(false);
-      toast.error((err as Error)?.message || "An unexpected error occurred. Please try again.");
-    }
-  };
-
-  const ytConnectedRef = React.useRef(ytConnected);
-  React.useEffect(() => {
-    if (!ytConnectedRef.current && ytConnected) {
-      if (sessionStorage.getItem("ytConnectInitiated")) {
-        toast.success("Successfully connected to YouTube!");
-        sessionStorage.removeItem("ytConnectInitiated");
-      }
-    }
-    ytConnectedRef.current = ytConnected;
-  }, [ytConnected]);
-
-  // Fetch connection statuses
-  const fetchInstagramConnectionStatus = async () => {
-    try {
-      const res = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/api/auth/status`,
-        { credentials: "include" }
-      );
-      if (res.ok) {
-        const status = await res.json();
-        setIgConnected(!!status.instagram);
-      }
-    } catch {
-      setIgConnected(false);
-    }
-  };
-
   // Fetch images from backend
-  const fetchImages = async () => {
+  const fetchImages = async (): Promise<{ error?: string }> => {
     setImagesLoading(true);
     setImagesError(null);
     try {
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-      const res = await fetch(`${API_BASE_URL}/api/images`, {
-        credentials: "include",
-      });
+      const res = await authFetch("/api/images");
       if (!res.ok) throw new Error("Failed to fetch images");
       const data = await res.json();
-      console.log('Fetched images:', data); // Debug log
-      setImages(Array.isArray(data) ? data.map(img => ({
-        id: img.key,
-        url: img.s3Url,
-        s3Key: img.key,
-        title: img.title
-      })) : []);
+      setImages(
+        Array.isArray(data)
+          ? data.map((img) => ({
+              id: img.key,
+              url: img.s3Url,
+              s3Key: img.key,
+              title: img.title,
+            }))
+          : []
+      );
+      return {};
     } catch (err) {
-      setImagesError((err as Error)?.message || "Unknown error");
+      const error = (err as Error)?.message || "Unknown error";
+      setImagesError(error);
+      return { error };
     } finally {
       setImagesLoading(false);
     }
   };
 
   // Fetch videos from backend
-  const fetchVideos = async () => {
-    console.log('Fetching videos...');
+  const fetchVideos = async (): Promise<{ error?: string }> => {
     setLoading(true);
     setError(null);
     try {
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-      const res = await fetch(`${API_BASE_URL}/api/videos`, {
-        credentials: "include",
-      });
+      const res = await authFetch("/api/videos");
       if (!res.ok) throw new Error("Failed to fetch videos");
       const data = await res.json();
       setVideos(Array.isArray(data) ? data : []);
+      return {};
     } catch (err) {
-      setError((err as Error)?.message || "Unknown error");
+      const error = (err as Error)?.message || "Unknown error";
+      setError(error);
+      return { error };
     } finally {
       setLoading(false);
     }
   };
-  
-  // Load data on mount and when YouTube connection changes
+
+  const validateYouTubeConnection = async (): Promise<boolean> => {
+    try {
+      const statusRes = await authFetch("/api/auth/status");
+      const status = await statusRes.json();
+
+      if (!status.youtube) {
+        await disconnectYouTube();
+        await fetchConnectionStatus();
+        toast.error(
+          "YouTube connection has expired. Please reconnect your account."
+        );
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error("Failed to verify connection status:", error);
+      toast.error("Failed to verify connection status. Please try again.");
+      return false;
+    }
+  };
+
+  const safeLoadData = async (isMounted: boolean): Promise<void> => {
+    try {
+      const [videosRes, imagesRes] = await Promise.all([
+        fetchVideos(),
+        fetchImages(),
+      ]);
+
+      if (!isMounted) return;
+
+      if (videosRes.error) {
+        throw new Error(videosRes.error);
+      }
+      if (imagesRes.error) {
+        throw new Error(imagesRes.error);
+      }
+    } catch (error) {
+      console.error("Failed to load data:", error);
+      if (error instanceof Error && error.message.includes("Unauthorized")) {
+        toast.error("Session expired. Please log in again.");
+        window.location.href = "/login";
+      } else {
+        toast.error("Failed to load content. Please refresh the page.");
+      }
+      throw error;
+    }
+  };
+
+  const handlePost = async (video: Video, scheduledTime?: DateTime) => {
+    try {
+      setSchedulingLoading(true);
+      setPostingId(video.id || video.s3Key || "");
+
+      if (!ytConnected) {
+        toast.error(
+          "YouTube connection required. Please connect your account."
+        );
+        setSchedulingLoading(false);
+        setPostingId(null);
+        return;
+      }
+
+      const selection = platformSelections[video.id || video.s3Key || ""] || {
+        yt: false,
+        ig: false,
+      };
+
+      if (!selection.yt && !selection.ig) {
+        toast.error("Please select at least one platform for publishing");
+        setSchedulingLoading(false);
+        return;
+      }
+
+      const payload = {
+        s3Key: video.s3Key,
+        metadata: {
+          title: video.title || "Untitled Video",
+          description: video.description || "",
+        },
+      };
+
+      if (selection.yt && ytConnected) {
+        try {
+          const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+          const endpoint = scheduledTime
+            ? "/api/schedule/video"
+            : "/api/publish/youtube";
+
+          const requestPayload = scheduledTime
+            ? {
+                ...payload,
+                scheduledTime: scheduledTime.toISO(),
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+              }
+            : payload;
+
+          const res = await authFetch(endpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(requestPayload),
+          });
+
+          const data = await res.json();
+
+          if (!res.ok) {
+            const errorMessage = data.error || "Unknown error";
+            if (res.status === 401 || res.status === 403) {
+              await disconnectYouTube();
+              await fetchConnectionStatus();
+              toast.error(
+                "YouTube authorization expired. Please reconnect your account."
+              );
+            } else {
+              toast.error(`Publishing failed: ${errorMessage}`);
+            }
+            setSchedulingLoading(false);
+            setPostingId(null);
+            return;
+          }
+
+          if (scheduledTime) {
+            toast.success(
+              `Video "${
+                video.title || "Untitled Video"
+              }" scheduled successfully!`
+            );
+            await fetchVideos();
+            setActiveTab("scheduled");
+          } else {
+            toast.success(
+              `"${video.title || "Untitled Video"}" published successfully!`
+            );
+            setPlatformSelections((prev) => ({
+              ...prev,
+              [video.id || video.s3Key || ""]: { yt: false, ig: false },
+            }));
+            await Promise.all([fetchVideos(), fetchConnectionStatus()]);
+            setActiveTab("past");
+          }
+        } catch (err) {
+          console.error("Publishing Error:", err);
+          toast.error(
+            (err as Error)?.message || "An unexpected error occurred"
+          );
+        }
+      }
+    } catch (err) {
+      console.error("Unexpected error:", err);
+    } finally {
+      setSchedulingLoading(false);
+      setPostingId(null);
+    }
+  };
+
+  // Load initial data
   React.useEffect(() => {
-    const loadData = async () => {
+    const loadContent = async () => {
       try {
-        await Promise.all([
-          fetchVideos(),
-          fetchImages(),
-          fetchConnectionStatus(),
-          fetchInstagramConnectionStatus()
-        ]);
-      } catch (error) {
-        console.error('Error loading data:', error);
-        toast.error('Failed to load content. Please refresh the page.');
+        await Promise.all([fetchVideos(), fetchImages()]);
+      } catch (err) {
+        console.error("Failed to load content:", err);
       }
     };
-    loadData();
-  }, [ytConnected]); // Refresh when YouTube connection changes
+
+    loadContent();
+  }, []);
+
+  // Handle YouTube connection status
+  React.useEffect(() => {
+    const handleConnectionStatus = async () => {
+      if (sessionStorage.getItem("ytConnectInitiated") && ytConnected) {
+        toast.success("Successfully connected to YouTube!");
+        sessionStorage.removeItem("ytConnectInitiated");
+      }
+    };
+
+    handleConnectionStatus();
+  }, [ytConnected]);
 
   return (
     <DashboardLayout>
       <div className="p-8">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">Your Posting Queue</h1>
-          <p className="text-white/60">Your content published while you sleep</p>
+          <h1 className="text-4xl font-bold text-white mb-2">
+            Your Posting Queue
+          </h1>
+          <p className="text-white/60">
+            Your content published while you sleep
+          </p>
         </div>
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={(value: 'scheduled' | 'past') => setActiveTab(value)} className="w-full">
+        <Tabs
+          value={activeTab}
+          onValueChange={(value: "scheduled" | "past") => setActiveTab(value)}
+          className="w-full"
+        >
           <TabsList className="mb-8 bg-transparent gap-2">
             <TabsTrigger
               value="scheduled"
@@ -378,41 +370,53 @@ const Publish = () => {
             </TabsTrigger>
           </TabsList>
 
-        {/* Social Connect Banner */}
-        <div className="bg-storiq-card-bg border border-storiq-border rounded-2xl p-6 mb-8 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="text-2xl">🔗</div>
+          {/* Social Connect Banner */}
+          <div className="bg-storiq-card-bg border border-storiq-border rounded-2xl p-6 mb-8 flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="text-2xl">🔗</div>
+              <div>
+                <h3 className="text-white font-medium">
+                  {ytConnected
+                    ? "Connected to YouTube"
+                    : "Connect Social Accounts to enable scheduling"}
+                </h3>
+                <p className="text-white/60 text-sm">
+                  {ytConnected
+                    ? "Ready to publish and schedule videos"
+                    : "To use scheduling feature, connect social accounts"}
+                </p>
+              </div>
+            </div>
+            <Button
+              className={`${
+                ytConnected
+                  ? "bg-green-600 hover:bg-green-700"
+                  : "bg-storiq-purple hover:bg-storiq-purple-light"
+              } text-white rounded-lg`}
+              disabled={ytLoading}
+              onClick={() => (!ytConnected ? handleYouTubeOAuth() : null)}
+            >
+              {ytLoading
+                ? "Connecting..."
+                : ytConnected
+                ? "✓ Connected"
+                : "Connect Now"}
+            </Button>
+          </div>
+
+          {/* Queue Header */}
+          <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-white font-medium">
-                {ytConnected ? "Connected to YouTube" : "Connect Social Accounts to enable scheduling"}
-              </h3>
-              <p className="text-white/60 text-sm">
-                {ytConnected ? "Ready to publish and schedule videos" : "To use scheduling feature, connect social accounts"}
+              <h2 className="text-2xl font-bold text-white mb-1">
+                Your Posting Queue
+              </h2>
+              <p className="text-white/60">
+                Your content published while you sleep
               </p>
             </div>
           </div>
-          <Button
-            className={`${
-              ytConnected
-                ? "bg-green-600 hover:bg-green-700"
-                : "bg-storiq-purple hover:bg-storiq-purple-light"
-            } text-white rounded-lg`}
-            disabled={ytLoading}
-            onClick={() => (!ytConnected ? handleYouTubeOAuth() : null)}
-          >
-            {ytLoading ? "Connecting..." : ytConnected ? "✓ Connected" : "Connect Now"}
-          </Button>
-        </div>
 
-        {/* Queue Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-2xl font-bold text-white mb-1">Your Posting Queue</h2>
-            <p className="text-white/60">Your content published while you sleep</p>
-          </div>
-        </div>
-
-        {/* Content based on active tab */}
+          {/* Content based on active tab */}
           <TabsContent value="scheduled" className="mt-6">
             {/* Split videos and images by file extension */}
             {(() => {
@@ -425,20 +429,27 @@ const Publish = () => {
 
               // Filter videos for current view
               const allVideoItems = videos.filter((v) => isVideoFile(v.url));
-              const currentVideoItems = allVideoItems.filter(v => {
-                if (activeTab === 'scheduled') {
+              const currentVideoItems = allVideoItems.filter((v) => {
+                if (activeTab === "scheduled") {
                   // Show videos that are:
                   // 1. Not yet published AND
                   // 2. Either unscheduled OR scheduled but not completed
-                  return !v.publishedToYouTube && (!v.scheduledTime || (v.scheduledTime && v.scheduledStatus !== 'completed'));
+                  return (
+                    !v.publishedToYouTube &&
+                    (!v.scheduledTime ||
+                      (v.scheduledTime && v.scheduledStatus !== "completed"))
+                  );
                 } else {
                   // Show videos that are:
                   // 1. Published to YouTube OR
                   // 2. Have completed scheduled publishing
-                  return v.publishedToYouTube || (v.scheduledTime && v.scheduledStatus === 'completed');
+                  return (
+                    v.publishedToYouTube ||
+                    (v.scheduledTime && v.scheduledStatus === "completed")
+                  );
                 }
               });
-              
+
               const imageItems = images;
               return (
                 <>
@@ -466,7 +477,8 @@ const Publish = () => {
                             Your Videos
                           </h2>
                           <p className="text-slate-400 text-base mt-1">
-                            Select and customize videos to publish across platforms
+                            Select and customize videos to publish across
+                            platforms
                           </p>
                         </div>
                       </div>
@@ -589,15 +601,20 @@ const Publish = () => {
                           </svg>
                         </div>
                         <div>
-                          <h2 className="text-2xl font-bold text-white">Your Images</h2>
+                          <h2 className="text-2xl font-bold text-white">
+                            Your Images
+                          </h2>
                           <p className="text-slate-400 text-base mt-1">
-                            Select and customize images to publish across platforms
+                            Select and customize images to publish across
+                            platforms
                           </p>
                         </div>
                       </div>
                       <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-slate-800/50 rounded-xl border border-slate-600/50">
                         <span className="text-sm text-slate-400">Total:</span>
-                        <span className="text-lg font-bold text-white">{imageItems.length}</span>
+                        <span className="text-lg font-bold text-white">
+                          {imageItems.length}
+                        </span>
                       </div>
                     </div>
 
@@ -607,7 +624,9 @@ const Publish = () => {
                           <div className="w-16 h-16 border-4 border-slate-700 border-t-purple-500 rounded-full animate-spin"></div>
                           <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-r-pink-500 rounded-full animate-spin animation-delay-150"></div>
                         </div>
-                        <p className="text-slate-400 mt-4 font-medium">Loading your images...</p>
+                        <p className="text-slate-400 mt-4 font-medium">
+                          Loading your images...
+                        </p>
                       </div>
                     ) : imagesError ? (
                       <div className="bg-red-500/10 border border-red-500/20 text-red-300 px-6 py-4 rounded-2xl flex items-center gap-3">
@@ -643,9 +662,12 @@ const Publish = () => {
                             />
                           </svg>
                         </div>
-                        <h3 className="text-xl font-bold text-white mb-2">No images yet</h3>
+                        <h3 className="text-xl font-bold text-white mb-2">
+                          No images yet
+                        </h3>
                         <p className="text-slate-400 mb-6 max-w-md mx-auto">
-                          Create your first image to start publishing across social platforms
+                          Create your first image to start publishing across
+                          social platforms
                         </p>
                         <Button
                           className="bg-storiq-purple hover:bg-storiq-purple/80 text-white font-medium px-8 py-3 shadow-lg hover:shadow-xl transition-all duration-300"
@@ -694,7 +716,9 @@ const Publish = () => {
                                 </DialogTrigger>
                               </div>
                               <DialogContent className="max-w-4xl w-full bg-slate-900 border-slate-700">
-                                <DialogTitle className="text-white text-xl font-bold">Image Preview</DialogTitle>
+                                <DialogTitle className="text-white text-xl font-bold">
+                                  Image Preview
+                                </DialogTitle>
                                 <div className="w-full bg-black rounded-xl overflow-hidden">
                                   <img
                                     src={image.url}
@@ -765,7 +789,9 @@ const Publish = () => {
                     </svg>
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold text-white">Published Content</h2>
+                    <h2 className="text-2xl font-bold text-white">
+                      Published Content
+                    </h2>
                     <p className="text-slate-400 text-base mt-1">
                       Your successfully published videos and scheduling history
                     </p>
@@ -779,7 +805,9 @@ const Publish = () => {
                     <div className="w-16 h-16 border-4 border-slate-700 border-t-green-500 rounded-full animate-spin"></div>
                     <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-r-emerald-500 rounded-full animate-spin animation-delay-150"></div>
                   </div>
-                  <p className="text-slate-400 mt-4 font-medium">Loading published content...</p>
+                  <p className="text-slate-400 mt-4 font-medium">
+                    Loading published content...
+                  </p>
                 </div>
               ) : error ? (
                 <div className="bg-red-500/10 border border-red-500/20 text-red-300 px-6 py-4 rounded-2xl flex items-center gap-3">
@@ -815,9 +843,12 @@ const Publish = () => {
                       />
                     </svg>
                   </div>
-                  <h3 className="text-xl font-bold text-white mb-2">No Published Content</h3>
+                  <h3 className="text-xl font-bold text-white mb-2">
+                    No Published Content
+                  </h3>
                   <p className="text-slate-400 mb-6 max-w-md mx-auto">
-                    Your published content will appear here after successful publication.
+                    Your published content will appear here after successful
+                    publication.
                   </p>
                 </div>
               ) : (
@@ -850,7 +881,10 @@ interface VideoPublishCardProps {
   ytConnected: boolean;
   igConnected: boolean;
   platformSelections: { [videoId: string]: { yt: boolean; ig: boolean } };
-  handlePlatformChange: (videoId: string, platform: "youtube" | "instagram") => void;
+  handlePlatformChange: (
+    videoId: string,
+    platform: "youtube" | "instagram"
+  ) => void;
   handlePost: (video: Video, scheduledTime?: DateTime) => void;
   postingId: string | null;
   schedulingLoading: boolean;
@@ -908,9 +942,16 @@ const VideoPublishCard: React.FC<VideoPublishCardProps> = ({
         </div>
 
         <DialogContent className="max-w-4xl w-full bg-slate-900 border-slate-700">
-          <DialogTitle className="text-white text-xl font-bold">Video Preview</DialogTitle>
+          <DialogTitle className="text-white text-xl font-bold">
+            Video Preview
+          </DialogTitle>
           <div className="aspect-video w-full bg-black rounded-xl overflow-hidden">
-            <video src={video.url} className="w-full h-full" controls autoPlay />
+            <video
+              src={video.url}
+              className="w-full h-full"
+              controls
+              autoPlay
+            />
           </div>
         </DialogContent>
       </Dialog>
@@ -927,28 +968,36 @@ const VideoPublishCard: React.FC<VideoPublishCardProps> = ({
                 {(video.publishCount ?? 0) === 1 ? "" : "s"}
               </span>
               {video.scheduledTime && (
-                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium
-                  ${video.scheduledStatus === 'completed' ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
-                    video.scheduledStatus === 'failed' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
-                    'bg-purple-500/20 text-purple-400 border border-purple-500/30'}`}>
+                <div
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium
+                  ${
+                    video.scheduledStatus === "completed"
+                      ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                      : video.scheduledStatus === "failed"
+                      ? "bg-red-500/20 text-red-400 border border-red-500/30"
+                      : "bg-purple-500/20 text-purple-400 border border-purple-500/30"
+                  }`}
+                >
                   <svg
                     className={`w-3.5 h-3.5 ${
-                      video.scheduledStatus === 'completed' ? 'text-green-400' :
-                      video.scheduledStatus === 'failed' ? 'text-red-400' :
-                      'text-purple-400'
+                      video.scheduledStatus === "completed"
+                        ? "text-green-400"
+                        : video.scheduledStatus === "failed"
+                        ? "text-red-400"
+                        : "text-purple-400"
                     }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
                   >
-                    {video.scheduledStatus === 'completed' ? (
+                    {video.scheduledStatus === "completed" ? (
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth="2"
                         d="M5 13l4 4L19 7"
                       />
-                    ) : video.scheduledStatus === 'failed' ? (
+                    ) : video.scheduledStatus === "failed" ? (
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -966,16 +1015,21 @@ const VideoPublishCard: React.FC<VideoPublishCardProps> = ({
                   </svg>
                   <div>
                     <span className="font-semibold">
-                      {video.scheduledStatus === 'completed' ? 'Published successfully' :
-                       video.scheduledStatus === 'failed' ? 'Publishing failed' :
-                       'Scheduled for ' + DateTime.fromISO(video.scheduledTime).toLocaleString(DateTime.DATETIME_SHORT)}
+                      {video.scheduledStatus === "completed"
+                        ? "Published successfully"
+                        : video.scheduledStatus === "failed"
+                        ? "Publishing failed"
+                        : "Scheduled for " +
+                          DateTime.fromISO(video.scheduledTime).toLocaleString(
+                            DateTime.DATETIME_SHORT
+                          )}
                     </span>
-                    {video.scheduledStatus === 'completed' && (
+                    {video.scheduledStatus === "completed" && (
                       <span className="block text-green-400/60 mt-0.5">
                         Published to YouTube
                       </span>
                     )}
-                    {video.scheduledStatus === 'failed' && (
+                    {video.scheduledStatus === "failed" && (
                       <span className="block text-red-400/60 mt-0.5">
                         Check connection and try again
                       </span>
@@ -1004,22 +1058,29 @@ const VideoPublishCard: React.FC<VideoPublishCardProps> = ({
                   <div className="flex items-center justify-center gap-2">
                     <span>YouTube</span>
                     {ytConnected ? (
-                      <span className={`w-2 h-2 rounded-full ${selection.yt ? "bg-purple-500" : "bg-green-500"}`} />
+                      <span
+                        className={`w-2 h-2 rounded-full ${
+                          selection.yt ? "bg-purple-500" : "bg-green-500"
+                        }`}
+                      />
                     ) : (
                       <span className="w-2 h-2 rounded-full bg-red-500" />
                     )}
                   </div>
                   {!ytConnected && (
-                    <span className="text-xs block text-red-400">Not Connected</span>
+                    <span className="text-xs block text-red-400">
+                      Not Connected
+                    </span>
                   )}
                 </button>
               </TooltipTrigger>
               <TooltipContent>
-                <p>{ytConnected
-                  ? selection.yt
-                    ? "Selected for publishing"
-                    : "Click to select YouTube for publishing"
-                  : "Connect YouTube account to publish"}
+                <p>
+                  {ytConnected
+                    ? selection.yt
+                      ? "Selected for publishing"
+                      : "Click to select YouTube for publishing"
+                    : "Connect YouTube account to publish"}
                 </p>
               </TooltipContent>
             </Tooltip>
@@ -1036,7 +1097,13 @@ const VideoPublishCard: React.FC<VideoPublishCardProps> = ({
             }`}
             onClick={() => handlePost(video)}
             disabled={postingId === videoId || !selection.yt || !ytConnected}
-            title={!ytConnected ? "Connect to YouTube to publish videos" : !selection.yt ? "Select a platform to publish" : ""}
+            title={
+              !ytConnected
+                ? "Connect to YouTube to publish videos"
+                : !selection.yt
+                ? "Select a platform to publish"
+                : ""
+            }
           >
             {postingId === videoId ? (
               <span className="flex items-center justify-center gap-2">
@@ -1058,7 +1125,11 @@ const VideoPublishCard: React.FC<VideoPublishCardProps> = ({
                     d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
                   />
                 </svg>
-                {!ytConnected ? "Connect YouTube" : !selection.yt ? "Select Platform" : "Publish Now"}
+                {!ytConnected
+                  ? "Connect YouTube"
+                  : !selection.yt
+                  ? "Select Platform"
+                  : "Publish Now"}
               </span>
             )}
           </Button>
@@ -1067,9 +1138,18 @@ const VideoPublishCard: React.FC<VideoPublishCardProps> = ({
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  className={`bg-slate-700 hover:bg-slate-600 text-white ${(!ytConnected || !selection.yt || schedulingLoading) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`bg-slate-700 hover:bg-slate-600 text-white ${
+                    !ytConnected || !selection.yt || schedulingLoading
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
+                  }`}
                   onClick={() => setScheduleOpen(true)}
-                  disabled={postingId === videoId || !selection.yt || !ytConnected || schedulingLoading}
+                  disabled={
+                    postingId === videoId ||
+                    !selection.yt ||
+                    !ytConnected ||
+                    schedulingLoading
+                  }
                 >
                   <svg
                     className="w-4 h-4"
@@ -1091,8 +1171,8 @@ const VideoPublishCard: React.FC<VideoPublishCardProps> = ({
                   {!ytConnected
                     ? "Connect YouTube account to schedule videos"
                     : !selection.yt
-                      ? "Select YouTube to enable scheduling"
-                      : "Schedule this video for later"}
+                    ? "Select YouTube to enable scheduling"
+                    : "Schedule this video for later"}
                 </p>
               </TooltipContent>
             </Tooltip>

@@ -1,6 +1,37 @@
 // src/hooks/useYouTubeConnect.ts
 import { useState, useCallback } from "react";
 import { toast } from "@/components/ui/use-toast";
+import { authFetch } from "@/lib/authFetch";
+
+// Type definitions for Google Identity Services
+interface GoogleIdentityServices {
+  accounts: {
+    oauth2: {
+      initTokenClient(config: {
+        client_id: string;
+        scope: string;
+        prompt: string;
+        callback: (response: TokenResponse) => void;
+      }): {
+        requestAccessToken(): void;
+      };
+    };
+  };
+}
+
+interface TokenResponse {
+  access_token?: string;
+  refresh_token?: string;
+  error?: string;
+  error_description?: string;
+}
+
+// Augment window interface
+declare global {
+  interface Window {
+    google?: GoogleIdentityServices;
+  }
+}
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 const GOOGLE_SCOPES =
@@ -28,12 +59,13 @@ function useYouTubeConnect() {
   // Fetch connection status
   const fetchConnectionStatus = useCallback(async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/status`, { credentials: "include" });
+      const res = await authFetch('/api/auth/status');
       if (res.ok) {
         const status = await res.json();
         setYtConnected(!!status.youtube);
       }
-    } catch {
+    } catch (error) {
+      console.error('[useYouTubeConnect] Status check failed:', error);
       setYtConnected(false);
     }
   }, []);
@@ -64,23 +96,17 @@ function useYouTubeConnect() {
 
       await loadGisScript();
 
-      // @ts-ignore
-      if (
-        !window.google ||
-        !window.google.accounts ||
-        !window.google.accounts.oauth2
-      ) {
+      if (!window.google?.accounts?.oauth2) {
         toast({ description: "Google Identity Services failed to load.", variant: "destructive" });
         setLoading(false);
         return;
       }
 
-      // @ts-ignore
       const tokenClient = window.google.accounts.oauth2.initTokenClient({
         client_id: GOOGLE_CLIENT_ID,
         scope: GOOGLE_SCOPES,
         prompt: "consent",
-        callback: async (tokenResponse: any) => {
+        callback: async (tokenResponse: TokenResponse) => {
           if (tokenResponse.error || !tokenResponse.access_token) {
             toast({
               description: tokenResponse.error_description || "YouTube OAuth failed",
@@ -90,10 +116,8 @@ function useYouTubeConnect() {
             return;
           }
           try {
-            const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/link-youtube`, {
+            const res = await authFetch('/api/auth/link-youtube', {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
-              credentials: "include",
               body: JSON.stringify({
                 accessToken: tokenResponse.access_token,
                 refreshToken: tokenResponse.refresh_token || undefined,
@@ -127,9 +151,8 @@ function useYouTubeConnect() {
   const disconnectYouTube = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/disconnect-youtube`, {
-        method: "POST",
-        credentials: "include",
+      const res = await authFetch('/api/auth/disconnect-youtube', {
+        method: "POST"
       });
       if (!res.ok) throw new Error("Failed to disconnect YouTube");
       await fetchConnectionStatus();
