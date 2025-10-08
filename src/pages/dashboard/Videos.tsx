@@ -614,7 +614,9 @@ const Videos = () => {
                   <h2 className="text-2xl font-bold text-white flex items-center gap-3">
                     Your Videos
                   </h2>
-                  <p className="text-white/60">Here are all the videos that you created.</p>
+                  <p className="text-white/60">
+                    Here are all the videos that you created.
+                  </p>
                 </div>
               </div>
 
@@ -660,7 +662,9 @@ const Videos = () => {
                   <h2 className="text-2xl font-bold text-white flex items-center gap-3">
                     Edited Videos
                   </h2>
-                  <p className="text-white/60">Here are all the edited videos.</p>
+                  <p className="text-white/60">
+                    Here are all the edited videos.
+                  </p>
                 </div>
               </div>
 
