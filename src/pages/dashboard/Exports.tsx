@@ -406,9 +406,7 @@ const Exports = () => {
           <h1 className="text-3xl lg:text-4xl font-bold text-white mb-2">
             Your Exports
           </h1>
-          <p className="text-white/60 text-lg">
-            Manage and download your exported videos
-          </p>
+<p className="text-white/60">Here are all the videos that you exported.</p>
         </div>
 
         {/* Stats Overview */}
