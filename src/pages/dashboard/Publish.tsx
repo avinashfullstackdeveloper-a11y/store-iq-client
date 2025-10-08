@@ -2,7 +2,14 @@
 
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
+import { DateTime } from "luxon";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
@@ -13,6 +20,7 @@ import {
   DialogContent,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ScheduleDialog } from "@/components/schedule-dialog";
 
 const IG_OAUTH_URL = `${import.meta.env.VITE_API_BASE_URL}/api/auth/instagram`;
 
@@ -26,6 +34,8 @@ interface Video {
   s3Key?: string;
   publishCount?: number;
   publishedToYouTube?: boolean;
+  scheduledTime?: string;
+  scheduledStatus?: 'pending' | 'completed' | 'failed';
 }
 
 const Publish = () => {
@@ -64,21 +74,29 @@ const Publish = () => {
   };
 
   // Handle posting per video
-  const handlePost = async (video: Video) => {
-    const selection = platformSelections[video.id || video.s3Key || ""] || {
-      yt: false,
-      ig: false,
-    };
-    if ((!selection.yt && !selection.ig) || (!ytConnected && !igConnected)) {
-      toast.error("Please connect platforms and select at least one.");
-      return;
-    }
-    setPostingId(video.id || video.s3Key || "");
-
+  const handlePost = async (video: Video, scheduledTime?: DateTime) => {
     try {
+      const selection = platformSelections[video.id || video.s3Key || ""] || {
+        yt: false,
+        ig: false,
+      };
+
+      // Validation checks
+      if (!selection.yt && !selection.ig) {
+        toast.error("Please select at least one platform for publishing");
+        return;
+      }
+      if (!ytConnected && selection.yt) {
+        toast.error("YouTube connection required to publish. Please connect your account.");
+        return;
+      }
+
+      setPostingId(video.id || video.s3Key || "");
+
       // Prepare payload
       const payload = {
         s3Key: video.s3Key,
+        scheduledTime: scheduledTime ? scheduledTime.toISO() : undefined
       };
 
       // Track results for each platform
@@ -89,7 +107,11 @@ const Publish = () => {
       // Post to YouTube if selected
       if (selection.yt && ytConnected) {
         const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-        const res = await fetch(`${API_BASE_URL}/api/publish/youtube`, {
+        const endpoint = scheduledTime ?
+          `${API_BASE_URL}/api/publish/youtube/schedule` :
+          `${API_BASE_URL}/api/publish/youtube`;
+        
+        const res = await fetch(endpoint, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
@@ -97,7 +119,9 @@ const Publish = () => {
         });
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
-          errorMsg += `YouTube: ${err?.message || "Failed to post"} `;
+          const errorMessage = err?.message || "Failed to post";
+          errorMsg += `YouTube Error: ${errorMessage}. Please try again or check your connection.`;
+          toast.error(errorMsg);
         } else {
           ytSuccess = true;
         }
@@ -106,7 +130,9 @@ const Publish = () => {
       setPostingId(null);
 
       if (ytSuccess) {
-        toast.success("Video published successfully!");
+        toast.success(scheduledTime ?
+          "Video scheduled successfully!" :
+          "Video published successfully!");
         setPlatformSelections((prev) => ({
           ...prev,
           [video.id || video.s3Key || ""]: { yt: false, ig: false },
@@ -228,15 +254,24 @@ const Publish = () => {
           <div className="flex items-center space-x-4">
             <div className="text-2xl">🔗</div>
             <div>
-              <h3 className="text-white font-medium">Connect Social Accounts to enable scheduling (TikTok, YouTube, Instagram)</h3>
-              <p className="text-white/60 text-sm">To use scheduling feature, connect social accounts</p>
+              <h3 className="text-white font-medium">
+                {ytConnected ? "Connected to YouTube" : "Connect Social Accounts to enable scheduling"}
+              </h3>
+              <p className="text-white/60 text-sm">
+                {ytConnected ? "Ready to publish and schedule videos" : "To use scheduling feature, connect social accounts"}
+              </p>
             </div>
           </div>
           <Button
-            className="bg-storiq-purple hover:bg-storiq-purple-light text-white rounded-lg"
+            className={`${
+              ytConnected
+                ? "bg-green-600 hover:bg-green-700"
+                : "bg-storiq-purple hover:bg-storiq-purple-light"
+            } text-white rounded-lg`}
+            disabled={ytLoading}
             onClick={() => (!ytConnected ? handleYouTubeOAuth() : null)}
           >
-            Connect Now
+            {ytLoading ? "Connecting..." : ytConnected ? "✓ Connected" : "Connect Now"}
           </Button>
         </div>
 
@@ -606,7 +641,7 @@ interface VideoPublishCardProps {
   igConnected: boolean;
   platformSelections: { [videoId: string]: { yt: boolean; ig: boolean } };
   handlePlatformChange: (videoId: string, platform: "youtube" | "instagram") => void;
-  handlePost: (video: Video) => void;
+  handlePost: (video: Video, scheduledTime?: DateTime) => void;
   postingId: string | null;
 }
 
@@ -619,13 +654,14 @@ const VideoPublishCard: React.FC<VideoPublishCardProps> = ({
   handlePost,
   postingId,
 }) => {
-  const [open, setOpen] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [scheduleOpen, setScheduleOpen] = useState(false);
   const videoId = video.id || video.s3Key || "";
   const selection = platformSelections[videoId] || { yt: false, ig: false };
 
   return (
     <div className="group bg-gradient-to-br from-slate-800/60 to-slate-900/60 rounded-2xl overflow-hidden border border-slate-600/50 transition-all duration-300 hover:border-purple-500/50 hover:shadow-xl hover:shadow-purple-500/10 hover:-translate-y-1 backdrop-blur-sm">
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <div className="relative aspect-video bg-slate-900 overflow-hidden">
           {video.thumbnail ? (
             <img
@@ -647,11 +683,16 @@ const VideoPublishCard: React.FC<VideoPublishCardProps> = ({
             <Button
               size="sm"
               className="absolute inset-0 w-full h-full opacity-0 group-hover:opacity-100"
-              onClick={() => setOpen(true)}
+              onClick={() => setPreviewOpen(true)}
             >
               Preview
             </Button>
           </DialogTrigger>
+          <ScheduleDialog
+            open={scheduleOpen}
+            onOpenChange={setScheduleOpen}
+            onSchedule={(scheduledTime) => handlePost(video, scheduledTime)}
+          />
         </div>
 
         <DialogContent className="max-w-4xl w-full bg-slate-900 border-slate-700">
@@ -673,43 +714,146 @@ const VideoPublishCard: React.FC<VideoPublishCardProps> = ({
                 Published {video.publishCount ?? 0} time
                 {(video.publishCount ?? 0) === 1 ? "" : "s"}
               </span>
+              {video.scheduledTime && (
+                <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium
+                  ${video.scheduledStatus === 'completed' ? 'bg-green-500/20 text-green-400' :
+                    video.scheduledStatus === 'failed' ? 'bg-red-500/20 text-red-400' :
+                    'bg-purple-500/20 text-purple-400'}`}>
+                  <svg
+                    className="w-3 h-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <span>
+                    {video.scheduledStatus === 'completed' ? 'Published' :
+                     video.scheduledStatus === 'failed' ? 'Failed' :
+                     'Scheduled for ' + DateTime.fromISO(video.scheduledTime).toLocaleString(DateTime.DATETIME_SHORT)}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
-        <Button
-          className={`w-full font-medium transition-all duration-300 ${
-            !selection.yt
-              ? "bg-slate-700/50 hover:bg-slate-600/50 text-slate-400 border border-slate-600/50"
-              : "bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg hover:shadow-xl hover:scale-[1.02]"
-          }`}
-          onClick={() => handlePost(video)}
-          disabled={postingId === videoId || (!selection.yt)}
-        >
-          {postingId === videoId ? (
-            <span className="flex items-center justify-center gap-2">
-              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              Publishing...
-            </span>
-          ) : (
-            <span className="flex items-center justify-center gap-2">
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                />
-              </svg>
-              {!selection.yt ? "Select platform to publish" : "Publish"}
-            </span>
-          )}
-        </Button>
+        {/* Platform Selection */}
+        <div className="mb-4 flex gap-2">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  className={`flex-1 p-2 rounded-lg transition-all ${
+                    selection.yt
+                      ? "bg-purple-500/20 text-purple-400 border-2 border-purple-500"
+                      : "bg-slate-700/50 text-slate-400 border border-slate-600/50"
+                  }`}
+                  onClick={() => handlePlatformChange(videoId, "youtube")}
+                  disabled={!ytConnected}
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    <span>YouTube</span>
+                    {ytConnected ? (
+                      <span className={`w-2 h-2 rounded-full ${selection.yt ? "bg-purple-500" : "bg-green-500"}`} />
+                    ) : (
+                      <span className="w-2 h-2 rounded-full bg-red-500" />
+                    )}
+                  </div>
+                  {!ytConnected && (
+                    <span className="text-xs block text-red-400">Not Connected</span>
+                  )}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{ytConnected
+                  ? selection.yt
+                    ? "Selected for publishing"
+                    : "Click to select YouTube for publishing"
+                  : "Connect YouTube account to publish"}
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-2">
+          <Button
+            className={`flex-1 font-medium transition-all duration-300 ${
+              !selection.yt || !ytConnected
+                ? "bg-slate-700/50 hover:bg-slate-600/50 text-slate-400 border border-slate-600/50"
+                : "bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg hover:shadow-xl hover:scale-[1.02]"
+            }`}
+            onClick={() => handlePost(video)}
+            disabled={postingId === videoId || !selection.yt || !ytConnected}
+            title={!ytConnected ? "Connect to YouTube to publish videos" : !selection.yt ? "Select a platform to publish" : ""}
+          >
+            {postingId === videoId ? (
+              <span className="flex items-center justify-center gap-2">
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Publishing...
+              </span>
+            ) : (
+              <span className="flex items-center justify-center gap-2">
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                  />
+                </svg>
+                {!ytConnected ? "Connect YouTube" : !selection.yt ? "Select Platform" : "Publish Now"}
+              </span>
+            )}
+          </Button>
+
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  className={`bg-slate-700 hover:bg-slate-600 text-white ${!ytConnected || !selection.yt ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  onClick={() => setScheduleOpen(true)}
+                  disabled={postingId === videoId || !selection.yt || !ytConnected}
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>
+                  {!ytConnected
+                    ? "Connect YouTube account to schedule videos"
+                    : !selection.yt
+                      ? "Select YouTube to enable scheduling"
+                      : "Schedule this video for later"}
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
       </div>
     </div>
   );
