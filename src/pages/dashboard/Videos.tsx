@@ -416,11 +416,8 @@ const Videos = () => {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div>
               <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
-                Collection
+                Collections
               </h1>
-              <p className="text-white/60 text-lg">
-                Manage and preview all your videos and images in one collection
-              </p>
             </div>
           </div>
 
