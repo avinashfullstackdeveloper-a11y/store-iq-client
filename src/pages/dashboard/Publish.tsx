@@ -631,7 +631,6 @@ const VideoPublishCard = ({
   handlePost,
   postingId,
 }) => {
-  const [expanded, setExpanded] = useState(false)
   const [open, setOpen] = useState(false)
   const videoId = video.id || video.s3Key || ""
   const selection = platformSelections[videoId] || { yt: false, ig: false }
@@ -702,19 +701,6 @@ const VideoPublishCard = ({
               </span>
             </div>
           </div>
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className="ml-4 p-2 rounded-xl bg-slate-700/50 hover:bg-slate-600/50 text-slate-400 hover:text-white transition-all duration-200"
-          >
-            <svg
-              className={`w-4 h-4 transform transition-transform duration-200 ${expanded ? "rotate-180" : ""}`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
         </div>
 
         {/* Platform selection */}
@@ -733,44 +719,6 @@ const VideoPublishCard = ({
           />
         </div>
 
-        {/* Expanded options */}
-        {expanded && (
-          <div className="mb-6 p-4 bg-slate-800/50 rounded-xl border border-slate-600/30 space-y-4">
-            <div className="grid grid-cols-1 gap-4">
-              <div>
-                <label className="text-xs font-medium text-slate-400 block mb-2">Title</label>
-                <input
-                  type="text"
-                  defaultValue={video.title || ""}
-                  className="w-full bg-slate-700/50 border border-slate-600/50 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all"
-                  placeholder="Enter video title"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-medium text-slate-400 block mb-2">Description</label>
-                <textarea
-                  className="w-full bg-slate-700/50 border border-slate-600/50 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all resize-none"
-                  rows={3}
-                  placeholder="Add a description for your video..."
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between p-3 bg-slate-700/30 rounded-lg">
-              <div>
-                <p className="text-white font-medium text-sm">Schedule Publishing</p>
-                <p className="text-slate-400 text-xs">Publish immediately or schedule for later</p>
-              </div>
-              <Button
-                size="sm"
-                variant="outline"
-                className="border-purple-500/50 text-purple-300 hover:bg-purple-500/10 bg-transparent"
-              >
-                Schedule
-              </Button>
-            </div>
-          </div>
-        )}
 
         {/* Publish button */}
         <Button
