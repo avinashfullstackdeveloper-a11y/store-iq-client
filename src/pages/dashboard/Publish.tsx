@@ -29,6 +29,7 @@ interface Video {
   id?: string;
   url: string;
   title?: string;
+  description?: string;
   thumbnail?: string;
   duration?: number;
   s3Key?: string;
@@ -48,10 +49,22 @@ const Publish = () => {
   } = useYouTubeConnect();
   const [igConnected, setIgConnected] = useState(false);
 
-  // Define tabs for the scheduling section
-  const tabs = ["Scheduled", "Past Publications"];
-
+  const [activeTab, setActiveTab] = useState<'scheduled' | 'past'>('scheduled');
   const [videos, setVideos] = useState<Video[]>([]);
+
+  // Filter videos based on active tab and file type
+  const filteredVideos = React.useMemo(() => {
+    const isVideoFile = (url: string) => /\.(mp4|mov|webm|avi|mkv)$/i.test(url);
+    const videoItems = videos.filter(v => isVideoFile(v.url));
+    
+    return videoItems.filter(v => {
+      if (activeTab === 'scheduled') {
+        return !v.publishedToYouTube || (v.scheduledTime && v.scheduledStatus !== 'completed');
+      } else {
+        return v.publishedToYouTube || (v.scheduledTime && v.scheduledStatus === 'completed');
+      }
+    });
+  }, [videos, activeTab]);
   const [images, setImages] = useState<{ id?: string; url: string; s3Key?: string; title?: string }[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [imagesLoading, setImagesLoading] = useState<boolean>(false);
@@ -117,8 +130,14 @@ const Publish = () => {
         const requestPayload = scheduledTime ? {
           videoS3Key: video.s3Key,
           scheduledTime: scheduledTime.toISO(),
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          metadata: {
+            title: video.title || 'Untitled Video',
+            description: video.description || ''
+          }
         } : payload;
+
+        console.log('Scheduling video with metadata:', requestPayload); // Debug log
         
         try {
           const res = await fetch(endpoint, {
@@ -149,8 +168,9 @@ const Publish = () => {
           
           ytSuccess = true;
           if (scheduledTime) {
-            toast.success("Video scheduled successfully!");
+            toast.success(`Video "${video.title || 'Untitled Video'}" scheduled successfully!`);
             await fetchVideos(); // Refresh videos to show scheduled status
+            setActiveTab('scheduled'); // Switch to scheduled tab
             setSchedulingLoading(false);
             return;
           }
@@ -165,12 +185,13 @@ const Publish = () => {
       setPostingId(null);
 
       if (ytSuccess) {
-        toast.success("Video published successfully!");
+        toast.success(`"${video.title || 'Untitled Video'}" published successfully!`);
         setPlatformSelections((prev) => ({
           ...prev,
           [video.id || video.s3Key || ""]: { yt: false, ig: false },
         }));
         await fetchVideos();
+        setActiveTab('past'); // Switch to past publications tab after successful publish
       } else if (!scheduledTime) {
         // Only show generic error for immediate publishing
         toast.error(errorMsg.trim() || "Failed to post video.");
@@ -269,20 +290,21 @@ const Publish = () => {
         </div>
 
         {/* Tabs */}
-        <div className="flex space-x-1 mb-8">
-          {tabs.map((tab, index) => (
-            <button
-              key={index}
-              className={`px-6 py-3 rounded-lg text-sm font-medium transition-colors ${
-                index === 0
-                  ? "bg-storiq-purple text-white"
-                  : "text-white/60 hover:text-white hover:bg-storiq-card-bg"
-              }`}
+        <Tabs value={activeTab} onValueChange={(value: 'scheduled' | 'past') => setActiveTab(value)} className="w-full">
+          <TabsList className="mb-8 bg-transparent gap-2">
+            <TabsTrigger
+              value="scheduled"
+              className={`px-6 py-3 rounded-lg text-sm font-medium transition-colors data-[state=active]:bg-storiq-purple data-[state=active]:text-white text-white/60 hover:text-white hover:bg-storiq-card-bg`}
             >
-              {tab}
-            </button>
-          ))}
-        </div>
+              Scheduled
+            </TabsTrigger>
+            <TabsTrigger
+              value="past"
+              className={`px-6 py-3 rounded-lg text-sm font-medium transition-colors data-[state=active]:bg-storiq-purple data-[state=active]:text-white text-white/60 hover:text-white hover:bg-storiq-card-bg`}
+            >
+              Past Publications
+            </TabsTrigger>
+          </TabsList>
 
         {/* Social Connect Banner */}
         <div className="bg-storiq-card-bg border border-storiq-border rounded-2xl p-6 mb-8 flex items-center justify-between">
@@ -316,12 +338,9 @@ const Publish = () => {
             <h2 className="text-2xl font-bold text-white mb-1">Your Posting Queue</h2>
             <p className="text-white/60">Your content published while you sleep</p>
           </div>
-          <Button variant="outline" className="border-storiq-border text-white hover:bg-storiq-purple hover:border-storiq-purple">
-            Edit Queue
-          </Button>
         </div>
 
-        <Tabs defaultValue="scheduled" className="w-full">
+        {/* Content based on active tab */}
           <TabsContent value="scheduled" className="mt-6">
             {/* Split videos and images by file extension */}
             {(() => {
@@ -331,7 +350,19 @@ const Publish = () => {
               function isImageFile(url: string) {
                 return /\.(jpg|jpeg|png|gif|webp)$/i.test(url);
               }
-              const videoItems = videos.filter((v) => isVideoFile(v.url));
+
+              // Filter videos for current view
+              const allVideoItems = videos.filter((v) => isVideoFile(v.url));
+              const currentVideoItems = allVideoItems.filter(v => {
+                if (activeTab === 'scheduled') {
+                  // Show videos that are pending or scheduled
+                  return !v.publishedToYouTube || (v.scheduledTime && v.scheduledStatus !== 'completed');
+                } else {
+                  // Show completed or published videos
+                  return v.publishedToYouTube || (v.scheduledTime && v.scheduledStatus === 'completed');
+                }
+              });
+              
               const imageItems = images;
               return (
                 <>
@@ -366,7 +397,7 @@ const Publish = () => {
                       <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-slate-800/50 rounded-xl border border-slate-600/50">
                         <span className="text-sm text-slate-400">Total:</span>
                         <span className="text-lg font-bold text-white">
-                          {videoItems.length}
+                          {filteredVideos.length}
                         </span>
                       </div>
                     </div>
@@ -398,7 +429,7 @@ const Publish = () => {
                         </svg>
                         <span>{error}</span>
                       </div>
-                    ) : videoItems.length === 0 ? (
+                    ) : filteredVideos.length === 0 ? (
                       <div className="flex flex-col items-center justify-center text-center py-20 border-2 border-dashed border-slate-600/50 rounded-2xl bg-slate-800/20">
                         <div className="w-20 h-20 mb-6 rounded-2xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center mx-auto">
                           <svg
@@ -446,7 +477,7 @@ const Publish = () => {
                       </div>
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-                        {videoItems.map((video) => (
+                        {filteredVideos.map((video) => (
                           <VideoPublishCard
                             key={video.id || video.s3Key}
                             video={video}
@@ -638,32 +669,99 @@ const Publish = () => {
           </TabsContent>
 
           <TabsContent value="past" className="mt-6">
-           <div className="bg-storiq-card-bg border border-storiq-border rounded-xl p-8">
-             <div className="flex flex-col items-center justify-center text-center py-20">
-               <div className="w-20 h-20 mb-6 rounded-2xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center mx-auto">
-                 <svg
-                   className="w-10 h-10 text-slate-500"
-                   fill="none"
-                   stroke="currentColor"
-                   viewBox="0 0 24 24"
-                 >
-                   <path
-                     strokeLinecap="round"
-                     strokeLinejoin="round"
-                     strokeWidth="2"
-                     d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                   />
-                 </svg>
-               </div>
-               <h3 className="text-xl font-bold text-white mb-2">
-                 Past Publications
-               </h3>
-               <p className="text-slate-400 max-w-md mx-auto">
-                 Your published content history will appear here. This feature
-                 is coming soon!
-               </p>
-             </div>
-           </div>
+            {/* Past Publications Section */}
+            <div className="bg-storiq-card-bg border border-storiq-border rounded-xl p-8">
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-lg">
+                    <svg
+                      className="w-5 h-5 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">Published Content</h2>
+                    <p className="text-slate-400 text-base mt-1">
+                      Your successfully published videos and scheduling history
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {loading ? (
+                <div className="flex flex-col items-center justify-center py-20">
+                  <div className="relative">
+                    <div className="w-16 h-16 border-4 border-slate-700 border-t-green-500 rounded-full animate-spin"></div>
+                    <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-r-emerald-500 rounded-full animate-spin animation-delay-150"></div>
+                  </div>
+                  <p className="text-slate-400 mt-4 font-medium">Loading published content...</p>
+                </div>
+              ) : error ? (
+                <div className="bg-red-500/10 border border-red-500/20 text-red-300 px-6 py-4 rounded-2xl flex items-center gap-3">
+                  <svg
+                    className="w-5 h-5 text-red-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <span>{error}</span>
+                </div>
+              ) : filteredVideos.length === 0 ? (
+                <div className="flex flex-col items-center justify-center text-center py-20 border-2 border-dashed border-slate-600/50 rounded-2xl bg-slate-800/20">
+                  <div className="w-20 h-20 mb-6 rounded-2xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center mx-auto">
+                    <svg
+                      className="w-10 h-10 text-slate-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-2">No Published Content</h3>
+                  <p className="text-slate-400 mb-6 max-w-md mx-auto">
+                    Your published content will appear here after successful publication.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+                  {filteredVideos.map((video) => (
+                    <VideoPublishCard
+                      key={video.id || video.s3Key}
+                      video={video}
+                      ytConnected={ytConnected}
+                      igConnected={igConnected}
+                      platformSelections={platformSelections}
+                      handlePlatformChange={handlePlatformChange}
+                      handlePost={handlePost}
+                      postingId={postingId}
+                      schedulingLoading={schedulingLoading}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           </TabsContent>
         </Tabs>
       </div>
@@ -753,28 +851,60 @@ const VideoPublishCard: React.FC<VideoPublishCardProps> = ({
                 {(video.publishCount ?? 0) === 1 ? "" : "s"}
               </span>
               {video.scheduledTime && (
-                <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium
-                  ${video.scheduledStatus === 'completed' ? 'bg-green-500/20 text-green-400' :
-                    video.scheduledStatus === 'failed' ? 'bg-red-500/20 text-red-400' :
-                    'bg-purple-500/20 text-purple-400'}`}>
+                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium
+                  ${video.scheduledStatus === 'completed' ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
+                    video.scheduledStatus === 'failed' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
+                    'bg-purple-500/20 text-purple-400 border border-purple-500/30'}`}>
                   <svg
-                    className="w-3 h-3"
+                    className={`w-3.5 h-3.5 ${
+                      video.scheduledStatus === 'completed' ? 'text-green-400' :
+                      video.scheduledStatus === 'failed' ? 'text-red-400' :
+                      'text-purple-400'
+                    }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
+                    {video.scheduledStatus === 'completed' ? (
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M5 13l4 4L19 7"
+                      />
+                    ) : video.scheduledStatus === 'failed' ? (
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    ) : (
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    )}
                   </svg>
-                  <span>
-                    {video.scheduledStatus === 'completed' ? 'Published' :
-                     video.scheduledStatus === 'failed' ? 'Failed' :
-                     'Scheduled for ' + DateTime.fromISO(video.scheduledTime).toLocaleString(DateTime.DATETIME_SHORT)}
-                  </span>
+                  <div>
+                    <span className="font-semibold">
+                      {video.scheduledStatus === 'completed' ? 'Published successfully' :
+                       video.scheduledStatus === 'failed' ? 'Publishing failed' :
+                       'Scheduled for ' + DateTime.fromISO(video.scheduledTime).toLocaleString(DateTime.DATETIME_SHORT)}
+                    </span>
+                    {video.scheduledStatus === 'completed' && (
+                      <span className="block text-green-400/60 mt-0.5">
+                        Published to YouTube
+                      </span>
+                    )}
+                    {video.scheduledStatus === 'failed' && (
+                      <span className="block text-red-400/60 mt-0.5">
+                        Check connection and try again
+                      </span>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
