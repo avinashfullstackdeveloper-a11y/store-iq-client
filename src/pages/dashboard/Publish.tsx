@@ -44,7 +44,7 @@ const Publish = () => {
   const [videos, setVideos] = useState<Video[]>([]);
   const [images, setImages] = useState<{ id?: string; url: string; s3Key?: string; title?: string }[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [imagesLoading, setImagesLoading] = useState<boolean>(true);
+  const [imagesLoading, setImagesLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [imagesError, setImagesError] = useState<string | null>(null);
   const [postingId, setPostingId] = useState<string | null>(null);
@@ -148,8 +148,34 @@ const Publish = () => {
     }
   };
 
+  // Fetch images from backend
+  const fetchImages = async () => {
+    setImagesLoading(true);
+    setImagesError(null);
+    try {
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+      const res = await fetch(`${API_BASE_URL}/api/images`, {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to fetch images");
+      const data = await res.json();
+      console.log('Fetched images:', data); // Debug log
+      setImages(Array.isArray(data) ? data.map(img => ({
+        id: img.key,
+        url: img.s3Url,
+        s3Key: img.key,
+        title: img.title
+      })) : []);
+    } catch (err) {
+      setImagesError((err as Error)?.message || "Unknown error");
+    } finally {
+      setImagesLoading(false);
+    }
+  };
+
   React.useEffect(() => {
     fetchVideos();
+    fetchImages();
     fetchConnectionStatus();
     fetchInstagramConnectionStatus();
   }, []);
@@ -177,12 +203,8 @@ const Publish = () => {
     <DashboardLayout>
       <div className="p-8">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">
-            Your Posting Queue
-          </h1>
-          <p className="text-white/60">
-            Your content published while you sleep
-          </p>
+          <h1 className="text-4xl font-bold text-white mb-2">Your Posting Queue</h1>
+          <p className="text-white/60">Your content published while you sleep</p>
         </div>
 
         {/* Tabs */}
@@ -206,13 +228,8 @@ const Publish = () => {
           <div className="flex items-center space-x-4">
             <div className="text-2xl">🔗</div>
             <div>
-              <h3 className="text-white font-medium">
-                Connect Social Accounts to enable scheduling (TikTok, YouTube,
-                Instagram)
-              </h3>
-              <p className="text-white/60 text-sm">
-                To use scheduling feature, connect social accounts
-              </p>
+              <h3 className="text-white font-medium">Connect Social Accounts to enable scheduling (TikTok, YouTube, Instagram)</h3>
+              <p className="text-white/60 text-sm">To use scheduling feature, connect social accounts</p>
             </div>
           </div>
           <Button
@@ -223,17 +240,33 @@ const Publish = () => {
           </Button>
         </div>
 
+        {/* Queue Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-2xl font-bold text-white mb-1">Your Posting Queue</h2>
+            <p className="text-white/60">Your content published while you sleep</p>
+          </div>
+          <Button variant="outline" className="border-storiq-border text-white hover:bg-storiq-purple hover:border-storiq-purple">
+            Edit Queue
+          </Button>
+        </div>
+
         <Tabs defaultValue="scheduled" className="w-full">
           <TabsContent value="scheduled" className="mt-6">
             {/* Split videos and images by file extension */}
             {(() => {
-              function isVideoFile(url) {
+              function isVideoFile(url: string) {
                 return /\.(mp4|mov|webm|avi|mkv)$/i.test(url);
               }
+              function isImageFile(url: string) {
+                return /\.(jpg|jpeg|png|gif|webp)$/i.test(url);
+              }
               const videoItems = videos.filter((v) => isVideoFile(v.url));
+              const imageItems = images;
               return (
                 <>
-                  <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-sm border border-slate-700/50 rounded-3xl p-8 mb-12 shadow-2xl">
+                  {/* Videos Section */}
+                  <div className="bg-storiq-card-bg border border-storiq-border rounded-xl p-8 mb-12">
                     <div className="flex items-center justify-between mb-8">
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center shadow-lg">
@@ -358,38 +391,208 @@ const Publish = () => {
                       </div>
                     )}
                   </div>
+                  {/* Images Section */}
+                  <div className="bg-storiq-card-bg border border-storiq-border rounded-xl p-8">
+                    <div className="flex items-center justify-between mb-8">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center shadow-lg">
+                          <svg
+                            className="w-5 h-5 text-white"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                            />
+                          </svg>
+                        </div>
+                        <div>
+                          <h2 className="text-2xl font-bold text-white">Your Images</h2>
+                          <p className="text-slate-400 text-base mt-1">
+                            Select and customize images to publish across platforms
+                          </p>
+                        </div>
+                      </div>
+                      <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-slate-800/50 rounded-xl border border-slate-600/50">
+                        <span className="text-sm text-slate-400">Total:</span>
+                        <span className="text-lg font-bold text-white">{imageItems.length}</span>
+                      </div>
+                    </div>
+
+                    {imagesLoading ? (
+                      <div className="flex flex-col items-center justify-center py-20">
+                        <div className="relative">
+                          <div className="w-16 h-16 border-4 border-slate-700 border-t-purple-500 rounded-full animate-spin"></div>
+                          <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-r-pink-500 rounded-full animate-spin animation-delay-150"></div>
+                        </div>
+                        <p className="text-slate-400 mt-4 font-medium">Loading your images...</p>
+                      </div>
+                    ) : imagesError ? (
+                      <div className="bg-red-500/10 border border-red-500/20 text-red-300 px-6 py-4 rounded-2xl flex items-center gap-3">
+                        <svg
+                          className="w-5 h-5 text-red-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                        <span>{imagesError}</span>
+                      </div>
+                    ) : imageItems.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center text-center py-20 border-2 border-dashed border-slate-600/50 rounded-2xl bg-slate-800/20">
+                        <div className="w-20 h-20 mb-6 rounded-2xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center mx-auto">
+                          <svg
+                            className="w-10 h-10 text-slate-500"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                            />
+                          </svg>
+                        </div>
+                        <h3 className="text-xl font-bold text-white mb-2">No images yet</h3>
+                        <p className="text-slate-400 mb-6 max-w-md mx-auto">
+                          Create your first image to start publishing across social platforms
+                        </p>
+                        <Button
+                          className="bg-storiq-purple hover:bg-storiq-purple/80 text-white font-medium px-8 py-3 shadow-lg hover:shadow-xl transition-all duration-300"
+                          onClick={() => navigate("/dashboard/create-image")}
+                        >
+                          <span className="flex items-center gap-2">
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M12 4v16m8-8H4"
+                              />
+                            </svg>
+                            Create Your First Image
+                          </span>
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+                        {imageItems.map((image) => (
+                          <div
+                            key={image.id || image.s3Key}
+                            className="group bg-gradient-to-br from-slate-800/60 to-slate-900/60 rounded-2xl overflow-hidden border border-slate-600/50 transition-all duration-300 hover:border-purple-500/50 hover:shadow-xl hover:shadow-purple-500/10 hover:-translate-y-1 backdrop-blur-sm"
+                          >
+                            <Dialog>
+                              <div className="relative aspect-video bg-slate-900 overflow-hidden">
+                                <img
+                                  src={image.url}
+                                  alt={image.title || "Untitled Image"}
+                                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300" />
+                                <DialogTrigger asChild>
+                                  <Button
+                                    size="sm"
+                                    className="absolute inset-0 w-full h-full opacity-0 group-hover:opacity-100"
+                                  >
+                                    Preview
+                                  </Button>
+                                </DialogTrigger>
+                              </div>
+                              <DialogContent className="max-w-4xl w-full bg-slate-900 border-slate-700">
+                                <DialogTitle className="text-white text-xl font-bold">Image Preview</DialogTitle>
+                                <div className="w-full bg-black rounded-xl overflow-hidden">
+                                  <img
+                                    src={image.url}
+                                    alt={image.title || "Full size image"}
+                                    className="w-full h-auto"
+                                  />
+                                </div>
+                              </DialogContent>
+                            </Dialog>
+                            <div className="p-6">
+                              <div className="flex items-start justify-between mb-4">
+                                <div className="flex-1 min-w-0">
+                                  <h3 className="text-white font-bold text-lg mb-2 truncate group-hover:text-purple-200 transition-colors">
+                                    {image.title || "Untitled Image"}
+                                  </h3>
+                                </div>
+                              </div>
+                              <Button
+                                className="w-full font-medium bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300"
+                                onClick={() => handlePost(image)}
+                              >
+                                <span className="flex items-center justify-center gap-2">
+                                  <svg
+                                    className="w-4 h-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth="2"
+                                      d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                                    />
+                                  </svg>
+                                  Publish
+                                </span>
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </>
               );
             })()}
           </TabsContent>
 
           <TabsContent value="past" className="mt-6">
-            <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-sm border border-slate-700/50 rounded-3xl p-8 shadow-2xl">
-              <div className="flex flex-col items-center justify-center text-center py-20">
-                <div className="w-20 h-20 mb-6 rounded-2xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center mx-auto">
-                  <svg
-                    className="w-10 h-10 text-slate-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-bold text-white mb-2">
-                  Past Publications
-                </h3>
-                <p className="text-slate-400 max-w-md mx-auto">
-                  Your published content history will appear here. This feature
-                  is coming soon!
-                </p>
-              </div>
-            </div>
+           <div className="bg-storiq-card-bg border border-storiq-border rounded-xl p-8">
+             <div className="flex flex-col items-center justify-center text-center py-20">
+               <div className="w-20 h-20 mb-6 rounded-2xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center mx-auto">
+                 <svg
+                   className="w-10 h-10 text-slate-500"
+                   fill="none"
+                   stroke="currentColor"
+                   viewBox="0 0 24 24"
+                 >
+                   <path
+                     strokeLinecap="round"
+                     strokeLinejoin="round"
+                     strokeWidth="2"
+                     d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                   />
+                 </svg>
+               </div>
+               <h3 className="text-xl font-bold text-white mb-2">
+                 Past Publications
+               </h3>
+               <p className="text-slate-400 max-w-md mx-auto">
+                 Your published content history will appear here. This feature
+                 is coming soon!
+               </p>
+             </div>
+           </div>
           </TabsContent>
         </Tabs>
       </div>
@@ -424,13 +627,21 @@ const VideoPublishCard: React.FC<VideoPublishCardProps> = ({
     <div className="group bg-gradient-to-br from-slate-800/60 to-slate-900/60 rounded-2xl overflow-hidden border border-slate-600/50 transition-all duration-300 hover:border-purple-500/50 hover:shadow-xl hover:shadow-purple-500/10 hover:-translate-y-1 backdrop-blur-sm">
       <Dialog open={open} onOpenChange={setOpen}>
         <div className="relative aspect-video bg-slate-900 overflow-hidden">
-          <video
-            src={video.url}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-            tabIndex={-1}
-            muted
-            playsInline
-          />
+          {video.thumbnail ? (
+            <img
+              src={video.thumbnail}
+              alt={video.title || "Video thumbnail"}
+              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+          ) : (
+            <video
+              src={video.url}
+              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              tabIndex={-1}
+              muted
+              playsInline
+            />
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300" />
           <DialogTrigger asChild>
             <Button
