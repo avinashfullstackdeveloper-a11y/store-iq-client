@@ -416,80 +416,12 @@ const Videos = () => {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div>
               <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
-                Collection
+                Collections
               </h1>
-              <p className="text-white/60 text-lg">
-                Manage and preview all your videos and images in one collection
-              </p>
             </div>
-            <Button
-              onClick={() => navigate("/dashboard/create-video")}
-              className="bg-storiq-purple hover:bg-storiq-purple/80 text-white font-semibold px-6 py-2.5 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
-            >
-              <Film className="h-5 w-5 mr-2" />
-              Create New Video
-            </Button>
           </div>
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            {/* Total Videos (videos + images) */}
-            <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-white/60 text-sm">Total Videos in Collection</p>
-                  <p className="text-2xl font-bold text-white">
-                    {onlyVideos.length}
-                  </p>
-                </div>
-                <div className="p-2 bg-blue-500/20 rounded-lg">
-                  <Film className="h-6 w-6 text-blue-400" />
-                </div>
-              </div>
-            </div>
-            {/* Total Images */}
-            <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-white/60 text-sm">Total Images in Collection</p>
-                  <p className="text-2xl font-bold text-white">
-                    {onlyImages.length}
-                  </p>
-                </div>
-                <div className="p-2 bg-blue-500/20 rounded-lg">
-                  <img src="/image.png" alt="Image" className="h-6 w-6" />
-                </div>
-              </div>
-            </div>
-            {/* Original Videos */}
-            <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-white/60 text-sm">Original Videos in Collection</p>
-                  <p className="text-2xl font-bold text-white">
-                    {originalVideos.length}
-                  </p>
-                </div>
-                <div className="p-2 bg-green-500/20 rounded-lg">
-                  <Play className="h-6 w-6 text-green-400" />
-                </div>
-              </div>
-            </div>
-            {/* Edited Videos */}
-            <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-white/60 text-sm">Edited Videos in Collection</p>
-                  <p className="text-2xl font-bold text-white">
-                    {editedVideos.length}
-                  </p>
-                </div>
-                <div className="p-2 bg-purple-500/20 rounded-lg">
-                  <Edit3 className="h-6 w-6 text-purple-400" />
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* Removed stats cards above video grid */}
         </div>
 
         {/* Preview Modal */}
@@ -677,19 +609,10 @@ const Videos = () => {
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-                    <div className="p-2 bg-green-500/20 rounded-lg">
-                      <Play className="h-5 w-5 text-green-400" />
-                    </div>
-                    Original Videos in Collection
-                    <Badge
-                      variant="secondary"
-                      className="ml-3 bg-green-500/20 text-green-400"
-                    >
-                      {originalVideos.length}
-                    </Badge>
+                    Your Videos
                   </h2>
-                  <p className="text-white/40 mt-1">
-                    Videos you've uploaded directly
+                  <p className="text-white/60">
+                    Here are all the videos that you created.
                   </p>
                 </div>
               </div>
@@ -702,7 +625,7 @@ const Videos = () => {
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {originalVideos.map((video: Video, index) => (
                     <VideoCard
                       key={video.id || index}
@@ -734,19 +657,10 @@ const Videos = () => {
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-                    <div className="p-2 bg-purple-500/20 rounded-lg">
-                      <Edit3 className="h-5 w-5 text-purple-400" />
-                    </div>
-                    Edited Videos in Collection
-                    <Badge
-                      variant="secondary"
-                      className="ml-3 bg-purple-500/20 text-purple-400"
-                    >
-                      {editedVideos.length}
-                    </Badge>
+                    Edited Videos
                   </h2>
-                  <p className="text-white/40 mt-1">
-                    Videos you've modified and enhanced
+                  <p className="text-white/60">
+                    Here are all the edited videos.
                   </p>
                 </div>
               </div>
@@ -759,7 +673,7 @@ const Videos = () => {
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {editedVideos.map((video: Video, index) => (
                     <VideoCard
                       key={video.id || index}
@@ -791,18 +705,8 @@ const Videos = () => {
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-                    <div className="p-2 bg-blue-500/20 rounded-lg">
-                      <img src="/image.png" alt="Image" className="h-5 w-5" />
-                    </div>
                     Images in Collection
-                    <Badge
-                      variant="secondary"
-                      className="ml-3 bg-blue-500/20 text-blue-400"
-                    >
-                      {onlyImages.length}
-                    </Badge>
                   </h2>
-                  <p className="text-white/40 mt-1">AI-generated images (part of your collection)</p>
                 </div>
               </div>
               {onlyImages.length === 0 ? (
@@ -1005,9 +909,10 @@ const VideoCard: React.FC<VideoCardProps> = ({
   formatDuration,
   formatDate,
 }) => {
+  // Use the same card structure and styling as testfile.tsx
   return (
-    <Card className="group overflow-hidden border-gray-700 bg-gray-800/50 backdrop-blur-sm hover:border-blue-500/50 transition-all duration-300 hover:shadow-xl rounded-xl">
-      <div className="relative h-48 overflow-hidden">
+    <div className="bg-storiq-card-bg border border-storiq-border rounded-2xl overflow-hidden hover:border-storiq-purple/50 transition-colors w-full max-w-xl mx-auto">
+      <div className="h-56 relative">
         <img
           src={
             video.thumbnail
@@ -1017,131 +922,40 @@ const VideoCard: React.FC<VideoCardProps> = ({
               : "/placeholder.svg"
           }
           alt={video.title || "Untitled Video"}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          className="w-full h-full object-cover"
           onError={(e) => {
             (e.target as HTMLImageElement).src = "/placeholder.svg";
           }}
         />
-        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-          <Button
-            onClick={onPreview}
-            className="rounded-full h-14 w-14 bg-blue-600 hover:bg-blue-700 shadow-lg"
-            size="icon"
-          >
-            <Play className="h-6 w-6 fill-current ml-1" />
-          </Button>
-        </div>
-        {video.duration && (
-          <Badge className="absolute bottom-3 right-3 bg-black/80 text-white border-0">
-            <Clock className="h-3 w-3 mr-1" />
-            {formatDuration(video.duration)}
-          </Badge>
-        )}
-        {video.publishedToYouTube && (
-          <Badge className="absolute top-3 left-3 bg-red-600 hover:bg-red-700 border-0">
-            <Youtube className="h-3 w-3 mr-1" />
-            YouTube
-          </Badge>
-        )}
+        <div className="absolute inset-0 bg-black/20"></div>
       </div>
-
-      <CardContent className="p-4">
-        <div className="flex justify-between items-start mb-3">
-          <h3 className="text-white font-semibold line-clamp-2 flex-1 mr-2 text-lg leading-tight">
-            {video.title || "Untitled Video"}
-          </h3>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-white/60 hover:text-white hover:bg-white/10 rounded-lg"
-              >
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="bg-gray-800 border-gray-700"
-            >
-              <DropdownMenuItem
-                onClick={onPreview}
-                className="text-white hover:bg-gray-700"
-              >
-                <Eye className="h-4 w-4 mr-2" />
-                Preview
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={onEdit}
-                className="text-white hover:bg-gray-700"
-              >
-                <Edit3 className="h-4 w-4 mr-2" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-red-400 hover:bg-red-500/20"
-                onClick={onDelete}
-                disabled={video.id === undefined || video.id === null}
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-
-        {/* Publish info */}
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-xs text-blue-400 font-medium">
-            Published {video.publishCount ?? 0} time
-            {(video.publishCount ?? 0) === 1 ? "" : "s"}
-          </span>
-          {video.publishedToYouTube && (
-            <Badge
-              variant="outline"
-              className="text-green-400 border-green-400/30 text-xs"
-            >
-              Published
-            </Badge>
-          )}
-        </div>
-
-        <p className="text-white/60 text-sm mb-4 line-clamp-2 leading-relaxed">
+      <div className="p-6">
+        <h3 className="text-white text-xl font-bold mb-1">
+          {video.title || "Untitled Video"}
+        </h3>
+        <p className="text-white/60 text-sm mb-4">
           {video.subtitle || video.description || "No description available"}
         </p>
-
-        <div className="flex items-center justify-between text-xs text-white/40">
-          <div className="flex items-center">
-            <Calendar className="h-3 w-3 mr-1" />
-            {video.createdAt ? formatDate(video.createdAt) : "Unknown date"}
-          </div>
-          <div className="flex items-center gap-1">
-            <Film className="h-3 w-3" />
-            {video.isEdited ? "Edited" : "Original"}
-          </div>
+        <div className="flex space-x-3">
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-storiq-border text-white hover:bg-storiq-purple hover:border-storiq-purple"
+            onClick={onEdit}
+          >
+            Edit
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-storiq-border text-white hover:bg-storiq-purple hover:border-storiq-purple"
+            onClick={onPreview}
+          >
+            Preview
+          </Button>
         </div>
-      </CardContent>
-
-      <CardFooter className="p-4 pt-0 flex gap-2">
-        <Button
-          size="sm"
-          onClick={onPreview}
-          className="flex-1 gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
-        >
-          <Play className="h-4 w-4" />
-          Preview
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onEdit}
-          className="flex-1 gap-2 text-white border-gray-600 hover:bg-gray-700 hover:border-gray-500 rounded-lg transition-colors"
-        >
-          <Edit3 className="h-4 w-4" />
-          Edit
-        </Button>
-      </CardFooter>
-    </Card>
+      </div>
+    </div>
   );
 };
 
