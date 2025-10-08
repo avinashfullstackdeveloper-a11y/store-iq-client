@@ -58,6 +58,7 @@ const Publish = () => {
   const [error, setError] = useState<string | null>(null);
   const [imagesError, setImagesError] = useState<string | null>(null);
   const [postingId, setPostingId] = useState<string | null>(null);
+  const [schedulingLoading, setSchedulingLoading] = useState<boolean>(false);
 
   // Platform selection per video
   type PlatformSelections = { [videoId: string]: { yt: boolean; ig: boolean } };
@@ -75,6 +76,7 @@ const Publish = () => {
 
   // Handle posting per video
   const handlePost = async (video: Video, scheduledTime?: DateTime) => {
+    setSchedulingLoading(true);
     try {
       const selection = platformSelections[video.id || video.s3Key || ""] || {
         yt: false,
@@ -108,41 +110,74 @@ const Publish = () => {
       if (selection.yt && ytConnected) {
         const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
         const endpoint = scheduledTime ?
-          `${API_BASE_URL}/api/publish/youtube/schedule` :
+          `${API_BASE_URL}/api/schedule/video` :
           `${API_BASE_URL}/api/publish/youtube`;
+
+        // Prepare the payload based on whether it's a scheduled post or immediate publish
+        const requestPayload = scheduledTime ? {
+          videoS3Key: video.s3Key,
+          scheduledTime: scheduledTime.toISO(),
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+        } : payload;
         
-        const res = await fetch(endpoint, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify(payload),
-        });
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          const errorMessage = err?.message || "Failed to post";
-          errorMsg += `YouTube Error: ${errorMessage}. Please try again or check your connection.`;
-          toast.error(errorMsg);
-        } else {
+        try {
+          const res = await fetch(endpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify(requestPayload),
+          });
+          
+          const data = await res.json();
+          
+          if (!res.ok) {
+            if (res.status === 404) {
+              toast.error("Video not found. Please try again.");
+            } else if (res.status === 400) {
+              // Handle validation errors
+              const errorMessage = data.error || "Invalid request";
+              toast.error(`Scheduling failed: ${errorMessage}`);
+            } else {
+              // Handle other errors
+              const errorMessage = data.error || "Failed to post";
+              errorMsg += `YouTube Error: ${errorMessage}. Please try again or check your connection.`;
+              toast.error(errorMsg);
+            }
+            setSchedulingLoading(false);
+            return;
+          }
+          
           ytSuccess = true;
+          if (scheduledTime) {
+            toast.success("Video scheduled successfully!");
+            await fetchVideos(); // Refresh videos to show scheduled status
+            setSchedulingLoading(false);
+            return;
+          }
+        } catch (err) {
+          console.error('API Error:', err);
+          toast.error("Failed to connect to server. Please try again.");
+          setSchedulingLoading(false);
+          return;
         }
       }
 
       setPostingId(null);
 
       if (ytSuccess) {
-        toast.success(scheduledTime ?
-          "Video scheduled successfully!" :
-          "Video published successfully!");
+        toast.success("Video published successfully!");
         setPlatformSelections((prev) => ({
           ...prev,
           [video.id || video.s3Key || ""]: { yt: false, ig: false },
         }));
         await fetchVideos();
-      } else {
+      } else if (!scheduledTime) {
+        // Only show generic error for immediate publishing
         toast.error(errorMsg.trim() || "Failed to post video.");
       }
     } catch (err) {
       setPostingId(null);
+      setSchedulingLoading(false);
       toast.error((err as Error)?.message || "Failed to post video.");
     }
   };
@@ -421,6 +456,7 @@ const Publish = () => {
                             handlePlatformChange={handlePlatformChange}
                             handlePost={handlePost}
                             postingId={postingId}
+                            schedulingLoading={schedulingLoading}
                           />
                         ))}
                       </div>
@@ -643,6 +679,7 @@ interface VideoPublishCardProps {
   handlePlatformChange: (videoId: string, platform: "youtube" | "instagram") => void;
   handlePost: (video: Video, scheduledTime?: DateTime) => void;
   postingId: string | null;
+  schedulingLoading: boolean;
 }
 
 const VideoPublishCard: React.FC<VideoPublishCardProps> = ({
@@ -653,6 +690,7 @@ const VideoPublishCard: React.FC<VideoPublishCardProps> = ({
   handlePlatformChange,
   handlePost,
   postingId,
+  schedulingLoading,
 }) => {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [scheduleOpen, setScheduleOpen] = useState(false);
@@ -823,9 +861,9 @@ const VideoPublishCard: React.FC<VideoPublishCardProps> = ({
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  className={`bg-slate-700 hover:bg-slate-600 text-white ${!ytConnected || !selection.yt ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`bg-slate-700 hover:bg-slate-600 text-white ${(!ytConnected || !selection.yt || schedulingLoading) ? 'opacity-50 cursor-not-allowed' : ''}`}
                   onClick={() => setScheduleOpen(true)}
-                  disabled={postingId === videoId || !selection.yt || !ytConnected}
+                  disabled={postingId === videoId || !selection.yt || !ytConnected || schedulingLoading}
                 >
                   <svg
                     className="w-4 h-4"
