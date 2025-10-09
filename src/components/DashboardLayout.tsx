@@ -10,7 +10,7 @@ import {
   FileEdit,
   Settings,
   Plus,
-  Menu
+  Menu,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -36,7 +36,6 @@ const inspirationItems = [
   { icon: Settings, label: "Account Settings", href: "/dashboard/settings" },
 ];
 
-
 import { useState } from "react";
 
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
@@ -48,12 +47,25 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     <>
       {/* Logo */}
       <div className="p-6">
-        <Link to="/dashboard" className="text-white font-bold text-lg inline-block">
+        <Link
+          to="/dashboard"
+          className="text-white font-bold text-lg inline-block"
+        >
           STORIQ
         </Link>
       </div>
       {/* Navigation */}
       <nav className="flex-1 px-6 space-y-8">
+        {/* Create New Video Button */}
+        <div className="space-y-2">
+          <Link
+            to="/dashboard/create-video"
+            className="flex items-center space-x-3 px-4 py-3 rounded-full transition-colors bg-storiq-purple text-white hover:bg-storiq-purple/80"
+          >
+            <Plus size={20} />
+            <span>Create New Video</span>
+          </Link>
+        </div>
         {/* Main Navigation */}
         <div className="space-y-2">
           {sidebarItems.map((item) => (
@@ -63,7 +75,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               end
               className={({ isActive }) =>
                 cn(
-                  "flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors",
+                  "flex items-center space-x-3 px-4 py-3 rounded-full transition-colors",
                   isActive
                     ? "bg-storiq-purple text-white"
                     : "text-white/70 hover:text-white hover:bg-storiq-card-bg"
@@ -85,7 +97,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 to={item.href}
                 className={({ isActive }) =>
                   cn(
-                    "flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors",
+                    "flex items-center space-x-3 px-4 py-3 rounded-full transition-colors",
                     isActive
                       ? "bg-storiq-purple text-white"
                       : "text-white/70 hover:text-white hover:bg-storiq-card-bg"
@@ -100,7 +112,9 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         </div>
         {/* Inspiration Section */}
         <div>
-          <h3 className="text-white/60 text-sm font-medium mb-3">Inspiration</h3>
+          <h3 className="text-white/60 text-sm font-medium mb-3">
+            Inspiration
+          </h3>
           <div className="space-y-2">
             {inspirationItems.map((item) => (
               <NavLink
@@ -108,7 +122,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 to={item.href}
                 className={({ isActive }) =>
                   cn(
-                    "flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors",
+                    "flex items-center space-x-3 px-4 py-3 rounded-full transition-colors",
                     isActive
                       ? "bg-storiq-purple text-white"
                       : "text-white/70 hover:text-white hover:bg-storiq-card-bg"
@@ -157,7 +171,10 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         {/* Sidebar: Sheet on mobile, aside on desktop */}
         {isMobile ? (
           <Sheet open={isSidebarOpen} onOpenChange={setSidebarOpen}>
-            <SheetContent side="left" className="p-0 w-64 bg-storiq-dark border-r border-storiq-border flex flex-col">
+            <SheetContent
+              side="left"
+              className="p-0 w-64 bg-storiq-dark border-r border-storiq-border flex flex-col"
+            >
               <SheetTitle className="sr-only">Sidebar Navigation</SheetTitle>
               {sidebarContent}
             </SheetContent>
@@ -169,9 +186,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         )}
 
         {/* Main Content */}
-        <main className="flex-1 overflow-auto">
-          {children}
-        </main>
+        <main className="flex-1 overflow-auto">{children}</main>
       </div>
     </div>
   );
